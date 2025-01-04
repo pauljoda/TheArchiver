@@ -71,22 +71,22 @@ services:
     environment:
       DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
     ports:
-    - target: 18888
-      published: 18888
+      - target: 18888
+        published: 18888
     restart: unless-stopped
   sql:
     container_name: "sql"
     image: "mcr.microsoft.com/mssql/server:2022-latest"
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "PASSWORD"
+      MSSQL_SA_PASSWORD: "I0ftheT!ger"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "sql"
     volumes:
-    - "download-cache-data:/var/opt/mssql"
+      - "download-cache-data:/var/opt/mssql"
     ports:
-    - target: 1433
-      published: 1433
+      - target: 1433
+        published: 1433
     restart: unless-stopped
   migrations:
     container_name: "migrations"
@@ -95,7 +95,7 @@ services:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
-      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
+      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=I0ftheT!ger;TrustServerCertificate=true;Database=download-cache"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "migrations"
   api:
@@ -107,12 +107,12 @@ services:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       Kestrel__Endpoints__http__Url: "http://*:5255"
-      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
+      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=I0ftheT!ger;TrustServerCertificate=true;Database=download-cache"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "api"
     ports:
-    - target: 5255
-      published: 5255
+      - target: 5255
+        published: 5255
     restart: unless-stopped
   background-download:
     container_name: "background-download"
@@ -120,6 +120,7 @@ services:
     volumes:
       - "D:\\Share:/share"
       - "D:\\TheArchiver\\Plugins:/plugins"
+      - "D:\\TheArchiver\\CLI:/cli"
     environment:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
@@ -127,12 +128,14 @@ services:
       MaxConcurrentThreads: "10"
       ShareLocation: "/share"
       PluginsLocation: "/plugins"
-      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
+      CLILocation: "/cli"
+      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=I0ftheT!ger;TrustServerCertificate=true;Database=download-cache"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "background-download"
     restart: unless-stopped
 volumes:
   download-cache-data: {}
+
 
 ```
 If tou setup the dotnet secret correct PASSWORD in sql and connection strings will be proper, id not change it to whatever you like here for production
