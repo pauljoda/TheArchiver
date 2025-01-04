@@ -28,9 +28,9 @@ public static class DownloadHandlerRegistry {
 
         foreach (var type in providerTypes) {
             var attribute = (DownloadHandler)type.GetCustomAttribute(typeof(DownloadHandler));
-            if (attribute != null) {
-                _downloadHandlers[attribute.BaseUrl] = type;
-            }
+            if (attribute == null) continue;
+            foreach(var url in attribute.BaseUrl.Split(','))
+                _downloadHandlers[url] = type;
         }
     }
 
@@ -51,9 +51,9 @@ public static class DownloadHandlerRegistry {
 
             foreach (var type in pluginTypes) {
                 var attribute = (DownloadHandler)type.GetCustomAttribute(typeof(DownloadHandler));
-                if (attribute != null) {
-                    _downloadHandlers[attribute.BaseUrl] = type;
-                }
+                if (attribute == null) continue;
+                foreach(var url in attribute.BaseUrl.Split(','))
+                    _downloadHandlers[url] = type;
             }
         }
     }
