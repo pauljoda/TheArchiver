@@ -1,0 +1,20 @@
+@API_HostAddress = http://10.1.20.90:5255
+
+GET {{API_HostAddress}}/api/health/
+
+### Test
+POST {{API_HostAddress}}/test/
+
+###
+
+# curl -X POST "https://yourdomain.com/manga/download?url=https://manga.com/manga/2"
+POST {{API_HostAddress}}/manga/download?url=https://manga.com/manga/2
+
+###
+
+
+
+###
+
+
+###

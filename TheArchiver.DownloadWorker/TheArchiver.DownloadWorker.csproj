@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>dotnet-DownloadWorker-5e9c4edc-cd4a-4185-885c-71951fa6e18f</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="HtmlAgilityPack" Version="1.11.72" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\TheArchiver.Data\TheArchiver.Data.csproj" />
+      <ProjectReference Include="..\TheArhiver.DownloadPluginAPI\TheArhiver.DownloadPluginAPI.csproj" />
+      <ProjectReference Include="..\TheArchiver.ServiceDefaults\TheArchiver.ServiceDefaults.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Plugins\" />
+    </ItemGroup>
+</Project>
