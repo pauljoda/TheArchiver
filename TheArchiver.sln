@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheArchiver.Host", "TheArch
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheArchiver.ServiceDefaults", "TheArchiver.ServiceDefaults\TheArchiver.ServiceDefaults.csproj", "{6D7491EA-B8BD-43A0-AF59-4D9B4E9813E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheArhiver.DownloadPluginAPI", "TheArhiver.DownloadPluginAPI\TheArhiver.DownloadPluginAPI.csproj", "{7DEFAC55-49B5-4056-B959-35C342DCDE2F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheArchiver.DownloadPluginAPI", "TheArchiver.DownloadPluginAPI\TheArchiver.DownloadPluginAPI.csproj", "{7DEFAC55-49B5-4056-B959-35C342DCDE2F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheArchiver.MigrationService", "TheArchiver.MigrationService\TheArchiver.MigrationService.csproj", "{459BB8DF-75E6-44C4-9B7C-9E3569084DF0}"
 EndProject

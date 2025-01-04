@@ -5,13 +5,14 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-        <Title>TheArchiverAPI</Title>
+        <Title>The Archiver Download Plugin API</Title>
         <Authors>pauljoda</Authors>
         <Description>Package to create download interfaces</Description>
-        <Version>1.0.1</Version>
-        <PackageProjectUrl>https://github.com/pauljoda/DownloadManager/tree/main</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/pauljoda/DownloadManager/tree/main</RepositoryUrl>
+        <Version>1.0.2</Version>
+        <PackageProjectUrl>https://github.com/pauljoda/TheArchiver</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/pauljoda/TheArchiver</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
+        <RootNamespace>TheArhiver.DownloadPluginAPI</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

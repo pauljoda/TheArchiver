@@ -14,7 +14,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\TheArchiver.Data\TheArchiver.Data.csproj" />
-      <ProjectReference Include="..\TheArhiver.DownloadPluginAPI\TheArhiver.DownloadPluginAPI.csproj" />
+      <ProjectReference Include="..\TheArchiver.DownloadPluginAPI\TheArchiver.DownloadPluginAPI.csproj" />
       <ProjectReference Include="..\TheArchiver.ServiceDefaults\TheArchiver.ServiceDefaults.csproj" />
     </ItemGroup>
 
