@@ -34,7 +34,7 @@ The images are not uploaded to a popular repo like DockerHub, by default Aspir8 
 Once installed, run the following command from the host directory
 
 ```commandline
-aspirate generate --output-format compose --non-interactive --secret-password teamneat
+aspirate generate --output-format compose
 ```
 Change the following in the docker compose, you will have to adjust for your enviornment
 
