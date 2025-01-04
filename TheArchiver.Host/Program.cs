@@ -9,7 +9,7 @@ var sql = builder.AddSqlServer("sql", password)
     .AddDatabase("download-cache");
 
 // DB Migrations
-var migrations = builder.AddProject<Projects.MigrationService>("migrations")
+var migrations = builder.AddProject<Projects.TheArchiver_MigrationService>("migrations")
     .WithReference(sql)
     .WaitFor(sql);
 
@@ -19,7 +19,7 @@ var api = builder.AddProject<Projects.TheArchiver_API>("api")
     .WaitFor(sql);
 
 // Background Task
-var backgroundTask = builder.AddProject<Projects.DownloadWorker>("background-download")
+var backgroundTask = builder.AddProject<Projects.TheArchiver_DownloadWorker>("background-download")
     .WithEnvironment("MaxConcurrentThreads", builder.Configuration["MaxConcurrentThreads"])
     .WithEnvironment("ShareLocation", builder.Configuration["ShareLocation"])
     .WithEnvironment("PluginsLocation", builder.Configuration["PluginsLocation"])

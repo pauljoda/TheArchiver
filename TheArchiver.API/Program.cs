@@ -1,4 +1,4 @@
-using Data.Context;
+using TheArchiver.Data.Context;
 using TheArchiver.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,7 +16,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment()) {
     app.MapOpenApi();
-    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "API v1"));
+    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "TheArchiver.API v1"));
 }
 
 #region API Endpoints
@@ -26,7 +26,7 @@ app.MapGet("api/health", () => "Healthy");
 
 // Test
 app.MapPost("/test", async (CacheDbContext dbContext) => {
-    var item = new Data.Models.DownloadQueueItem {
+    var item = new TheArchiver.Data.Models.DownloadQueueItem {
         Url = "https://manga.com/manga/1"
     };
     dbContext.DownloadQueueItems.Add(item);
@@ -36,7 +36,7 @@ app.MapPost("/test", async (CacheDbContext dbContext) => {
 
 // Add to queue
 app.MapPost("/api/download", async (CacheDbContext dbContext, string url) => {
-    var item = new Data.Models.DownloadQueueItem {
+    var item = new TheArchiver.Data.Models.DownloadQueueItem {
         Url = url
     };
     Console.WriteLine($"Caching download of {url}");

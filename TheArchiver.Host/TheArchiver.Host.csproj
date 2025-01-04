@@ -9,7 +9,7 @@
         <Nullable>enable</Nullable>
         <IsAspireHost>true</IsAspireHost>
         <UserSecretsId>33657e04-b087-447e-a661-b9914fbb486b</UserSecretsId>
-        <RootNamespace>DownloadManagerHost</RootNamespace>
+        <RootNamespace>TheArchiver.Host</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
@@ -31,7 +31,7 @@
       <ProjectReference Include="..\TheArchiver.API\TheArchiver.API.csproj" />
       <ProjectReference Include="..\TheArchiver.Data\TheArchiver.Data.csproj" />
       <ProjectReference Include="..\TheArchiver.DownloadWorker\TheArchiver.DownloadWorker.csproj" />
-      <ProjectReference Include="..\MigrationService\MigrationService.csproj" />
+      <ProjectReference Include="..\TheArchiver.MigrationService\TheArchiver.MigrationService.csproj" />
       <ProjectReference Include="..\TheArchiver.ServiceDefaults\TheArchiver.ServiceDefaults.csproj" />
     </ItemGroup>
 

@@ -3,19 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API", "API\API.csproj", "{D2C29E8C-E253-483A-8980-8FA4E1A94792}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheArchiver.API", "TheArchiver.API\TheArchiver.API.csproj", "{D2C29E8C-E253-483A-8980-8FA4E1A94792}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Data", "Data\Data.csproj", "{14A99009-DF00-402E-B596-B8E0DA3D9AE6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheArchiver.Data", "TheArchiver.Data\TheArchiver.Data.csproj", "{14A99009-DF00-402E-B596-B8E0DA3D9AE6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DownloadWorker", "DownloadWorker\DownloadWorker.csproj", "{59DA11F2-BE34-43B8-A4E0-C571C0D0BAA2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheArchiver.DownloadWorker", "TheArchiver.DownloadWorker\TheArchiver.DownloadWorker.csproj", "{59DA11F2-BE34-43B8-A4E0-C571C0D0BAA2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Host", "Host\Host.csproj", "{13169D42-2F10-474A-B332-0FA668022F13}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheArchiver.Host", "TheArchiver.Host\TheArchiver.Host.csproj", "{13169D42-2F10-474A-B332-0FA668022F13}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceDefaults", "ServiceDefaults\ServiceDefaults.csproj", "{6D7491EA-B8BD-43A0-AF59-4D9B4E9813E0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheArchiver.ServiceDefaults", "TheArchiver.ServiceDefaults\TheArchiver.ServiceDefaults.csproj", "{6D7491EA-B8BD-43A0-AF59-4D9B4E9813E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DownloadPluginAPI", "DownloadPluginAPI\DownloadPluginAPI.csproj", "{7DEFAC55-49B5-4056-B959-35C342DCDE2F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheArhiver.DownloadPluginAPI", "TheArhiver.DownloadPluginAPI\TheArhiver.DownloadPluginAPI.csproj", "{7DEFAC55-49B5-4056-B959-35C342DCDE2F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MigrationService", "MigrationService\MigrationService.csproj", "{459BB8DF-75E6-44C4-9B7C-9E3569084DF0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheArchiver.MigrationService", "TheArchiver.MigrationService\TheArchiver.MigrationService.csproj", "{459BB8DF-75E6-44C4-9B7C-9E3569084DF0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
