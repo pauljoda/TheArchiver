@@ -29,6 +29,8 @@ Since this uses a persistant docker volume, this db will persist between runs so
 This project is meant to run on your local server, since the goal is to archive things for yourself. 
 In order to export an aspire project in a way that you can run locally, you need to use [aspir8](https://prom3theu5.github.io/aspirational-manifests/getting-started.html).
 
+The images are not uploaded to a popular repo like DockerHub, by default Aspir8 will push to your machines image store, which for most is fine, but you can also push to a local registry, as I have in the example compose below. If you do not define a ContainerRegistry in the inti stage of aspirate, simply remove the reference to the registry, and it will pull from the local images
+
 Once installed, run the following command from the host directory
 
 ```commandline
