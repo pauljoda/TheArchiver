@@ -79,7 +79,7 @@ services:
     image: "mcr.microsoft.com/mssql/server:2022-latest"
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "I0ftheT!ger"
+      MSSQL_SA_PASSWORD: "PASSWORD"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "sql"
     volumes:
@@ -95,7 +95,7 @@ services:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
-      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=I0ftheT!ger;TrustServerCertificate=true;Database=download-cache"
+      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "migrations"
   api:
@@ -107,7 +107,7 @@ services:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       Kestrel__Endpoints__http__Url: "http://*:5255"
-      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=I0ftheT!ger;TrustServerCertificate=true;Database=download-cache"
+      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "api"
     ports:
@@ -127,7 +127,7 @@ services:
       MaxConcurrentThreads: "10"
       ShareLocation: "/share"
       PluginsLocation: "/plugins"
-      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=I0ftheT!ger;TrustServerCertificate=true;Database=download-cache"
+      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "background-download"
     restart: unless-stopped
@@ -135,3 +135,4 @@ volumes:
   download-cache-data: {}
 
 ```
+If tou setup the dotnet secret correct PASSWORD in sql and connection strings will be proper, id not change it to whatever you like here for production
