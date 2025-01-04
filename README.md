@@ -19,6 +19,11 @@ Feel free to clone and run on your own, or do whatever you like with it. I'll li
 
 To use a plugin, define the plugin folder ENV in the compose file, and place the dll of the libary there. You must implement the IDownloadHandler class and use the DownloadHandler attribute for the reflection to find it
 
+## Setup Dev
+Clone the repo, and add the .net secret to the host for the password, place a default sql password with the key "sql-password", this will be the default password for the "sa" account setup on the sql server instance.
+
+Since this uses a persistant docker volume, this db will persist between runs so you can log into it at the IP of the host on the exposed port
+
 ## Running on Docker
 
 This project is meant to run on your local server, since the goal is to archive things for yourself. 
