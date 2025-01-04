@@ -11,6 +11,9 @@ public static class DownloadHandlerRegistry {
         RegisterProviders();
         LoadPlugins(pluginFolderPath);
         Console.WriteLine($"Loaded {_downloadHandlers.Count} providers.");
+        foreach (var handler in _downloadHandlers) {
+            Console.WriteLine($"  {handler.Key} -> {handler.Value.Name}");
+        }
     }
     
     private static void RegisterProviders() {
