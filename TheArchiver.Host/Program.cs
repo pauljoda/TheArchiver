@@ -23,6 +23,7 @@ var backgroundTask = builder.AddProject<Projects.TheArchiver_DownloadWorker>("ba
     .WithEnvironment("MaxConcurrentThreads", builder.Configuration["MaxConcurrentThreads"])
     .WithEnvironment("ShareLocation", builder.Configuration["ShareLocation"])
     .WithEnvironment("PluginsLocation", builder.Configuration["PluginsLocation"])
+    .WithEnvironment("NotificationUrl", builder.Configuration["NotificationUrl"])
     .WithReference(sql)
     .WaitFor(migrations);
 
