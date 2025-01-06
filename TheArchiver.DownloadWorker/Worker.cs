@@ -39,6 +39,11 @@ public class Worker(IServiceProvider serviceProvider,
                             new IDownloadHandler.DownloadResult(false, $"No handler found for {queueItem.Url}");
                     
                     Console.WriteLine(saveResults.Message);
+
+                    await NotificationHelper.SendNotification(
+                        saveResults.Success ? "Download Successful" : "Download Failed",
+                        saveResults.Message,
+                        saveResults.Success ? "white_check_mark" : "x");
                     
                     if (!saveResults.Success)
                         dbContext.FailedDownloads.Add(new FailedDownloads() {
@@ -49,6 +54,7 @@ public class Worker(IServiceProvider serviceProvider,
                 }
                 catch (Exception e) {
                     Console.WriteLine(e);
+                    await NotificationHelper.SendNotification("Error Downloading", e.Message, "x");
                     // Save anything that succeeded
                     await dbContext.SaveChangesAsync(stoppingToken);
                 }
