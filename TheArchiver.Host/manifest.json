@@ -85,6 +85,7 @@
         "MaxConcurrentThreads": "10",
         "ShareLocation": "/Volumes/NetworkShare/",
         "PluginsLocation": "./Plugins",
+        "NotificationUrl": "https://notify.pauljoda.com/local",
         "ConnectionStrings__download-cache": "{download-cache.connectionString}"
       }
     }

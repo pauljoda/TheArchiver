@@ -1,6 +1,7 @@
-﻿namespace TheArhiver.DownloadPluginAPI.Helpers;
+﻿namespace TheArchiver.DownloadPluginAPI.Helpers;
 
 public static class StringHelper {
+    
     /// <summary>
     /// Removes invalid characters from the input string that are not allowed in file names.
     /// </summary>

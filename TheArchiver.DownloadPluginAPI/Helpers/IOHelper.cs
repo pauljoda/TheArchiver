@@ -1,6 +1,27 @@
-﻿namespace TheArhiver.DownloadPluginAPI.Helpers;
+﻿namespace TheArchiver.DownloadPluginAPI.Helpers;
 
 public static class IOHelper {
+    /// <summary>
+    /// Downloads a file from the specified URL and saves it to the given file path.
+    /// </summary>
+    /// <param name="client">An instance of HttpClient used to perform the HTTP request.</param>
+    /// <param name="url">The URL of the file to be downloaded.</param>
+    /// <param name="filePath">The local file path where the downloaded file will be saved.</param>
+    /// <returns>A boolean value indicating whether the download operation was successful.</returns>
+    /// <exception cref="HttpRequestException">Thrown if the HTTP request fails.</exception>
+    /// <exception cref="IOException">Thrown if an error occurs while writing the file to the specified path.</exception>
+    /// <exception cref="UnauthorizedAccessException">Thrown if access to the specified file path is denied.</exception>
+    public static async Task DownloadFilesAsync(HttpClient client, Uri url, string filePath) {
+        try {
+            await using var stream = await client.GetStreamAsync(url);
+            await using var fs = new FileStream(filePath, FileMode.OpenOrCreate);
+            await stream.CopyToAsync(fs);
+        }
+        catch (Exception ex) {
+            Console.WriteLine(ex);
+        }
+    }
+    
     /// <summary>
     /// Compresses the specified directory into a zip file at the specified location.
     /// </summary>

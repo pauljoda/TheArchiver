@@ -8,11 +8,11 @@
         <Title>The Archiver Download Plugin API</Title>
         <Authors>pauljoda</Authors>
         <Description>Package to create download interfaces</Description>
-        <Version>1.0.2</Version>
+        <Version>1.0.4</Version>
         <PackageProjectUrl>https://github.com/pauljoda/TheArchiver</PackageProjectUrl>
         <RepositoryUrl>https://github.com/pauljoda/TheArchiver</RepositoryUrl>
         <RepositoryType>GitHub</RepositoryType>
-        <RootNamespace>TheArhiver.DownloadPluginAPI</RootNamespace>
+        <RootNamespace>TheArchiver.DownloadPluginAPI</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

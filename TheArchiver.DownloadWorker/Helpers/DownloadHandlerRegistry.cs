@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
+using TheArchiver.DownloadPluginAPI.Helpers;
 using TheArhiver.DownloadPluginAPI;
-using TheArhiver.DownloadPluginAPI.Helpers;
 
 namespace TheArchiver.DownloadWorker.Helpers;
 

@@ -1,9 +1,12 @@
-﻿using System.Web;
+﻿using System.Net;
+using System.Text.Json;
+using System.Web;
 using HtmlAgilityPack;
 
-namespace TheArhiver.DownloadPluginAPI.Helpers;
+namespace TheArchiver.DownloadPluginAPI.Helpers;
 
 public static class HtmlHelper {
+    
     /// <summary>
     /// Asynchronously fetches the content of a webpage given its URL.
     /// </summary>
@@ -22,8 +25,66 @@ public static class HtmlHelper {
         if (!response.IsSuccessStatusCode) {
             return null;
         }
-        
+
         return await response.Content.ReadAsStringAsync();
+    }
+
+    /// <summary>
+    /// Downloads webpage content while sending cookies derived from a JSON string.
+    /// </summary>
+    /// <param name="url">The URL of the webpage to fetch the data from.</param>
+    /// <param name="cookiesJson">JSON string containing key-value pairs for cookies.</param>
+    /// <returns>Downloaded content as a string.</returns>
+    public static async Task<string> GetWebsiteContentsWithCookiesAsync(string url, string cookiesJson) {
+        // Create an HTTP client handler to manage cookies
+        var cookieContainer = new CookieContainer();
+        var handler = new HttpClientHandler {
+            CookieContainer = cookieContainer
+        };
+
+        // Add cookies from the provided JSON
+        AddCookiesFromJson(cookieContainer, new Uri(url), cookiesJson);
+
+        // Initialize HttpClient
+        using (var httpClient = new HttpClient(handler)) {
+            httpClient.Timeout = TimeSpan.FromMinutes(5);
+
+            try {
+                // Perform HTTP GET request to fetch content
+                var response = await httpClient.GetAsync(url);
+                response.EnsureSuccessStatusCode();
+
+                // Return the webpage content as a string
+                return await response.Content.ReadAsStringAsync();
+            }
+            catch (Exception ex) {
+                Console.WriteLine($"Error fetching webpage content: {ex.Message}");
+                throw;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Parses a JSON string and adds cookies to the provided CookieContainer.
+    /// </summary>
+    /// <param name="cookieContainer">CookieContainer instance to add cookies to.</param>
+    /// <param name="uri">The Uri to associate the cookies with.</param>
+    /// <param name="cookiesJson">JSON string containing cookies in key-value format.</param>
+    private static void AddCookiesFromJson(CookieContainer cookieContainer, Uri uri, string cookiesJson) {
+        try {
+            // Parse the JSON into a dictionary
+            var cookies = JsonSerializer.Deserialize<Dictionary<string, string>>(cookiesJson);
+
+            if (cookies != null) {
+                foreach (var cookie in cookies) {
+                    cookieContainer.Add(uri, new Cookie(cookie.Key, cookie.Value));
+                }
+            }
+        }
+        catch (JsonException ex) {
+            Console.WriteLine($"Error parsing cookies JSON: {ex.Message}");
+            throw;
+        }
     }
 
     /// <summary>

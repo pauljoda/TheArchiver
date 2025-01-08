@@ -1,6 +1,7 @@
-﻿namespace TheArhiver.DownloadPluginAPI.Helpers;
+﻿namespace TheArchiver.DownloadPluginAPI.Helpers;
 
 public static class UrlHelper {
+    
     /// <summary>
     /// Extracts the base URL (scheme and host) from a given full URL.
     /// </summary>
