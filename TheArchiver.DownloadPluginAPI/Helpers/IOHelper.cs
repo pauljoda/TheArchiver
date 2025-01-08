@@ -11,7 +11,7 @@ public static class IOHelper {
     /// <exception cref="HttpRequestException">Thrown if the HTTP request fails.</exception>
     /// <exception cref="IOException">Thrown if an error occurs while writing the file to the specified path.</exception>
     /// <exception cref="UnauthorizedAccessException">Thrown if access to the specified file path is denied.</exception>
-    private static async Task DownloadFilesAsync(HttpClient client, Uri url, string filePath) {
+    public static async Task DownloadFilesAsync(HttpClient client, Uri url, string filePath) {
         try {
             await using var stream = await client.GetStreamAsync(url);
             await using var fs = new FileStream(filePath, FileMode.OpenOrCreate);

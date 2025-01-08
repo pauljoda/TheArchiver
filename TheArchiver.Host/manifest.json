@@ -41,7 +41,7 @@
     },
     "migrations": {
       "type": "project.v0",
-      "path": "../MigrationService/MigrationService.csproj",
+      "path": "../TheArchiver.MigrationService/TheArchiver.MigrationService.csproj",
       "env": {
         "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES": "true",
         "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES": "true",
@@ -51,7 +51,7 @@
     },
     "api": {
       "type": "project.v0",
-      "path": "../API/API.csproj",
+      "path": "../TheArchiver.API/TheArchiver.API.csproj",
       "env": {
         "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES": "true",
         "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES": "true",
@@ -77,7 +77,7 @@
     },
     "background-download": {
       "type": "project.v0",
-      "path": "../DownloadWorker/DownloadWorker.csproj",
+      "path": "../TheArchiver.DownloadWorker/TheArchiver.DownloadWorker.csproj",
       "env": {
         "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES": "true",
         "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES": "true",
@@ -85,6 +85,7 @@
         "MaxConcurrentThreads": "10",
         "ShareLocation": "/Volumes/NetworkShare/",
         "PluginsLocation": "./Plugins",
+        "NotificationUrl": "https://notify.pauljoda.com/local",
         "ConnectionStrings__download-cache": "{download-cache.connectionString}"
       }
     }
