@@ -33,7 +33,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish Migration Container
-        if: contains(github.event.head_commit.message, 'publish')
+        # if: contains(github.event.head_commit.message, 'publish')
         run: |
           dotnet publish "./TheArchiver.MigrationService/TheArchiver.MigrationService.csproj" -t:PublishContainer -r "linux-x64" -p:ContainerRegistry="ghcr.io" -p:ContainerRepository="the-archiver/migrations" -p:ContainerImageTag="latest"
           
