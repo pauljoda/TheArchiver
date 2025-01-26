@@ -33,7 +33,14 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Publish Migration Container
-        # if: contains(github.event.head_commit.message, 'publish')
         run: |
           dotnet publish "./TheArchiver.MigrationService/TheArchiver.MigrationService.csproj" -t:PublishContainer -r "linux-x64" -p:ContainerRegistry="ghcr.io" -p:ContainerRepository="pauljoda/the-archiver-migrations" -p:ContainerImageTag="latest"
-          
+
+      - name: Publish API Container
+        run: |
+          dotnet publish "./TheArchiver.API/TheArchiver.API.csproj" -t:PublishContainer -r "linux-x64" -p:ContainerRegistry="ghcr.io" -p:ContainerRepository="pauljoda/the-archiver-api" -p:ContainerImageTag="latest"
+    
+      - name: Publish Download Worker Container
+        run: |
+          dotnet publish "./TheArchiver.DownloadWorker/TheArchiver.DownloadWorker.csproj" -t:PublishContainer -r "linux-x64" -p:ContainerRegistry="ghcr.io" -p:ContainerRepository="pauljoda/the-archiver-downloadworker" -p:ContainerImageTag="latest"
+    
