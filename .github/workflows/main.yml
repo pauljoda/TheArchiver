@@ -1,0 +1,39 @@
+name: Publish to GitHub Container Registry
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'PublishGitHubAction/**'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup .NET
+        uses: actions:setup-dotnet@v1
+        with:
+          dotnet-version: '9.x'
+
+      - name: Login to GitHub Containers
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish Migration Container
+        if: contains(github.event.head_commit.message, 'publish')
+        run: |
+          dotnet publish "./TheArchiver.MigrationService/TheArchiver.MigrationService.csproj" -t:PublishContainer -r "linux-x64" -p:ContainerRegistry="ghcr.io" -p:ContainerRepository="the-archiver/migrations" -p:ContainerImageTag="latest"
+          
