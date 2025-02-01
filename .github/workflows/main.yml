@@ -40,10 +40,6 @@ jobs:
         run: |
           dotnet publish "./TheArchiver.API/TheArchiver.API.csproj" -t:PublishContainer -r "linux-x64" -p:ContainerRegistry="ghcr.io" -p:ContainerRepository="pauljoda/the-archiver-api" -p:ContainerImageTag="latest"\
       
-      - name: Publish FFMPEG Container
-        run: |
-          dotnet publish "./ffmpeg/ffmpeg.csproj" -t:PublishContainer -r "linux-x64" -p:ContainerRegistry="ghcr.io" -p:ContainerRepository="pauljoda/the-archiver-ffmpeg" -p:ContainerImageTag="latest"
-    
       - name: Publish Download Worker Container
         run: |
           dotnet publish "./TheArchiver.DownloadWorker/TheArchiver.DownloadWorker.csproj" -t:PublishContainer -r "linux-x64" -p:ContainerRegistry="ghcr.io" -p:ContainerRepository="pauljoda/the-archiver-downloadworker" -p:ContainerImageTag="latest"
