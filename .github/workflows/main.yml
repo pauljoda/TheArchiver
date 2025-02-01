@@ -40,14 +40,10 @@ jobs:
         run: |
           dotnet publish "./TheArchiver.API/TheArchiver.API.csproj" -t:PublishContainer -r "linux-x64" -p:ContainerRegistry="ghcr.io" -p:ContainerRepository="pauljoda/the-archiver-api" -p:ContainerImageTag="latest"\
       
-      - name: Build FFMPEG Container
+      - name: Publish FFMPEG Container
         run: |
-          run: docker build -t ghcr.io/pauljoda/the-archiver-ffmpeg:latest ./ffmpeg/DockerFile
-
-      - name: Push FFMPEG Image
-        run: |
-          run: docker push ghcr.io/pauljoda/the-archiver-ffmpeg:latest
-        
+          dotnet publish "./ffmpeg/ffmpeg.csproj" -t:PublishContainer -r "linux-x64" -p:ContainerRegistry="ghcr.io" -p:ContainerRepository="pauljoda/the-archiver-ffmpeg" -p:ContainerImageTag="latest"
+    
       - name: Publish Download Worker Container
         run: |
           dotnet publish "./TheArchiver.DownloadWorker/TheArchiver.DownloadWorker.csproj" -t:PublishContainer -r "linux-x64" -p:ContainerRegistry="ghcr.io" -p:ContainerRepository="pauljoda/the-archiver-downloadworker" -p:ContainerImageTag="latest"
