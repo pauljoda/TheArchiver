@@ -12,10 +12,10 @@ USER $APP_UID
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["ffmpeg/ffmpeg.csproj", "ffmpeg/"]
-RUN dotnet restore "ffmpeg/ffmpeg.csproj"
 COPY . .
-WORKDIR "/src/ffmpeg"
+RUN dotnet restore "ffmpeg.csproj"
+COPY . .
+WORKDIR "/src/"
 RUN dotnet build "ffmpeg.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish

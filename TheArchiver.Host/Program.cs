@@ -29,7 +29,7 @@ var backgroundTask = builder.AddProject<Projects.TheArchiver_DownloadWorker>("ba
 
 // FFMPEG
 var ffmpeg =
-    builder.AddDockerfile("ffmpeg", "../", "./ffmpeg/Dockerfile")
+    builder.AddDockerfile("ffmpeg", "../ffmpeg", "./Dockerfile")
         .WithBindMount("/Volumes/NetworkShare/YouTube", "/scan")
         .WithEnvironment("ScanLocation", builder.Configuration["ScanLocation"]);
 
