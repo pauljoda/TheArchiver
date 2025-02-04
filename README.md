@@ -67,61 +67,69 @@ Delete the restart for migrations
 Example Complete, be sure to change things like share paths and password in connection string
 ```yaml
 services:
+  # Dashboard
   aspire-dashboard:
-    container_name: "aspire-dashboard"
+    container_name: "archiver-dashboard"
     image: "mcr.microsoft.com/dotnet/aspire-dashboard:8.0"
     environment:
       DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
-    ports:
-    - target: 18888
-      published: 18888
+    networks:
+      home_network:
+        ipv4_address: 10.10.10.90 # Port 18888
     restart: unless-stopped
+
+  # SQL
   sql:
-    container_name: "sql"
+    container_name: "archiver-sql"
     image: "mcr.microsoft.com/mssql/server:2022-latest"
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: "PASSWORD"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:18889"
       OTEL_SERVICE_NAME: "sql"
     volumes:
     - "download-cache-data:/var/opt/mssql"
-    ports:
-    - target: 1433
-      published: 1433
+    network_mode: service:aspire-dashboard # port 1433
     restart: unless-stopped
+
+  # SQL Migrations
   migrations:
-    container_name: "migrations"
-    image: "registry.pauljoda.com/the-archiver/migrations:latest"
+    container_name: "archiver-migrations"
+    image: "ghcr.io/pauljoda/the-archiver-migrations:latest"
+    network_mode: service:aspire-dashboard 
     environment:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
-      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      ConnectionStrings__download-cache: "Server=localhost,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:18889"
       OTEL_SERVICE_NAME: "migrations"
+
+  # Web API
   api:
-    container_name: "api"
-    image: "registry.pauljoda.com/the-archiver/api:latest"
+    container_name: "archiver-api"
+    image: "ghcr.io/pauljoda/the-archiver-api:latest"
     environment:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       Kestrel__Endpoints__http__Url: "http://*:5255"
-      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      ConnectionStrings__download-cache: "Server=localhost,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:18889"
       OTEL_SERVICE_NAME: "api"
-    ports:
-    - target: 5255
-      published: 5255
+    network_mode: service:aspire-dashboard # port 5255
     restart: unless-stopped
+
+  # Background Downloader
   background-download:
-    container_name: "background-download"
-    image: "registry.pauljoda.com/the-archiver/background-download:latest"
+    container_name: "archiver-background-download"
+    image: "ghcr.io/pauljoda/the-archiver-downloadworker:latest"
+    user: "100:100"
+    network_mode: service:aspire-dashboard
     volumes:
-      - "<YOUR BASE SHARE HERE>:/share"
-      - "<YOUR PLUGIN PATH HERE>:/plugins"
+      - "/path/to/storage:/share"
+      - "/path/to/Plugins:/plugins"
     environment:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
@@ -129,13 +137,38 @@ services:
       MaxConcurrentThreads: "10"
       ShareLocation: "/share"
       PluginsLocation: "/plugins"
-      NotificationUrl: "https://notify.example.com/topic" # Optional to use ntfy server for push notifications
-      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      NotificationUrl: "https://notify.YOURDOMAINEXAMPLE.com/local"
+      ConnectionStrings__download-cache: "Server=localhost,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:18889"
       OTEL_SERVICE_NAME: "background-download"
     restart: unless-stopped
+
+  # FFMPEG
+  ffmpeg:
+    container_name: "archiver-ffmpeg"
+    image: "ghcr.io/pauljoda/the-archiver-ffmpeg:latest"
+    user: "1000:1000"
+    network_mode: service:aspire-dashboard 
+    volumes:
+      - "/home/path/:/scan"
+    environment:
+      ScanLocation: "/scan" 
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:18889"
+      OTEL_SERVICE_NAME: "ffmpeg"
+
+# Voluemes
 volumes:
   download-cache-data: {}
 
+# Network
+networks:
+  home_network:
+    external: true
+
 ```
 If you setup the dotnet secret correct PASSWORD in sql and connection strings will be proper, if not change it to whatever you like here for production
+
+Also, it is worth setting up an .env for reused variables like the password, this is a template I use and for the sake of keeping it portable I have it all in this compose example
