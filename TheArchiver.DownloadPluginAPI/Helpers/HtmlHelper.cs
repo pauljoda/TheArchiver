@@ -45,7 +45,8 @@ public static class HtmlHelper {
         var requestData = new {
             cmd = "request.get",
             url = website,
-            maxTimeout = timeout
+            maxTimeout = timeout,
+            max_timeout = timeout
         };
 
         // Serialize into json string
