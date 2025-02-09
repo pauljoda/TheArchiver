@@ -16,7 +16,7 @@ public static class HtmlHelper {
     public static async Task<string?> GetWebsiteContent(string url, int timeout = 100) {
         // Check if flaresolver is up, use that if so
         if(await IsCloudflareProxyUp())
-            return await GetWebsiteContentCloudFlare(url, timeout);
+            return await GetWebsiteContentCloudFlare(url, 60000);
         
         using var httpClient = new HttpClient();
         httpClient.Timeout = TimeSpan.FromSeconds(timeout);
@@ -45,8 +45,7 @@ public static class HtmlHelper {
         var requestData = new {
             cmd = "request.get",
             url = website,
-            maxTimeout = timeout,
-            max_timeout = timeout
+            maxTimeout = timeout
         };
 
         // Serialize into json string
@@ -66,7 +65,6 @@ public static class HtmlHelper {
 
         // Parse the Results
         var resultJson = await response.Content.ReadAsStringAsync();
-        Console.WriteLine(resultJson);
         var jsonDocument = JsonDocument.Parse(resultJson);
 
         // Try with what is expected
