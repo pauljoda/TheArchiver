@@ -68,7 +68,7 @@ public static class HtmlHelper {
         var jsonDocument = JsonDocument.Parse(resultJson);
 
         //TODO: TESTING
-        Console.WriteLine(jsonDocument);
+        Console.WriteLine(jsonDocument.ToString());
 
         // Try with what is expected
         if (jsonDocument.RootElement.TryGetProperty("solution", out var solutionElement) &&
