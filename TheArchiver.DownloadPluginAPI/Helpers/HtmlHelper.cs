@@ -15,7 +15,7 @@ public static class HtmlHelper {
     /// <returns>A task representing the asynchronous operation. The task result is the content of the webpage as a string, or null if the request fails.</returns>
     public static async Task<string?> GetWebsiteContent(string url, int timeout = 100) {
         // Check if flaresolver is up, use that if so
-        if(await IsServiceAvailable("http://localhost:8080/v1"))
+        if(await IsCloudflareProxyUp())
             return await GetWebsiteContentCloudFlare(url, timeout);
         
         using var httpClient = new HttpClient();
@@ -40,6 +40,7 @@ public static class HtmlHelper {
     /// <param name="url">The URL of the webpage to fetch content from.</param>
     /// <returns>A task representing the asynchronous operation. The task result is the content of the webpage as a string, or null if the request fails.</returns>
     public static async Task<string?> GetWebsiteContentCloudFlare(string website, int timeout = 60000) {
+        Console.WriteLine("Using Cloudflare");
         // Load the JSON payload
         var requestData = new {
             cmd = "request.get",
@@ -51,7 +52,7 @@ public static class HtmlHelper {
         var jsonPayload = JsonSerializer.Serialize(requestData);
 
         using var httpClient = new HttpClient();
-        var requestMessage = new HttpRequestMessage(HttpMethod.Post, "http://10.10.10.90:8080/v1") {
+        var requestMessage = new HttpRequestMessage(HttpMethod.Post, "http://localhost:8080/v1") {
             Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
         };
 
@@ -214,12 +215,24 @@ public static class HtmlHelper {
     /// </summary>
     /// <param name="url">The URL of the service or website to check for availability.</param>
     /// <returns>A task representing the asynchronous operation. The task result is a boolean value: true if the service is available and returns a successful 2xx status code, otherwise false.</returns>
-    public static async Task<bool> IsServiceAvailable(string url) {
+    public static async Task<bool> IsCloudflareProxyUp() {
         try {
-            using var httpClient = new HttpClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(5); // Adjust if necessary
-            var response = await httpClient.GetAsync(url);
+            var requestData = new {
+                cmd = "request.get",
+                url = "https://google.com",
+                maxTimeout = 60000
+            };
 
+            // Serialize into json string
+            var jsonPayload = JsonSerializer.Serialize(requestData);
+
+            using var httpClient = new HttpClient();
+            var requestMessage = new HttpRequestMessage(HttpMethod.Post, "http://localhost:8080/v1") {
+                Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
+            };
+
+            // Send request and fetch the webpage content
+            var response = await httpClient.SendAsync(requestMessage);
             return response.IsSuccessStatusCode; // Returns true if 2xx status code
         }
         catch {
