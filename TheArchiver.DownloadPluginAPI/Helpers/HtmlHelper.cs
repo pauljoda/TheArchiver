@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using System.Text;
 using System.Text.Json;
 using System.Web;
 using HtmlAgilityPack;
@@ -13,6 +14,10 @@ public static class HtmlHelper {
     /// <param name="url">The URL of the webpage to fetch content from.</param>
     /// <returns>A task representing the asynchronous operation. The task result is the content of the webpage as a string, or null if the request fails.</returns>
     public static async Task<string?> GetWebsiteContent(string url, int timeout = 100) {
+        // Check if flaresolver is up, use that if so
+        if(await IsServiceAvailable("http://localhost:8080/v1"))
+            return await GetWebsiteContentCloudFlare(url, timeout);
+        
         using var httpClient = new HttpClient();
         httpClient.Timeout = TimeSpan.FromSeconds(timeout);
         httpClient.DefaultRequestHeaders.Add(
@@ -27,6 +32,41 @@ public static class HtmlHelper {
         }
 
         return await response.Content.ReadAsStringAsync();
+    }
+
+    /// <summary>
+    /// Asynchronously fetches the content of a webpage given its URL, with Cloudflare solving
+    /// </summary>
+    /// <param name="url">The URL of the webpage to fetch content from.</param>
+    /// <returns>A task representing the asynchronous operation. The task result is the content of the webpage as a string, or null if the request fails.</returns>
+    public static async Task<string?> GetWebsiteContentCloudFlare(string website, int timeout = 60000) {
+        // Load the JSON payload
+        var requestData = new {
+            cmd = "request.get",
+            url = website,
+            maxTimeout = timeout
+        };
+
+        // Serialize into json string
+        var jsonPayload = JsonSerializer.Serialize(requestData);
+
+        using var httpClient = new HttpClient();
+        var requestMessage = new HttpRequestMessage(HttpMethod.Post, "http://10.10.10.90:8080/v1") {
+            Content = new StringContent(jsonPayload, Encoding.UTF8, "application/json")
+        };
+
+        // Send request and fetch the webpage content
+        var response = await httpClient.SendAsync(requestMessage);
+
+        if (!response.IsSuccessStatusCode) {
+            return null;
+        }
+
+        // Parse the Results
+        var resultJson = await response.Content.ReadAsStringAsync();
+        var jsonDocument = JsonDocument.Parse(resultJson);
+
+        return jsonDocument.RootElement.GetProperty("solution").GetProperty("response").GetString();
     }
 
     /// <summary>
@@ -167,5 +207,23 @@ public static class HtmlHelper {
     public static string? GetAttributeById(string id, string attributeName, string html) {
         var htmlNode = GetHtmlNodeById(id, html);
         return htmlNode != null ? GetHtmlAttribute(attributeName, htmlNode) : null;
+    }
+
+    /// <summary>
+    /// Determines asynchronously whether a specified service or website is available by performing an HTTP GET request.
+    /// </summary>
+    /// <param name="url">The URL of the service or website to check for availability.</param>
+    /// <returns>A task representing the asynchronous operation. The task result is a boolean value: true if the service is available and returns a successful 2xx status code, otherwise false.</returns>
+    public static async Task<bool> IsServiceAvailable(string url) {
+        try {
+            using var httpClient = new HttpClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(5); // Adjust if necessary
+            var response = await httpClient.GetAsync(url);
+
+            return response.IsSuccessStatusCode; // Returns true if 2xx status code
+        }
+        catch {
+            return false; // Handle exceptions like timeouts or unreachable host
+        }
     }
 }
