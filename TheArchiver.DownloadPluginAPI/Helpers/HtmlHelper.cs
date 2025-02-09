@@ -65,6 +65,7 @@ public static class HtmlHelper {
 
         // Parse the Results
         var resultJson = await response.Content.ReadAsStringAsync();
+        Console.WriteLine(resultJson);
         var jsonDocument = JsonDocument.Parse(resultJson);
 
         // Try with what is expected
