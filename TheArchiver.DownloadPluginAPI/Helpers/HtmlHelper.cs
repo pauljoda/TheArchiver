@@ -67,9 +67,6 @@ public static class HtmlHelper {
         var resultJson = await response.Content.ReadAsStringAsync();
         var jsonDocument = JsonDocument.Parse(resultJson);
 
-        //TODO: TESTING
-        Console.WriteLine(jsonDocument.RootElement.ToString());
-
         // Try with what is expected
         if (jsonDocument.RootElement.TryGetProperty("solution", out var solutionElement) &&
             solutionElement.TryGetProperty("response", out var responsePropertySolution)) {
