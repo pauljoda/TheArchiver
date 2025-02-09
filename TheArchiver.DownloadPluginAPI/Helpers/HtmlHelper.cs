@@ -68,25 +68,14 @@ public static class HtmlHelper {
         var jsonDocument = JsonDocument.Parse(resultJson);
 
         // Try with what is expected
-        try {
-            var check = jsonDocument.RootElement.GetProperty("solution").GetProperty("response").GetString();
-            return check;
-        }
-        catch (Exception ex) {
-            Console.WriteLine("Not under solution -> response");
-        }
-        
-        // Try direct
-        try {
-            var check = jsonDocument.RootElement.GetProperty("response").GetString();
-            return check;
-        }
-        catch (Exception ex) {
-            Console.WriteLine("Error parsing json from cloudflare: " + ex);
+        if (jsonDocument.RootElement.TryGetProperty("solution", out var solutionElement) &&
+            solutionElement.TryGetProperty("response", out var responsePropertySolution)) {
+            return responsePropertySolution.GetString();
         }
 
-        // Nothing there, guess failed
-        return null;
+        return jsonDocument.RootElement.TryGetProperty("response", out var responseProperty) ? responseProperty.GetString() :
+            // Nothing there, guess failed
+            null;
     }
 
     /// <summary>
