@@ -1,4 +1,5 @@
-﻿using TheArchiver.DownloadWorker.Helpers;
+﻿using TheArchiver.DownloadPluginAPI.Helpers;
+using TheArchiver.DownloadWorker.Helpers;
 
 namespace Tests;
 
@@ -10,6 +11,7 @@ public class Tests {
 
     [Test]
     public async Task NotificationTest() {
+        var content = await HtmlHelper.GetWebsiteContent("https://google.com");
         var result = await NotificationHelper.SendNotification("Something Happened", "Something seemed to happen and this is letting you know", "file_cabinet");
         if(result)
             Assert.Pass();

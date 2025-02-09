@@ -67,7 +67,26 @@ public static class HtmlHelper {
         var resultJson = await response.Content.ReadAsStringAsync();
         var jsonDocument = JsonDocument.Parse(resultJson);
 
-        return jsonDocument.RootElement.GetProperty("solution").GetProperty("response").GetString();
+        // Try with what is expected
+        try {
+            var check = jsonDocument.RootElement.GetProperty("solution").GetProperty("response").GetString();
+            return check;
+        }
+        catch (Exception ex) {
+            Console.WriteLine("Not under solution -> response");
+        }
+        
+        // Try direct
+        try {
+            var check = jsonDocument.RootElement.GetProperty("response").GetString();
+            return check;
+        }
+        catch (Exception ex) {
+            Console.WriteLine("Error parsing json from cloudflare: " + ex);
+        }
+
+        // Nothing there, guess failed
+        return null;
     }
 
     /// <summary>
