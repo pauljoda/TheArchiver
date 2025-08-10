@@ -7,5 +7,5 @@ public class DownloadQueueItem {
     public int Id { get; set; }
     
     [Required]
-    public string Url { get; set; }
+    public string Url { get; set; } = string.Empty;
 }

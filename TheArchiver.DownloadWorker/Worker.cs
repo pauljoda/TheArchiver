@@ -24,21 +24,52 @@ public class Worker(IServiceProvider serviceProvider,
         if(shareLocation == null)
             throw new Exception("ShareLocation environment variable not set");
 
+        await ConsoleOutputService.SendInformationAsync("Worker", "Background download worker started successfully");
+        
         while (!stoppingToken.IsCancellationRequested) {
             await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
-            Console.WriteLine("Checking for items to download...");
+            await ConsoleOutputService.SendDebugAsync("Worker", "Checking for items to download...");
             
-            foreach (var queueItem in dbContext.DownloadQueueItems) {
+            var queueItems = dbContext.DownloadQueueItems.ToList();
+            if (queueItems.Count > 0)
+            {
+                await ConsoleOutputService.SendInformationAsync("Worker", $"Found {queueItems.Count} items in download queue");
+            }
+            
+            foreach (var queueItem in queueItems) {
                 try {
-                    Console.WriteLine($"Downloading {queueItem.Url}");
+                    await ConsoleOutputService.SendInformationAsync("Worker", $"Starting download: {queueItem.Url}");
                     var downloadHandler = DownloadHandlerRegistry.GetDownloadHandlerForUrl(queueItem.Url);
 
-                    var saveResults =
-                        downloadHandler != null ? 
-                            await downloadHandler.Download(queueItem.Url, shareLocation, maxThreads) :
-                            new IDownloadHandler.DownloadResult(false, $"No handler found for {queueItem.Url}");
+                    if (downloadHandler == null)
+                    {
+                        await ConsoleOutputService.SendWarningAsync("Worker", $"No download handler found for URL: {queueItem.Url}");
+                        var downloadResult = new IDownloadHandler.DownloadResult(false, $"No handler found for {queueItem.Url}");
+                        
+                        await NotificationHelper.SendNotification(
+                            "Download Failed", 
+                            downloadResult.Message, 
+                            "x");
+                        
+                        dbContext.FailedDownloads.Add(new FailedDownloads() {
+                            Url = queueItem.Url,
+                            ErrorMessage = downloadResult.Message
+                        });
+                        dbContext.DownloadQueueItems.Remove(queueItem);
+                        continue;
+                    }
+
+                    await ConsoleOutputService.SendDebugAsync("Worker", $"Using download handler: {downloadHandler.GetType().Name}");
+                    var saveResults = await downloadHandler.Download(queueItem.Url, shareLocation, maxThreads);
                     
-                    Console.WriteLine(saveResults.Message);
+                    if (saveResults.Success)
+                    {
+                        await ConsoleOutputService.SendInformationAsync("Worker", $"Download completed successfully: {saveResults.Message}");
+                    }
+                    else
+                    {
+                        await ConsoleOutputService.SendErrorAsync("Worker", $"Download failed: {saveResults.Message}");
+                    }
 
                     await NotificationHelper.SendNotification(
                         saveResults.Success ? "Download Successful" : "Download Failed",
@@ -53,7 +84,9 @@ public class Worker(IServiceProvider serviceProvider,
                     dbContext.DownloadQueueItems.Remove(queueItem);
                 }
                 catch (Exception e) {
-                    Console.WriteLine(e);
+                    await ConsoleOutputService.SendErrorAsync("Worker", $"Exception during download: {e.Message}");
+                    await ConsoleOutputService.SendDebugAsync("Worker", $"Stack trace: {e.StackTrace}");
+                    
                     await NotificationHelper.SendNotification("Error Downloading", e.Message, "x");
                     // Save anything that succeeded
                     await dbContext.SaveChangesAsync(stoppingToken);

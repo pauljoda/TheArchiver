@@ -32,6 +32,7 @@
       <ProjectReference Include="..\TheArchiver.Data\TheArchiver.Data.csproj" />
       <ProjectReference Include="..\TheArchiver.DownloadWorker\TheArchiver.DownloadWorker.csproj" />
       <ProjectReference Include="..\TheArchiver.MigrationService\TheArchiver.MigrationService.csproj" />
+      <ProjectReference Include="..\TheArchiver.Monitor\TheArchiver.Monitor.csproj" />
       <ProjectReference Include="..\TheArchiver.ServiceDefaults\TheArchiver.ServiceDefaults.csproj" />
     </ItemGroup>
 

@@ -15,4 +15,8 @@ builder.AddSqlServerDbContext<CacheDbContext>("download-cache");
 DownloadHandlerRegistry.Init(Environment.GetEnvironmentVariable("PluginsLocation") ?? "./Plugins");
 
 var host = builder.Build();
+
+// Initialize ConsoleOutputService with service provider
+ConsoleOutputService.Initialize(host.Services);
+
 host.Run();

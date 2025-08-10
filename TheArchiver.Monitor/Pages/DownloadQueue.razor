@@ -1,0 +1,227 @@
+@page "/download-queue"
+@using Microsoft.AspNetCore.SignalR.Client
+@inject QueueMonitorService MonitorService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+<PageTitle>Download Queue - TheArchiver Monitor</PageTitle>
+
+<!-- Main Content -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center">
+                    <span class="mr-3 text-4xl">📥</span>
+                    Download Queue
+                </h1>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                    <span class="mr-1">📊</span>
+                    @queueItems.Count items
+                </span>
+                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                    <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
+                    Live Updates
+                </div>
+            </div>
+        </div>
+    </div>
+
+        <!-- Control Panel -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <button class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200" @onclick="RefreshQueue">
+                        <span class="mr-2">🔄</span>
+                        Refresh Queue
+                    </button>
+                    <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
+                        Live Updates Enabled
+                    </div>
+                </div>
+                
+                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                    Last updated: @DateTime.Now.ToString("HH:mm:ss")
+                </div>
+            </div>
+        </div>
+
+        <!-- Queue Content -->
+        @if (isLoading)
+        {
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12">
+                <div class="flex items-center justify-center">
+                    <div class="flex flex-col items-center">
+                        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                        <p class="mt-4 text-gray-600 dark:text-gray-400">Loading queue items...</p>
+                    </div>
+                </div>
+            </div>
+        }
+        else if (queueItems.Count == 0)
+        {
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-12">
+                <div class="text-center">
+                    <div class="text-6xl mb-4">📭</div>
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Queue is Empty</h3>
+                    <p class="text-gray-500 dark:text-gray-400 mb-6">No items are currently in the download queue.</p>
+                    <div class="flex justify-center space-x-4">
+                        <button class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors duration-200" @onclick="RefreshQueue">
+                            <span class="mr-2">🔄</span>
+                            Refresh
+                        </button>
+                        <a href="/" class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                            <span class="mr-2">📊</span>
+                            Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">Queue Items</h3>
+                        <span class="text-sm text-gray-500 dark:text-gray-400">@queueItems.Count total items</span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    ID
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    URL
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th scope="col" class="relative px-6 py-3">
+                                    <span class="sr-only">Actions</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            @foreach (var item in queueItems)
+                            {
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <div class="flex items-center">
+                                            <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-3">
+                                                <span class="text-sm font-medium text-blue-600 dark:text-blue-400">#</span>
+                                            </div>
+                                            <span class="text-sm font-medium text-gray-900 dark:text-gray-100">@item.Id</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center">
+                                            <div class="flex-shrink-0 h-8 w-8 mr-3">
+                                                <div class="h-8 w-8 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                                                    <span class="text-sm">🔗</span>
+                                                </div>
+                                            </div>
+                                            <div class="max-w-xs lg:max-w-md xl:max-w-lg">
+                                                <p class="text-sm text-gray-900 dark:text-gray-100 break-all">@item.Url</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300">
+                                            <div class="w-1.5 h-1.5 bg-yellow-400 rounded-full mr-1.5 animate-pulse"></div>
+                                            Queued
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                        <button class="inline-flex items-center px-3 py-1.5 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200" 
+                                                @onclick="() => RemoveItem(item.Id)" 
+                                                disabled="@isRemoving">
+                                            <span class="mr-1">🗑️</span>
+                                            Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        }
+
+        <!-- Back Button -->
+        <div class="mt-6 mb-8">
+            <a href="/" class="inline-flex items-center px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors duration-200">
+                <span class="mr-2">←</span>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+@code {
+    private List<DownloadQueueItem> queueItems = new();
+    private bool isLoading = true;
+    private bool isRemoving = false;
+    private HubConnection? hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadQueueItems();
+        await SetupSignalRConnection();
+    }
+
+    private async Task LoadQueueItems()
+    {
+        isLoading = true;
+        queueItems = await MonitorService.GetQueueItemsAsync();
+        isLoading = false;
+    }
+
+    private async Task SetupSignalRConnection()
+    {
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/monitorhub"))
+            .Build();
+
+        hubConnection.On("QueueUpdated", async () =>
+        {
+            await LoadQueueItems();
+            await InvokeAsync(StateHasChanged);
+        });
+
+        await hubConnection.StartAsync();
+    }
+
+    private async Task RefreshQueue()
+    {
+        await LoadQueueItems();
+    }
+
+    private async Task RemoveItem(int id)
+    {
+        isRemoving = true;
+        var result = await MonitorService.RemoveQueueItemAsync(id);
+        if (result)
+        {
+            await LoadQueueItems();
+        }
+        isRemoving = false;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+
+}

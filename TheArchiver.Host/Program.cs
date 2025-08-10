@@ -18,6 +18,12 @@ var api = builder.AddProject<Projects.TheArchiver_API>("api")
     .WithReference(sql)
     .WaitFor(sql);
 
+// Monitoring Web App
+var monitor = builder.AddProject<Projects.TheArchiver_Monitor>("monitor")
+    .WithReference(sql)
+    .WaitFor(migrations)
+    .WithExternalHttpEndpoints();
+
 // Background Task
 var backgroundTask = builder.AddProject<Projects.TheArchiver_DownloadWorker>("background-download")
     .WithEnvironment("MaxConcurrentThreads", builder.Configuration["MaxConcurrentThreads"])
@@ -25,12 +31,13 @@ var backgroundTask = builder.AddProject<Projects.TheArchiver_DownloadWorker>("ba
     .WithEnvironment("PluginsLocation", builder.Configuration["PluginsLocation"])
     .WithEnvironment("NotificationUrl", builder.Configuration["NotificationUrl"])
     .WithReference(sql)
+    .WithReference(monitor)
     .WaitFor(migrations);
 
 // FFMPEG
 var ffmpeg =
     builder.AddDockerfile("ffmpeg", "../ffmpeg", "./Dockerfile")
-        .WithBindMount("/Volumes/NetworkShare/YouTube", "/scan")
+        .WithBindMount(builder.Configuration["ShareLocation"], "/scan")
         .WithEnvironment("ScanLocation", builder.Configuration["ScanLocation"]);
 
 builder.Build().Run();
