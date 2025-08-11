@@ -1,27 +1,37 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Options;
 using TheArchiver.DownloadWorker.Models;
 
 namespace DownloadPluginAPI.Helpers;
 
-public static class KavitaHelper {
-    
+public class KavitaHelper
+{
+    private readonly KavitaConfiguration _config;
+
+    public KavitaHelper(IOptions<KavitaConfiguration> config)
+    {
+        _config = config.Value;
+    }
+
     /// <summary>
     /// Sends a POST request to the Kavita TheArchiver.API to authenticate the plugin and retrieve a token.
     /// </summary>
     /// <returns>A string containing the authentication token if the request is successful, otherwise "Error".</returns>
-    public static async Task<string> GetToken() {
+    public async Task<string> GetToken()
+    {
         // Define the URL and TheArchiver.API parameters
-        var url = "http://10.1.20.3:5000/api/Plugin/authenticate";
-        var apiKey = "1ae5d06d-fbdc-4992-b805-5147419292f2";
-        var pluginName = "Downloader";
+        var url = $"{_config.BaseUrl}/api/Plugin/authenticate";
+        var apiKey = _config.ApiKey;
+        var pluginName = _config.PluginName;
 
         // Build the full URL with query parameters
         var fullUrl = $"{url}?apiKey={apiKey}&pluginName={pluginName}";
 
         // Create the HttpClient
-        using (var client = new HttpClient()) {
+        using (var client = new HttpClient())
+        {
             // Set headers
             client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("text/plain"));
@@ -29,7 +39,8 @@ public static class KavitaHelper {
             // Since the body is empty, we send a blank StringContent
             var content = new StringContent("", Encoding.UTF8, "application/x-www-form-urlencoded");
 
-            try {
+            try
+            {
                 // Make the POST request
                 var response = await client.PostAsync(fullUrl, content);
 
@@ -43,7 +54,8 @@ public static class KavitaHelper {
                 var jsonResponse = JsonSerializer.Deserialize<KavitaAuthResponse>(responseBody);
                 return jsonResponse != null ? jsonResponse.Token : "Error";
             }
-            catch (HttpRequestException ex) {
+            catch (HttpRequestException ex)
+            {
                 Console.WriteLine($"Request error: {ex.Message}");
                 return "Error";
             }
@@ -55,11 +67,13 @@ public static class KavitaHelper {
     /// </summary>
     /// <param name="token">The authentication token required for authorization with the Kavita TheArchiver.API.</param>
     /// <returns>A string indicating "Success" if the library scan is initiated successfully, otherwise an error message describing the issue.</returns>
-    public static async Task<string> ScanLibrary(string token) {
-        try {
+    public async Task<string> ScanLibrary(string token)
+    {
+        try
+        {
             // Tell Kavita to Scan
             // Define the URL and token
-            string kavita = "http://10.1.20.3:5000/api/Library/scan?libraryId=5&force=false";
+            string kavita = $"{_config.BaseUrl}/api/Library/scan?libraryId={_config.LibraryId}&force={_config.ForceLibraryScan.ToString().ToLower()}";
 
             // Create the HttpClient instance
             using HttpClient client = new HttpClient();
@@ -73,7 +87,8 @@ public static class KavitaHelper {
             // Create the content to send with the request (if needed)
             var content = new StringContent("", System.Text.Encoding.UTF8, "application/x-www-form-urlencoded");
 
-            try {
+            try
+            {
                 // Send the POST request
                 HttpResponseMessage response = await client.PostAsync(kavita, content);
 
@@ -83,17 +98,19 @@ public static class KavitaHelper {
                 // Read the response content (if needed)
                 string responseBody = await response.Content.ReadAsStringAsync();
             }
-            catch (HttpRequestException ex) {
+            catch (HttpRequestException ex)
+            {
                 Console.WriteLine($"Request error: {ex.Message}");
             }
 
             // Wait to allow scan
-            await Task.Delay(15000);
+            await Task.Delay(_config.ScanDelayMilliseconds);
 
             // Return the content as a response
             return "Success";
         }
-        catch (Exception ex) {
+        catch (Exception ex)
+        {
             // Handle exceptions
             return $"An error occurred: {ex.Message}";
         }
