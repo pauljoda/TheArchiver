@@ -119,6 +119,15 @@
             <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-800">
                 <h3 class="text-base sm:text-lg font-semibold">Live Logs</h3>
                 <div class="flex items-center gap-3">
+                    <button id="pauseButton" onclick="togglePause()" class="inline-flex items-center gap-2 rounded-md bg-yellow-600 px-3 py-2 text-sm font-medium text-white hover:bg-yellow-700 active:bg-yellow-800">
+                        <svg id="pauseIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 4h4v16H6V4zM14 4h4v16h-4V4z" />
+                        </svg>
+                        <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5 hidden">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.25 5.25v13.5L18.75 12 5.25 5.25z" />
+                        </svg>
+                        <span id="pauseText">Pause</span>
+                    </button>
                     <button onclick="refreshLogs()" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 active:bg-blue-800">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.5 12a7.5 7.5 0 1 1 2.208 5.292M4.5 12H2.25m2.25 0H6.75" />
@@ -138,6 +147,7 @@ Loading logs...
     <script>
         let logInterval;
         let statusInterval;
+        let isPaused = false;
 
         function setStatusState(kind) {
             const indicator = document.getElementById('statusIndicator');
@@ -153,6 +163,32 @@ Loading logs...
                 indicator.className = base + ' bg-red-500 shadow-[0_0_0_3px] shadow-red-500/20';
                 headerText.textContent = 'Error';
                 cardText.textContent = 'Error';
+            }
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            const pauseButton = document.getElementById('pauseButton');
+            const pauseIcon = document.getElementById('pauseIcon');
+            const playIcon = document.getElementById('playIcon');
+            const pauseText = document.getElementById('pauseText');
+            
+            if (isPaused) {
+                // Pause the auto-refresh
+                if (logInterval) clearInterval(logInterval);
+                // Update button appearance
+                pauseButton.className = 'inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 active:bg-green-800';
+                pauseIcon.classList.add('hidden');
+                playIcon.classList.remove('hidden');
+                pauseText.textContent = 'Resume';
+            } else {
+                // Resume the auto-refresh
+                startLogRefresh();
+                // Update button appearance
+                pauseButton.className = 'inline-flex items-center gap-2 rounded-md bg-yellow-600 px-3 py-2 text-sm font-medium text-white hover:bg-yellow-700 active:bg-yellow-800';
+                pauseIcon.classList.remove('hidden');
+                playIcon.classList.add('hidden');
+                pauseText.textContent = 'Pause';
             }
         }
 
@@ -181,25 +217,39 @@ Loading logs...
                 const response = await fetch('/Home/StreamLogs');
                 const logs = await response.text();
                 const el = document.getElementById('logOutput');
+                const wasAtBottom = el.scrollTop >= (el.scrollHeight - el.offsetHeight - 10);
+                
                 el.textContent = logs;
-                el.scrollTop = el.scrollHeight;
+                
+                // Only auto-scroll if user was already at the bottom (unless paused)
+                if (!isPaused && wasAtBottom) {
+                    el.scrollTop = el.scrollHeight;
+                }
             } catch (error) {
                 document.getElementById('logOutput').textContent = 'Error loading logs: ' + error.message;
+            }
+        }
+
+        function startLogRefresh() {
+            if (logInterval) clearInterval(logInterval);
+            if (!isPaused) {
+                logInterval = setInterval(() => {
+                    refreshLogs();
+                }, 500);
             }
         }
 
         function startAutoRefresh() {
             updateStatus();
             refreshLogs();
-            // Logs every 500ms, status every 5s
-            if (logInterval) clearInterval(logInterval);
+            // Status every 5s
             if (statusInterval) clearInterval(statusInterval);
-            logInterval = setInterval(() => {
-                refreshLogs();
-            }, 500);
             statusInterval = setInterval(() => {
                 updateStatus();
             }, 5000);
+            
+            // Start log refresh
+            startLogRefresh();
         }
 
         window.addEventListener('load', startAutoRefresh);
@@ -208,7 +258,27 @@ Loading logs...
                 if (logInterval) clearInterval(logInterval);
                 if (statusInterval) clearInterval(statusInterval);
             } else {
-                startAutoRefresh();
+                // Only restart if not paused
+                updateStatus();
+                if (statusInterval) clearInterval(statusInterval);
+                statusInterval = setInterval(() => {
+                    updateStatus();
+                }, 5000);
+                
+                if (!isPaused) {
+                    startLogRefresh();
+                }
+            }
+        });
+
+        // Add keyboard shortcut for pause/resume (spacebar)
+        document.addEventListener('keydown', function(e) {
+            // Don't trigger when user is typing in input fields
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            if (e.code === 'Space') {
+                e.preventDefault();
+                togglePause();
             }
         });
 
