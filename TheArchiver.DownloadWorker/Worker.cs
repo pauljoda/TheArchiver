@@ -8,7 +8,8 @@ using TheArchiver.DownloadWorker.Helpers;
 namespace TheArchiver.DownloadWorker;
 
 public class Worker(IServiceProvider serviceProvider,
-    IHostApplicationLifetime hostApplicationLifetime) : BackgroundService {
+    IHostApplicationLifetime hostApplicationLifetime,
+    ILogger<Worker> logger) : BackgroundService {
     
     public const string ActivitySourceName = "BackgroundDownload";
     private static readonly ActivitySource SActivitySource = new(ActivitySourceName);
@@ -24,26 +25,26 @@ public class Worker(IServiceProvider serviceProvider,
         if(shareLocation == null)
             throw new Exception("ShareLocation environment variable not set");
 
-        await ConsoleOutputService.SendInformationAsync("Worker", "Background download worker started successfully");
+        logger.LogInformation("Background download worker started successfully");
         
         while (!stoppingToken.IsCancellationRequested) {
             await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken);
-            await ConsoleOutputService.SendDebugAsync("Worker", "Checking for items to download...");
+            logger.LogDebug("Checking for items to download...");
             
             var queueItems = dbContext.DownloadQueueItems.ToList();
             if (queueItems.Count > 0)
             {
-                await ConsoleOutputService.SendInformationAsync("Worker", $"Found {queueItems.Count} items in download queue");
+                logger.LogInformation("Found {Count} items in download queue", queueItems.Count);
             }
             
             foreach (var queueItem in queueItems) {
                 try {
-                    await ConsoleOutputService.SendInformationAsync("Worker", $"Starting download: {queueItem.Url}");
+                    logger.LogInformation("Starting download: {Url}", queueItem.Url);
                     var downloadHandler = DownloadHandlerRegistry.GetDownloadHandlerForUrl(queueItem.Url);
 
                     if (downloadHandler == null)
                     {
-                        await ConsoleOutputService.SendWarningAsync("Worker", $"No download handler found for URL: {queueItem.Url}");
+                        logger.LogWarning("No download handler found for URL: {Url}", queueItem.Url);
                         var downloadResult = new IDownloadHandler.DownloadResult(false, $"No handler found for {queueItem.Url}");
                         
                         await NotificationHelper.SendNotification(
@@ -59,16 +60,16 @@ public class Worker(IServiceProvider serviceProvider,
                         continue;
                     }
 
-                    await ConsoleOutputService.SendDebugAsync("Worker", $"Using download handler: {downloadHandler.GetType().Name}");
+                    logger.LogDebug("Using download handler: {Handler}", downloadHandler.GetType().Name);
                     var saveResults = await downloadHandler.Download(queueItem.Url, shareLocation, maxThreads);
                     
                     if (saveResults.Success)
                     {
-                        await ConsoleOutputService.SendInformationAsync("Worker", $"Download completed successfully: {saveResults.Message}");
+                        logger.LogInformation("Download completed successfully: {Message}", saveResults.Message);
                     }
                     else
                     {
-                        await ConsoleOutputService.SendErrorAsync("Worker", $"Download failed: {saveResults.Message}");
+                        logger.LogError("Download failed: {Message}", saveResults.Message);
                     }
 
                     await NotificationHelper.SendNotification(
@@ -84,8 +85,7 @@ public class Worker(IServiceProvider serviceProvider,
                     dbContext.DownloadQueueItems.Remove(queueItem);
                 }
                 catch (Exception e) {
-                    await ConsoleOutputService.SendErrorAsync("Worker", $"Exception during download: {e.Message}");
-                    await ConsoleOutputService.SendDebugAsync("Worker", $"Stack trace: {e.StackTrace}");
+                    logger.LogError(e, "Exception during download: {Message}", e.Message);
                     
                     await NotificationHelper.SendNotification("Error Downloading", e.Message, "x");
                     // Save anything that succeeded

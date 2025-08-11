@@ -16,7 +16,6 @@ DownloadHandlerRegistry.Init(Environment.GetEnvironmentVariable("PluginsLocation
 
 var host = builder.Build();
 
-// Initialize ConsoleOutputService with service provider
-ConsoleOutputService.Initialize(host.Services);
+// Removed legacy ConsoleOutputService initialization (worker logs are scraped from container logs)
 
 host.Run();

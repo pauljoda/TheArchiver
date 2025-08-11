@@ -75,7 +75,7 @@ public class HomeController : Controller
             {
                 ShowStdout = true,
                 ShowStderr = true,
-                Tail = "100",
+                Tail = "all",
                 Follow = false,
                 Timestamps = false
             };

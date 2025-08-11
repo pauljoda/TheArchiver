@@ -136,7 +136,8 @@ Loading logs...
     </div>
 
     <script>
-        let refreshInterval;
+        let logInterval;
+        let statusInterval;
 
         function setStatusState(kind) {
             const indicator = document.getElementById('statusIndicator');
@@ -190,16 +191,22 @@ Loading logs...
         function startAutoRefresh() {
             updateStatus();
             refreshLogs();
-            refreshInterval = setInterval(() => {
-                updateStatus();
+            // Logs every 500ms, status every 5s
+            if (logInterval) clearInterval(logInterval);
+            if (statusInterval) clearInterval(statusInterval);
+            logInterval = setInterval(() => {
                 refreshLogs();
+            }, 500);
+            statusInterval = setInterval(() => {
+                updateStatus();
             }, 5000);
         }
 
         window.addEventListener('load', startAutoRefresh);
         document.addEventListener('visibilitychange', function () {
             if (document.hidden) {
-                clearInterval(refreshInterval);
+                if (logInterval) clearInterval(logInterval);
+                if (statusInterval) clearInterval(statusInterval);
             } else {
                 startAutoRefresh();
             }
