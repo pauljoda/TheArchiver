@@ -60,7 +60,17 @@
         <a class="dismiss">🗙</a>
     </div>
 
-    <script src="_framework/blazor.server.js"></script>
+    <script src="_framework/blazor.server.js" autostart="false"></script>
+    <script>
+        Blazor.start({
+            configureSignalR: function (builder) {
+                let c = builder.withUrl('/_blazor').build();
+                c.serverTimeoutInMilliseconds = 60000;
+                c.keepAliveIntervalInMilliseconds = 30000;
+                return c;
+            }
+        });
+    </script>
     <script src="_content/Microsoft.AspNetCore.SignalR.Client/signalr.min.js"></script>
     <script src="js/console-output.js"></script>
 </body>

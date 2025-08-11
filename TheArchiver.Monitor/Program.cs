@@ -36,9 +36,18 @@ if (!app.Environment.IsDevelopment())
 app.UseStaticFiles();
 app.UseRouting();
 
-app.MapBlazorHub();
-app.MapHub<MonitorHub>("/monitorhub");
-app.MapHub<ConsoleHub>("/consolehub");
+app.MapBlazorHub(options =>
+{
+    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
+});
+app.MapHub<MonitorHub>("/monitorhub", options =>
+{
+    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
+});
+app.MapHub<ConsoleHub>("/consolehub", options =>
+{
+    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
+});
 app.MapControllers();
 app.MapFallbackToPage("/_Host");
 
