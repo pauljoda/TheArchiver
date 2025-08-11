@@ -1,5 +1,5 @@
 {
-  "$schema": "https://json.schemastore.org/aspire-9.0.json",
+  "$schema": "https://json.schemastore.org/aspire-8.0.json",
   "resources": {
     "sql-password": {
       "type": "parameter.v0",
@@ -75,6 +75,32 @@
         }
       }
     },
+    "monitor": {
+      "type": "project.v0",
+      "path": "../TheArchiver.Monitor/TheArchiver.Monitor.csproj",
+      "env": {
+        "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES": "true",
+        "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES": "true",
+        "OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY": "in_memory",
+        "ASPNETCORE_FORWARDEDHEADERS_ENABLED": "true",
+        "HTTP_PORTS": "{monitor.bindings.http.targetPort}",
+        "ConnectionStrings__download-cache": "{download-cache.connectionString}"
+      },
+      "bindings": {
+        "http": {
+          "scheme": "http",
+          "protocol": "tcp",
+          "transport": "http",
+          "external": true
+        },
+        "https": {
+          "scheme": "https",
+          "protocol": "tcp",
+          "transport": "http",
+          "external": true
+        }
+      }
+    },
     "background-download": {
       "type": "project.v0",
       "path": "../TheArchiver.DownloadWorker/TheArchiver.DownloadWorker.csproj",
@@ -83,10 +109,29 @@
         "OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES": "true",
         "OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY": "in_memory",
         "MaxConcurrentThreads": "10",
-        "ShareLocation": "/Volumes/NetworkShare/",
+        "ShareLocation": "/Users/pauldavis/test",
         "PluginsLocation": "./Plugins",
         "NotificationUrl": "https://notify.pauljoda.com/local",
-        "ConnectionStrings__download-cache": "{download-cache.connectionString}"
+        "ConnectionStrings__download-cache": "{download-cache.connectionString}",
+        "services__monitor__http__0": "{monitor.bindings.http.url}",
+        "services__monitor__https__0": "{monitor.bindings.https.url}"
+      }
+    },
+    "ffmpeg": {
+      "type": "container.v1",
+      "build": {
+        "context": "../ffmpeg",
+        "dockerfile": "../ffmpeg/Dockerfile"
+      },
+      "bindMounts": [
+        {
+          "source": "../../../test",
+          "target": "/scan",
+          "readOnly": false
+        }
+      ],
+      "env": {
+        "ScanLocation": "/scan"
       }
     }
   }
