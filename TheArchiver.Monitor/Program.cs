@@ -1,54 +1,45 @@
 using TheArchiver.Data.Context;
 using TheArchiver.ServiceDefaults;
 using TheArchiver.Monitor.Services;
-using TheArchiver.Monitor.Hubs;
+using Docker.DotNet;
+using Docker.DotNet.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
 
 // Add services to the container.
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
-builder.Services.AddSignalR();
-builder.Services.AddControllers();
+builder.Services.AddControllersWithViews();
+builder.Services.AddHttpClient();
 
 // Add database context
 builder.AddSqlServerDbContext<CacheDbContext>("download-cache");
 
 // Add monitoring services
 builder.Services.AddScoped<QueueMonitorService>();
-builder.Services.AddSingleton<NotificationService>();
-builder.Services.AddSingleton<IConsoleOutputService, ConsoleOutputService>();
 
-// Add configuration
-builder.Services.Configure<MonitorConfiguration>(builder.Configuration.GetSection(MonitorConfiguration.SectionName));
-builder.Services.AddSingleton<IConfigurationService, ConfigurationService>();
+// Add Docker client
+builder.Services.AddSingleton<IDockerClient>(provider =>
+{
+    return new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock"))
+        .CreateClient();
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Error");
+    app.UseExceptionHandler("/Home/Error");
 }
 
 app.UseStaticFiles();
 app.UseRouting();
 
-app.MapBlazorHub(options =>
-{
-    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
-});
-app.MapHub<MonitorHub>("/monitorhub", options =>
-{
-    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
-});
-app.MapHub<ConsoleHub>("/consolehub", options =>
-{
-    options.Transports = Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets;
-});
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+
 app.MapControllers();
-app.MapFallbackToPage("/_Host");
 
 app.Run();

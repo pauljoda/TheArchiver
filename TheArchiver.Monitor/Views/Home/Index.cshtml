@@ -1,0 +1,224 @@
+@model TheArchiver.Monitor.Models.StatusCountsViewModel
+@{
+    ViewData["Title"] = "TheArchiver Monitor";
+}
+
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+
+    <!-- Prevent theme flash: apply dark early if needed -->
+    <script>
+      (function() {
+        try {
+          var ls = localStorage.getItem('theme');
+          var sys = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (ls === 'dark' || (!ls && sys)) document.documentElement.classList.add('dark');
+        } catch(_) {}
+      })();
+    </script>
+
+    <!-- Tailwind CDN with class-based dark mode -->
+    <script>tailwind.config = { darkMode: 'class' };</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Base site styles (optional) -->
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body class="h-full bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <div class="mx-auto max-w-7xl px-4 py-8 md:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-3">
+                <div class="size-10 rounded-lg bg-blue-600 text-white grid place-items-center shadow-lg">
+                    <!-- Archive icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 7.5h16.5M3.75 7.5A2.25 2.25 0 0 1 6 5.25h12A2.25 2.25 0 0 1 20.25 7.5m-16.5 0V18A2.25 2.25 0 0 0 6 20.25h12A2.25 2.25 0 0 0 20.25 18V7.5M9 12h6"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight">TheArchiver Monitor</h1>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Status, activity and logs</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="inline-flex items-center gap-2 rounded-full bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300 px-3 py-1 text-xs font-medium">
+                    <span id="statusIndicator" class="inline-block size-2 rounded-full bg-green-500 shadow-[0_0_0_3px] shadow-green-500/20"></span>
+                    <span id="statusText">Active</span>
+                </span>
+                <!-- Theme toggle -->
+                <button type="button" id="themeToggle" class="inline-flex items-center gap-2 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <svg id="iconSun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5 hidden dark:inline">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v2m0 14v2m7-9h2M3 12H1m15.364 6.364 1.414 1.414M6.222 6.222 4.808 4.808m12.728 0 1.414 1.414M6.222 17.778l-1.414 1.414M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" />
+                    </svg>
+                    <svg id="iconMoon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5 dark:hidden">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />
+                    </svg>
+                    <span class="hidden sm:inline">Theme</span>
+                </button>
+            </div>
+        </div>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="mb-6 rounded-md border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 p-4 text-red-700 dark:text-red-300">
+                <strong class="font-semibold">Error:</strong> @ViewBag.Error
+            </div>
+        }
+
+        <!-- Stat cards -->
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Queue Items</p>
+                        <p id="queueCount" class="mt-2 text-3xl font-semibold">@(Model?.QueueCount ?? 0)</p>
+                    </div>
+                    <div class="rounded-lg bg-blue-100 dark:bg-blue-900/40 p-3 text-blue-600 dark:text-blue-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12M3.75 6.75h.007v.007H3.75V6.75zm0 5.25h.007v.007H3.75V12zm0 5.25h.007v.007H3.75V17.25z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Failed Downloads</p>
+                        <p id="failedCount" class="mt-2 text-3xl font-semibold">@(Model?.FailedCount ?? 0)</p>
+                    </div>
+                    <div class="rounded-lg bg-red-100 dark:bg-red-900/40 p-3 text-red-600 dark:text-red-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.18 3.86a2 2 0 0 0-3.42 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Status</p>
+                <div class="mt-2 flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <span class="inline-block size-2 rounded-full bg-green-500"></span>
+                    <span id="statusTextCard">Active</span>
+                </div>
+            </div>
+
+            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                <p class="text-sm text-gray-500 dark:text-gray-400">Last Updated</p>
+                <p id="lastUpdated" class="mt-2 text-sm text-gray-700 dark:text-gray-300">@DateTime.Now.ToString("HH:mm:ss")</p>
+            </div>
+        </div>
+
+        <!-- Logs panel -->
+        <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm">
+            <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-800">
+                <h3 class="text-base sm:text-lg font-semibold">Live Logs</h3>
+                <div class="flex items-center gap-3">
+                    <button onclick="refreshLogs()" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 active:bg-blue-800">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.5 12a7.5 7.5 0 1 1 2.208 5.292M4.5 12H2.25m2.25 0H6.75" />
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 sm:p-6">
+                <pre id="logOutput" class="h-96 w-full overflow-y-auto rounded-lg bg-black text-green-400 p-4 text-xs sm:text-sm font-mono">
+Loading logs...
+                </pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let refreshInterval;
+
+        function setStatusState(kind) {
+            const indicator = document.getElementById('statusIndicator');
+            const headerText = document.getElementById('statusText');
+            const cardText = document.getElementById('statusTextCard');
+            if (!indicator || !headerText || !cardText) return;
+            const base = 'inline-block size-2 rounded-full mr-0';
+            if (kind === 'ok') {
+                indicator.className = base + ' bg-green-500 shadow-[0_0_0_3px] shadow-green-500/20';
+                headerText.textContent = 'Active';
+                cardText.textContent = 'Active';
+            } else {
+                indicator.className = base + ' bg-red-500 shadow-[0_0_0_3px] shadow-red-500/20';
+                headerText.textContent = 'Error';
+                cardText.textContent = 'Error';
+            }
+        }
+
+        async function updateStatus() {
+            try {
+                const response = await fetch('/Home/GetQueueStatus');
+                const data = await response.json();
+
+                if (data.error) {
+                    setStatusState('error');
+                    return;
+                }
+
+                document.getElementById('queueCount').textContent = data.queueCount ?? 0;
+                document.getElementById('failedCount').textContent = data.failedCount ?? 0;
+                document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
+                setStatusState('ok');
+            } catch (error) {
+                console.error('Error updating status:', error);
+                setStatusState('error');
+            }
+        }
+
+        async function refreshLogs() {
+            try {
+                const response = await fetch('/Home/StreamLogs');
+                const logs = await response.text();
+                const el = document.getElementById('logOutput');
+                el.textContent = logs;
+                el.scrollTop = el.scrollHeight;
+            } catch (error) {
+                document.getElementById('logOutput').textContent = 'Error loading logs: ' + error.message;
+            }
+        }
+
+        function startAutoRefresh() {
+            updateStatus();
+            refreshLogs();
+            refreshInterval = setInterval(() => {
+                updateStatus();
+                refreshLogs();
+            }, 5000);
+        }
+
+        window.addEventListener('load', startAutoRefresh);
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                clearInterval(refreshInterval);
+            } else {
+                startAutoRefresh();
+            }
+        });
+
+        // Theme toggle behavior
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn = document.getElementById('themeToggle');
+            if (!btn) return;
+            btn.addEventListener('click', function () {
+                if (window.darkModeManager) {
+                    window.darkModeManager.toggle();
+                } else {
+                    const isDark = document.documentElement.classList.toggle('dark');
+                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                }
+            });
+        });
+    </script>
+
+    <script src="~/js/dark-mode.js"></script>
+</body>
+</html>

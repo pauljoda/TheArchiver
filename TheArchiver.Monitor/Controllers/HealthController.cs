@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using TheArchiver.Monitor.Hubs;
-using TheArchiver.Monitor.Services;
 using System.Diagnostics;
+using Microsoft.EntityFrameworkCore;
+using TheArchiver.Data.Context;
 
 namespace TheArchiver.Monitor.Controllers;
 
@@ -9,13 +9,13 @@ namespace TheArchiver.Monitor.Controllers;
 [Route("api/[controller]")]
 public class HealthController : ControllerBase
 {
-    private readonly IConsoleOutputService _consoleOutputService;
     private readonly ILogger<HealthController> _logger;
+    private readonly CacheDbContext _dbContext;
 
-    public HealthController(IConsoleOutputService consoleOutputService, ILogger<HealthController> logger)
+    public HealthController(ILogger<HealthController> logger, CacheDbContext dbContext)
     {
-        _consoleOutputService = consoleOutputService;
         _logger = logger;
+        _dbContext = dbContext;
     }
 
     [HttpGet]
@@ -23,33 +23,29 @@ public class HealthController : ControllerBase
     {
         try
         {
-            var consoleHealth = await _consoleOutputService.IsHealthyAsync();
-            var connectedClients = ConsoleHub.GetConnectedClientsCount();
-            var connectedClientsInfo = ConsoleHub.GetConnectedClients();
+            bool databaseHealthy;
+            try
+            {
+                databaseHealthy = await _dbContext.Database.CanConnectAsync();
+            }
+            catch (Exception)
+            {
+                databaseHealthy = false;
+            }
 
             var healthStatus = new
             {
-                Status = "Healthy",
+                Status = databaseHealthy ? "Healthy" : "Degraded",
                 Timestamp = DateTime.UtcNow,
                 Services = new
                 {
-                    ConsoleOutput = consoleHealth ? "Healthy" : "Unhealthy",
-                    SignalR = "Healthy",
-                    Database = "Healthy" // TODO: Add actual database health check
+                    Database = databaseHealthy ? "Healthy" : "Unhealthy"
                 },
                 Metrics = new
                 {
-                    ConnectedClients = connectedClients,
                     Uptime = GetUptime(),
                     MemoryUsage = GetMemoryUsage()
-                },
-                ConnectedClients = connectedClientsInfo.Select(c => new
-                {
-                    ConnectionId = c.ConnectionId,
-                    ConnectedAt = c.ConnectedAt,
-                    Duration = DateTime.UtcNow - c.ConnectedAt,
-                    IpAddress = c.IpAddress
-                })
+                }
             };
 
             return Ok(healthStatus);
@@ -63,61 +59,6 @@ public class HealthController : ControllerBase
                 Timestamp = DateTime.UtcNow,
                 Error = ex.Message
             });
-        }
-    }
-
-    [HttpGet("console")]
-    public async Task<IActionResult> GetConsoleHealth()
-    {
-        try
-        {
-            var isHealthy = await _consoleOutputService.IsHealthyAsync();
-            var connectedClients = ConsoleHub.GetConnectedClientsCount();
-
-            return Ok(new
-            {
-                IsHealthy = isHealthy,
-                ConnectedClients = connectedClients,
-                Timestamp = DateTime.UtcNow
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Console health check failed");
-            return StatusCode(500, new
-            {
-                IsHealthy = false,
-                Error = ex.Message,
-                Timestamp = DateTime.UtcNow
-            });
-        }
-    }
-
-    [HttpGet("clients")]
-    public IActionResult GetConnectedClients()
-    {
-        try
-        {
-            var clients = ConsoleHub.GetConnectedClients();
-            
-            return Ok(new
-            {
-                TotalClients = clients.Count(),
-                Clients = clients.Select(c => new
-                {
-                    ConnectionId = c.ConnectionId,
-                    ConnectedAt = c.ConnectedAt,
-                    Duration = DateTime.UtcNow - c.ConnectedAt,
-                    IpAddress = c.IpAddress,
-                    UserAgent = c.UserAgent
-                }),
-                Timestamp = DateTime.UtcNow
-            });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Failed to get connected clients");
-            return StatusCode(500, new { Error = ex.Message });
         }
     }
 
