@@ -43,6 +43,10 @@ jobs:
       - name: Publish Download Worker Container
         run: |
           dotnet publish "./TheArchiver.DownloadWorker/TheArchiver.DownloadWorker.csproj" -t:PublishContainer -r "linux-x64" -p:ContainerRegistry="ghcr.io" -p:ContainerRepository="pauljoda/the-archiver-downloadworker" -p:ContainerImageTag="latest"
+     
+      - name: Publish Monitor Container
+        run: |
+          dotnet publish "./TheArchiver.Monitor/TheArchiver.Monitor.csproj" -t:PublishContainer -r "linux-x64" -p:ContainerRegistry="ghcr.io" -p:ContainerRepository="pauljoda/the-archiver-monitor" -p:ContainerImageTag="latest"
 
       - name: Build ffmpeg docker
         working-directory: "./ffmpeg"
