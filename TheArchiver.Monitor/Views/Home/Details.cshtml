@@ -1,0 +1,148 @@
+@model TheArchiver.Monitor.Models.QueueAndFailedViewModel
+@{
+    ViewData["Title"] = "Queue & Failed Details";
+}
+
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"]</title>
+
+    <script>
+      (function(){
+        try{var ls=localStorage.getItem('theme');var sys=window.matchMedia('(prefers-color-scheme: dark)').matches; if(ls==='dark'||(!ls&&sys))document.documentElement.classList.add('dark');}catch(_){}}
+      )();
+    </script>
+    <script>tailwind.config={darkMode:'class'};</script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body class="h-full bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <div class="mx-auto max-w-7xl px-4 py-8 md:px-6 lg:px-8">
+        <div class="flex items-center justify-between mb-6">
+            <div>
+                <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Queue & Failed Details</h1>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Review queued items and failed downloads</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="/Home/Index" class="inline-flex items-center rounded-md border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-800">Dashboard</a>
+                <button id="themeToggle" type="button" class="inline-flex items-center gap-2 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+                    <svg id="iconSun" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5 hidden dark:inline">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v2m0 14v2m7-9h2M3 12H1m15.364 6.364 1.414 1.414M6.222 6.222 4.808 4.808m12.728 0 1.414 1.414M6.222 17.778l-1.414 1.414M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0z" />
+                    </svg>
+                    <svg id="iconMoon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5 dark:hidden">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />
+                    </svg>
+                    <span class="hidden sm:inline">Theme</span>
+                </button>
+            </div>
+        </div>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="mb-6 rounded-md border border-red-200 dark:border-red-900/50 bg-red-50 dark:bg-red-900/20 p-4 text-red-700 dark:text-red-300">
+                <strong class="font-semibold">Error:</strong> @ViewBag.Error
+            </div>
+        }
+
+        <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm">
+            <div class="border-b border-gray-200 dark:border-gray-800">
+                <nav class="-mb-px flex gap-6 px-4 sm:px-6" aria-label="Tabs">
+                    <button class="tab-btn border-b-2 border-blue-600 px-1 py-4 text-sm font-medium text-blue-600" data-tab="queue">Queue Items (@Model.QueueItems.Count)</button>
+                    <button class="tab-btn border-b-2 border-transparent px-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" data-tab="failed">Failed Downloads (@Model.FailedItems.Count)</button>
+                </nav>
+            </div>
+            <div class="p-4 sm:p-6">
+                <div id="tab-queue" class="tab-panel">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-900/30">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Id</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Url</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+                            @foreach (var item in Model.QueueItems)
+                            {
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40">
+                                    <td class="px-4 py-3 text-sm">@item.Id</td>
+                                    <td class="px-4 py-3 text-sm break-all">@item.Url</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="tab-failed" class="tab-panel hidden">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-900/30">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Id</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Url</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Error</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+                            @foreach (var item in Model.FailedItems)
+                            {
+                                <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40">
+                                    <td class="px-4 py-3 text-sm">@item.Id</td>
+                                    <td class="px-4 py-3 text-sm break-all">@item.Url</td>
+                                    <td class="px-4 py-3 text-sm">@item.ErrorMessage</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tabs
+        document.addEventListener('DOMContentLoaded', function () {
+            const buttons = Array.from(document.querySelectorAll('.tab-btn'));
+            const panels = {
+                queue: document.getElementById('tab-queue'),
+                failed: document.getElementById('tab-failed')
+            };
+
+            function activate(name){
+                buttons.forEach(b=>{
+                    const active = b.dataset.tab===name;
+                    b.className = `tab-btn px-1 py-4 text-sm font-medium border-b-2 ${active? 'border-blue-600 text-blue-600':'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'}`;
+                });
+                Object.entries(panels).forEach(([key,el])=>{
+                    if(!el) return; el.classList.toggle('hidden', key!==name);
+                });
+            }
+
+            buttons.forEach(b=>b.addEventListener('click', ()=>activate(b.dataset.tab)));
+            activate('queue');
+        });
+
+        // Theme toggle
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn = document.getElementById('themeToggle');
+            if (!btn) return;
+            btn.addEventListener('click', function () {
+                if (window.darkModeManager) {
+                    window.darkModeManager.toggle();
+                } else {
+                    const isDark = document.documentElement.classList.toggle('dark');
+                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                }
+            });
+        });
+    </script>
+
+    <script src="/js/dark-mode.js"></script>
+</body>
+</html>
+
+

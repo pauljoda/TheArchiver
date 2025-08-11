@@ -19,10 +19,21 @@ builder.AddSqlServerDbContext<CacheDbContext>("download-cache");
 builder.Services.AddScoped<QueueMonitorService>();
 
 // Add Docker client
-builder.Services.AddSingleton<IDockerClient>(provider =>
+builder.Services.AddSingleton<IDockerClient>(_ =>
 {
-    return new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock"))
-        .CreateClient();
+    var dockerHost = Environment.GetEnvironmentVariable("DOCKER_HOST");
+    if (!string.IsNullOrWhiteSpace(dockerHost))
+    {
+        return new DockerClientConfiguration(new Uri(dockerHost)).CreateClient();
+    }
+
+    if (OperatingSystem.IsWindows())
+    {
+        return new DockerClientConfiguration(new Uri("npipe://./pipe/docker_engine")).CreateClient();
+    }
+
+    // Default to local Unix socket (Linux/macOS)
+    return new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient();
 });
 
 var app = builder.Build();
