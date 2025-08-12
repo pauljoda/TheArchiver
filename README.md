@@ -1,4 +1,6 @@
 # The Archiver
+![Web Portal](/Screenshots/Portal.png "Web Portal")
+
 ## Description
 The Archiver is a project that formed from my free time playing with .net aspire. 
 
@@ -14,6 +16,7 @@ The app consists of:
 - Host: The aspire host
 - MigrationService: Since aspire creates new containers and is meant to scale and move, this ensures that the changes to the db are applied and created each time
 - ServiceDefaults: Standard .net aspire defaults to enable better local dev
+- Monitor: Web front end to view current status
 
 Feel free to clone and run on your own, or do whatever you like with it. I'll likely update this as I need, and have example plugins you can use in other repos
 
@@ -64,7 +67,7 @@ Delete the restart for migrations
     restart: unless-stopped
 ```
 
-Example Complete, be sure to change things like share paths and password in connection string
+Example Complete, be sure to change things like share paths and password in connection string, this uses Traefik, you will need to setup the networks in docker beforehand
 ```yaml
 services:
   # Dashboard
@@ -74,62 +77,135 @@ services:
     environment:
       DOTNET_DASHBOARD_UNSECURED_ALLOW_ANONYMOUS: "true"
     networks:
-      home_network:
-        ipv4_address: 10.10.10.90 # Port 18888
+      - archiver # Port 18888
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.save-dashboard-http.rule=Host(`save-dashboard.DOMAIN.com`)
+      - traefik.http.routers.save-dashboard-http.entrypoints=web
+      - traefik.http.routers.save-dashboard-https.tls=true
+      - traefik.http.routers.save-dashboard-https.tls.certresolver=cloudflare
+      - traefik.http.routers.save-dashboard-https.entrypoints=websecure
+      - traefik.http.routers.save-dashboard-https.rule=Host(`save-dashboard.DOMAIN.com`)
+      - traefik.http.services.save-dashboard.loadbalancer.server.port=18888
+    restart: unless-stopped
+
+  # Cloudflare Solver
+  flaresolverr:
+    container_name: flaresolverr-archiver
+    image: ghcr.io/yoori/flare-bypasser:latest
+    networks:
+      - archiver
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Chicago
+      - LANG=en_US
+      - LOG_LEVEL=debug
     restart: unless-stopped
 
   # SQL
   sql:
     container_name: "archiver-sql"
     image: "mcr.microsoft.com/mssql/server:2022-latest"
+    networks:
+      - archiver # Port 1433
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "PASSWORD"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:18889"
+      MSSQL_SA_PASSWORD: "MyStr0ng!P@ssw0rd"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "sql"
     volumes:
-    - "download-cache-data:/var/opt/mssql"
-    network_mode: service:aspire-dashboard # port 1433
+    - "sql_cache:/var/opt/mssql"
     restart: unless-stopped
 
   # SQL Migrations
   migrations:
     container_name: "archiver-migrations"
     image: "ghcr.io/pauljoda/the-archiver-migrations:latest"
-    network_mode: service:aspire-dashboard 
+    networks:
+      - archiver
     environment:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
-      ConnectionStrings__download-cache: "Server=localhost,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:18889"
+      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=MyStr0ng!P@ssw0rd;TrustServerCertificate=true;Database=download-cache"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "migrations"
 
   # Web API
   api:
     container_name: "archiver-api"
     image: "ghcr.io/pauljoda/the-archiver-api:latest"
+    depends_on:
+      - sql
+      - migrations
+    networks:
+      - archiver
     environment:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       Kestrel__Endpoints__http__Url: "http://*:5255"
-      ConnectionStrings__download-cache: "Server=localhost,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:18889"
+      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=MyStr0ng!P@ssw0rd;TrustServerCertificate=true;Database=download-cache"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "api"
-    network_mode: service:aspire-dashboard # port 5255
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.save-http.rule=Host(`save.DOMAIN.com`)
+      - traefik.http.routers.save-http.entrypoints=web
+      - traefik.http.services.save-save.loadbalancer.server.port=5255
+      - traefik.http.routers.save-https.tls=true
+      - traefik.http.routers.save-https.tls.certresolver=cloudflare
+      - traefik.http.routers.save-https.entrypoints=websecure
+      - traefik.http.routers.save-https.rule=Host(`save.DOMAIN.com`)    
+    restart: unless-stopped
+
+  monitor:
+    container_name: "monitor"
+    image: "ghcr.io/pauljoda/the-archiver-monitor:latest"
+    user: "0:0" # Might not need this, but for my instance I used it
+    networks:
+      - archiver
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock  # Mount Docker socket
+    environment:
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
+      OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+      Kestrel__Endpoints__http__Url: "http://*:5000"
+      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=MyStr0ng!P@ssw0rd;TrustServerCertificate=true;Database=download-cache"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
+      OTEL_SERVICE_NAME: "monitor"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.save-monitor-http.rule=Host(`save-monitor.DOMAIN.com`)
+      - traefik.http.routers.save-monitor-http.entrypoints=web
+      - traefik.http.routers.save-monitor-https.tls=true
+      - traefik.http.routers.save-monitor-https.tls.certresolver=cloudflare
+      - traefik.http.routers.save-monitor-https.entrypoints=websecure
+      - traefik.http.routers.save-monitor-https.rule=Host(`save-monitor.DOMAIN.com`)
+      - traefik.http.services.save-monitor.loadbalancer.server.port=5000
+      - traefik.http.middlewares.save-monitor-redirect.redirectscheme.scheme=https
+      - traefik.http.routers.save-monitor-http.middlewares=save-monitor-redirect
+     # - traefik.http.routers.save-monitor-https.middlewares=authelia@docker # Optional auth middle layer
     restart: unless-stopped
 
   # Background Downloader
   background-download:
     container_name: "archiver-background-download"
     image: "ghcr.io/pauljoda/the-archiver-downloadworker:latest"
-    user: "100:100"
-    network_mode: service:aspire-dashboard
+    user: "1000:1000"
+    depends_on:
+      - sql
+      - migrations
+    networks:
+      - archiver
+      - ntfy
     volumes:
-      - "/path/to/storage:/share"
-      - "/path/to/Plugins:/plugins"
+      - "../../docker-data:/share"
+      - "../../docker-data/TheArchiver/Plugins:/plugins"
     environment:
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
@@ -137,9 +213,10 @@ services:
       MaxConcurrentThreads: "10"
       ShareLocation: "/share"
       PluginsLocation: "/plugins"
-      NotificationUrl: "https://notify.YOURDOMAINEXAMPLE.com/local"
-      ConnectionStrings__download-cache: "Server=localhost,1433;User ID=sa;Password=PASSWORD;TrustServerCertificate=true;Database=download-cache"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:18889"
+      NotificationUrl: "http://ntfy:80/downloads"
+      ConnectionStrings__download-cache: "Server=sql,1433;User ID=sa;Password=MyStr0ng!P@ssw0rd;TrustServerCertificate=true;Database=download-cache"
+      services__monitor__http__0: "http://monitor:5000"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "background-download"
     restart: unless-stopped
 
@@ -148,24 +225,26 @@ services:
     container_name: "archiver-ffmpeg"
     image: "ghcr.io/pauljoda/the-archiver-ffmpeg:latest"
     user: "1000:1000"
-    network_mode: service:aspire-dashboard 
+    networks:
+      - archiver
     volumes:
-      - "/home/path/:/scan"
+      - "../../docker-data/YouTube:/scan"
     environment:
       ScanLocation: "/scan" 
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EXCEPTION_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_EMIT_EVENT_LOG_ATTRIBUTES: "true"
       OTEL_DOTNET_EXPERIMENTAL_OTLP_RETRY: "in_memory"
-      OTEL_EXPORTER_OTLP_ENDPOINT: "http://localhost:18889"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://aspire-dashboard:18889"
       OTEL_SERVICE_NAME: "ffmpeg"
 
-# Voluemes
 volumes:
-  download-cache-data: {}
+ sql_cache:
 
 # Network
 networks:
-  home_network:
+  archiver:
+    external: true
+  ntfy:
     external: true
 
 ```
