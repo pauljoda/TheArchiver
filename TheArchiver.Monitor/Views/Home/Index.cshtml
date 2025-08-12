@@ -1,4 +1,4 @@
-@model TheArchiver.Monitor.Models.StatusCountsViewModel
+@model TheArchiver.Monitor.Models.QueueAndFailedViewModel
 @{
     ViewData["Title"] = "TheArchiver Monitor";
 }
@@ -25,7 +25,7 @@
     <script>tailwind.config = { darkMode: 'class' };</script>
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Base site styles (optional) -->
+    <!-- Base site styles -->
     <link rel="stylesheet" href="~/css/site.css" />
 </head>
 <body class="h-full bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 transition-colors duration-300">
@@ -59,7 +59,6 @@
                     </svg>
                     <span class="hidden sm:inline">Theme</span>
                 </button>
-                <a href="/Home/Details" class="inline-flex items-center rounded-md bg-gray-900 text-white dark:bg-white dark:text-gray-900 px-3 py-2 text-sm font-medium hover:opacity-90">Details</a>
             </div>
         </div>
 
@@ -70,76 +69,268 @@
             </div>
         }
 
-        <!-- Stat cards -->
-        <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-6 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Queue Items</p>
-                        <p id="queueCount" class="mt-2 text-3xl font-semibold">@(Model?.QueueCount ?? 0)</p>
-                    </div>
-                    <div class="rounded-lg bg-blue-100 dark:bg-blue-900/40 p-3 text-blue-600 dark:text-blue-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12M3.75 6.75h.007v.007H3.75V6.75zm0 5.25h.007v.007H3.75V12zm0 5.25h.007v.007H3.75V17.25z" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-6 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Failed Downloads</p>
-                        <p id="failedCount" class="mt-2 text-3xl font-semibold">@(Model?.FailedCount ?? 0)</p>
-                    </div>
-                    <div class="rounded-lg bg-red-100 dark:bg-red-900/40 p-3 text-red-600 dark:text-red-300">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.18 3.86a2 2 0 0 0-3.42 0z" />
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-6 shadow-sm">
-                <p class="text-sm text-gray-500 dark:text-gray-400">Status</p>
-                <div class="mt-2 flex items-center gap-2 text-green-600 dark:text-green-400">
-                    <span class="inline-block size-2 rounded-full bg-green-500"></span>
-                    <span id="statusTextCard">Active</span>
-                </div>
-            </div>
-
-            <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-6 shadow-sm">
-                <p class="text-sm text-gray-500 dark:text-gray-400">Last Updated</p>
-                <p id="lastUpdated" class="mt-2 text-sm text-gray-700 dark:text-gray-300">@DateTime.Now.ToString("HH:mm:ss")</p>
+        <!-- Tab Navigation -->
+        <div class="mb-8">
+            <div class="border-b border-gray-200 dark:border-gray-700">
+                <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                    <button type="button" class="tab-button border-b-2 border-blue-500 py-2 px-1 text-sm font-medium text-blue-600 dark:text-blue-400" data-tab="dashboard">
+                        <div class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 13h8v8H3zM13 3h8v8h-8zM13 13h8v8h-8zM3 3h8v8H3z"/>
+                            </svg>
+                            Dashboard
+                        </div>
+                    </button>
+                    <button type="button" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600" data-tab="queue">
+                        <div class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12M3.75 6.75h.007v.007H3.75V6.75zm0 5.25h.007v.007H3.75V12zm0 5.25h.007v.007H3.75V17.25z" />
+                            </svg>
+                            Queue <span id="queueTabCount" class="ml-1 inline-flex items-center rounded-full bg-blue-100 dark:bg-blue-900/40 px-2 py-0.5 text-xs font-medium text-blue-800 dark:text-blue-200">@(Model?.QueueCount ?? 0)</span>
+                        </div>
+                    </button>
+                    <button type="button" class="tab-button border-b-2 border-transparent py-2 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600" data-tab="failed">
+                        <div class="flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.18 3.86a2 2 0 0 0-3.42 0z" />
+                            </svg>
+                            Failed <span id="failedTabCount" class="ml-1 inline-flex items-center rounded-full bg-red-100 dark:bg-red-900/40 px-2 py-0.5 text-xs font-medium text-red-800 dark:text-red-200">@(Model?.FailedCount ?? 0)</span>
+                        </div>
+                    </button>
+                </nav>
             </div>
         </div>
 
-        <!-- Logs panel -->
-        <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm">
-            <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-800">
-                <h3 class="text-base sm:text-lg font-semibold">Live Logs</h3>
-                <div class="flex items-center gap-3">
-                    <button id="pauseButton" onclick="togglePause()" class="inline-flex items-center gap-2 rounded-md bg-yellow-600 px-3 py-2 text-sm font-medium text-white hover:bg-yellow-700 active:bg-yellow-800">
-                        <svg id="pauseIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 4h4v16H6V4zM14 4h4v16h-4V4z" />
-                        </svg>
-                        <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5 hidden">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.25 5.25v13.5L18.75 12 5.25 5.25z" />
-                        </svg>
-                        <span id="pauseText">Pause</span>
-                    </button>
-                    <button onclick="refreshLogs()" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 active:bg-blue-800">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.5 12a7.5 7.5 0 1 1 2.208 5.292M4.5 12H2.25m2.25 0H6.75" />
-                        </svg>
-                        Refresh
-                    </button>
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Dashboard Tab -->
+            <div id="dashboard-tab" class="tab-panel">
+                <!-- Manual URL insertion form -->
+                <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm mb-8">
+                    <div class="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-800">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Add URL to Queue</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Manually insert a URL to download</p>
+                            </div>
+                            <div class="rounded-lg bg-blue-100 dark:bg-blue-900/40 p-3 text-blue-600 dark:text-blue-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.5v15m7.5-7.5h-15"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <form id="urlForm" class="flex gap-3">
+                            <div class="flex-1">
+                                <input type="url" id="urlInput" name="url" placeholder="https://example.com/video" 
+                                       class="block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2.5 text-sm text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:focus:border-blue-400" 
+                                       required />
+                            </div>
+                            <button type="submit" id="addUrlBtn" 
+                                    class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.5v15m7.5-7.5h-15"/>
+                                </svg>
+                                <span>Add to Queue</span>
+                            </button>
+                        </form>
+                        <div id="urlFormMessage" class="mt-3 hidden">
+                            <div class="rounded-md p-3">
+                                <p class="text-sm font-medium"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stat cards -->
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Queue Items</p>
+                                <p id="queueCount" class="mt-2 text-3xl font-semibold">@(Model?.QueueCount ?? 0)</p>
+                            </div>
+                            <div class="rounded-lg bg-blue-100 dark:bg-blue-900/40 p-3 text-blue-600 dark:text-blue-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.25 6.75h12m-12 5.25h12m-12 5.25h12M3.75 6.75h.007v.007H3.75V6.75zm0 5.25h.007v.007H3.75V12zm0 5.25h.007v.007H3.75V17.25z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Failed Downloads</p>
+                                <p id="failedCount" class="mt-2 text-3xl font-semibold">@(Model?.FailedCount ?? 0)</p>
+                            </div>
+                            <div class="rounded-lg bg-red-100 dark:bg-red-900/40 p-3 text-red-600 dark:text-red-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.18 3.86a2 2 0 0 0-3.42 0z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Status</p>
+                        <div class="mt-2 flex items-center gap-2 text-green-600 dark:text-green-400">
+                            <span class="inline-block size-2 rounded-full bg-green-500"></span>
+                            <span id="statusTextCard">Active</span>
+                        </div>
+                    </div>
+
+                    <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 p-6 shadow-sm">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Last Updated</p>
+                        <p id="lastUpdated" class="mt-2 text-sm text-gray-700 dark:text-gray-300">@DateTime.Now.ToString("HH:mm:ss")</p>
+                    </div>
+                </div>
+
+                <!-- Logs panel -->
+                <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm">
+                    <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-800">
+                        <h3 class="text-base sm:text-lg font-semibold">Live Logs</h3>
+                        <div class="flex items-center gap-3">
+                            <button id="pauseButton" onclick="togglePause()" class="inline-flex items-center gap-2 rounded-md bg-yellow-600 px-3 py-2 text-sm font-medium text-white hover:bg-yellow-700 active:bg-yellow-800">
+                                <svg id="pauseIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 4h4v16H6V4zM14 4h4v16h-4V4z" />
+                                </svg>
+                                <svg id="playIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5 hidden">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5.25 5.25v13.5L18.75 12 5.25 5.25z" />
+                                </svg>
+                                <span id="pauseText">Pause</span>
+                            </button>
+                            <button onclick="refreshLogs()" class="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 active:bg-blue-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.5 12a7.5 7.5 0 1 1 2.208 5.292M4.5 12H2.25m2.25 0H6.75" />
+                                </svg>
+                                Refresh
+                            </button>
+                        </div>
+                    </div>
+                    <div class="p-4 sm:p-6">
+                        <pre id="logOutput" class="h-96 w-full overflow-y-auto rounded-lg bg-black text-green-400 p-4 text-xs sm:text-sm font-mono">
+Loading logs...
+                        </pre>
+                    </div>
                 </div>
             </div>
-            <div class="p-4 sm:p-6">
-                <pre id="logOutput" class="h-96 w-full overflow-y-auto rounded-lg bg-black text-green-400 p-4 text-xs sm:text-sm font-mono">
-Loading logs...
-                </pre>
+
+            <!-- Queue Tab -->
+            <div id="queue-tab" class="tab-panel hidden">
+                <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm">
+                    <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-800">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Queue Items</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">URLs waiting to be downloaded</p>
+                        </div>
+                        @if (Model?.QueueItems?.Any() == true)
+                        {
+                            <button onclick="clearAllQueue()" class="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 active:bg-red-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" />
+                                </svg>
+                                Clear All
+                            </button>
+                        }
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table id="queueTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-900/30">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Id</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Url</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="queueTableBody" class="divide-y divide-gray-200 dark:divide-gray-800">
+                                @if (Model?.QueueItems?.Any() == true)
+                                {
+                                    @foreach (var item in Model.QueueItems)
+                                    {
+                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40" data-id="@item.Id">
+                                            <td class="px-4 py-3 text-sm">@item.Id</td>
+                                            <td class="px-4 py-3 text-sm break-all">@item.Url</td>
+                                            <td class="px-4 py-3 text-sm">
+                                                <button onclick="deleteQueueItem(@item.Id, this)" class="inline-flex items-center gap-1 rounded bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-3">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" />
+                                                    </svg>
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr id="queueEmptyRow">
+                                        <td colspan="3" class="text-center py-8 text-gray-500 dark:text-gray-400">No items in queue</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Failed Tab -->
+            <div id="failed-tab" class="tab-panel hidden">
+                <div class="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800 shadow-sm">
+                    <div class="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-800">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Failed Downloads</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Downloads that encountered errors</p>
+                        </div>
+                        @if (Model?.FailedItems?.Any() == true)
+                        {
+                            <button onclick="clearAllFailed()" class="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 active:bg-red-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" />
+                                </svg>
+                                Clear All
+                            </button>
+                        }
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table id="failedTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead class="bg-gray-50 dark:bg-gray-900/30">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Id</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Url</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Error</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="failedTableBody" class="divide-y divide-gray-200 dark:divide-gray-800">
+                                @if (Model?.FailedItems?.Any() == true)
+                                {
+                                    @foreach (var item in Model.FailedItems)
+                                    {
+                                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40" data-id="@item.Id">
+                                            <td class="px-4 py-3 text-sm">@item.Id</td>
+                                            <td class="px-4 py-3 text-sm break-all">@item.Url</td>
+                                            <td class="px-4 py-3 text-sm">@item.ErrorMessage</td>
+                                            <td class="px-4 py-3 text-sm">
+                                                <button onclick="deleteFailedItem(@item.Id, this)" class="inline-flex items-center gap-1 rounded bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-3">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" />
+                                                    </svg>
+                                                    Delete
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr id="failedEmptyRow">
+                                        <td colspan="4" class="text-center py-8 text-gray-500 dark:text-gray-400">No failed downloads</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -147,7 +338,29 @@ Loading logs...
     <script>
         let logInterval;
         let statusInterval;
+        let dataRefreshInterval;
         let isPaused = false;
+        let currentActiveTab = 'dashboard';
+
+        // Tab management
+        function switchTab(tabName) {
+            currentActiveTab = tabName;
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                const isActive = btn.dataset.tab === tabName;
+                btn.className = `tab-button border-b-2 py-2 px-1 text-sm font-medium ${
+                    isActive 
+                        ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+                }`;
+            });
+            
+            // Update tab panels
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.toggle('hidden', !panel.id.startsWith(tabName + '-'));
+            });
+        }
 
         function setStatusState(kind) {
             const indicator = document.getElementById('statusIndicator');
@@ -174,17 +387,13 @@ Loading logs...
             const pauseText = document.getElementById('pauseText');
             
             if (isPaused) {
-                // Pause the auto-refresh
                 if (logInterval) clearInterval(logInterval);
-                // Update button appearance
                 pauseButton.className = 'inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 active:bg-green-800';
                 pauseIcon.classList.add('hidden');
                 playIcon.classList.remove('hidden');
                 pauseText.textContent = 'Resume';
             } else {
-                // Resume the auto-refresh
                 startLogRefresh();
-                // Update button appearance
                 pauseButton.className = 'inline-flex items-center gap-2 rounded-md bg-yellow-600 px-3 py-2 text-sm font-medium text-white hover:bg-yellow-700 active:bg-yellow-800';
                 pauseIcon.classList.remove('hidden');
                 playIcon.classList.add('hidden');
@@ -204,6 +413,8 @@ Loading logs...
 
                 document.getElementById('queueCount').textContent = data.queueCount ?? 0;
                 document.getElementById('failedCount').textContent = data.failedCount ?? 0;
+                document.getElementById('queueTabCount').textContent = data.queueCount ?? 0;
+                document.getElementById('failedTabCount').textContent = data.failedCount ?? 0;
                 document.getElementById('lastUpdated').textContent = new Date().toLocaleTimeString();
                 setStatusState('ok');
             } catch (error) {
@@ -212,7 +423,104 @@ Loading logs...
             }
         }
 
+        async function updateTableData() {
+            if (currentActiveTab === 'dashboard') return;
+            
+            try {
+                const response = await fetch('/Home/GetQueueData');
+                const data = await response.json();
+
+                if (data.error) {
+                    console.error('Error loading table data:', data.error);
+                    return;
+                }
+
+                // Update queue table
+                if (currentActiveTab === 'queue') {
+                    updateQueueTable(data.queueItems || []);
+                }
+                
+                // Update failed table
+                if (currentActiveTab === 'failed') {
+                    updateFailedTable(data.failedItems || []);
+                }
+            } catch (error) {
+                console.error('Error updating table data:', error);
+            }
+        }
+
+        function updateQueueTable(items) {
+            const tbody = document.getElementById('queueTableBody');
+            const emptyRow = document.getElementById('queueEmptyRow');
+            
+            // Clear existing rows except empty row
+            const rows = tbody.querySelectorAll('tr:not(#queueEmptyRow)');
+            rows.forEach(row => row.remove());
+            
+            if (items.length === 0) {
+                if (emptyRow) emptyRow.style.display = '';
+            } else {
+                if (emptyRow) emptyRow.style.display = 'none';
+                
+                items.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 dark:hover:bg-gray-900/40';
+                    row.dataset.id = item.id;
+                    row.innerHTML = `
+                        <td class="px-4 py-3 text-sm">${item.id}</td>
+                        <td class="px-4 py-3 text-sm break-all">${item.url}</td>
+                        <td class="px-4 py-3 text-sm">
+                            <button onclick="deleteQueueItem(${item.id}, this)" class="inline-flex items-center gap-1 rounded bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" />
+                                </svg>
+                                Delete
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        function updateFailedTable(items) {
+            const tbody = document.getElementById('failedTableBody');
+            const emptyRow = document.getElementById('failedEmptyRow');
+            
+            // Clear existing rows except empty row
+            const rows = tbody.querySelectorAll('tr:not(#failedEmptyRow)');
+            rows.forEach(row => row.remove());
+            
+            if (items.length === 0) {
+                if (emptyRow) emptyRow.style.display = '';
+            } else {
+                if (emptyRow) emptyRow.style.display = 'none';
+                
+                items.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 dark:hover:bg-gray-900/40';
+                    row.dataset.id = item.id;
+                    row.innerHTML = `
+                        <td class="px-4 py-3 text-sm">${item.id}</td>
+                        <td class="px-4 py-3 text-sm break-all">${item.url}</td>
+                        <td class="px-4 py-3 text-sm">${item.errorMessage || ''}</td>
+                        <td class="px-4 py-3 text-sm">
+                            <button onclick="deleteFailedItem(${item.id}, this)" class="inline-flex items-center gap-1 rounded bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" />
+                                </svg>
+                                Delete
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
         async function refreshLogs() {
+            if (currentActiveTab !== 'dashboard') return;
+            
             try {
                 const response = await fetch('/Home/StreamLogs');
                 const logs = await response.text();
@@ -221,7 +529,6 @@ Loading logs...
                 
                 el.textContent = logs;
                 
-                // Only auto-scroll if user was already at the bottom (unless paused)
                 if (!isPaused && wasAtBottom) {
                     el.scrollTop = el.scrollHeight;
                 }
@@ -232,54 +539,257 @@ Loading logs...
 
         function startLogRefresh() {
             if (logInterval) clearInterval(logInterval);
-            if (!isPaused) {
+            if (!isPaused && currentActiveTab === 'dashboard') {
                 logInterval = setInterval(() => {
                     refreshLogs();
                 }, 500);
             }
         }
 
+        function startDataRefresh() {
+            if (dataRefreshInterval) clearInterval(dataRefreshInterval);
+            dataRefreshInterval = setInterval(() => {
+                updateTableData();
+            }, 5000); // Refresh table data every 5 seconds
+        }
+
         function startAutoRefresh() {
             updateStatus();
-            refreshLogs();
+            if (currentActiveTab === 'dashboard') {
+                refreshLogs();
+                startLogRefresh();
+            } else {
+                updateTableData();
+            }
+            
             // Status every 5s
             if (statusInterval) clearInterval(statusInterval);
             statusInterval = setInterval(() => {
                 updateStatus();
             }, 5000);
             
-            // Start log refresh
-            startLogRefresh();
+            // Start data refresh for tables
+            startDataRefresh();
         }
 
-        window.addEventListener('load', startAutoRefresh);
-        document.addEventListener('visibilitychange', function () {
-            if (document.hidden) {
-                if (logInterval) clearInterval(logInterval);
-                if (statusInterval) clearInterval(statusInterval);
-            } else {
-                // Only restart if not paused
-                updateStatus();
-                if (statusInterval) clearInterval(statusInterval);
-                statusInterval = setInterval(() => {
-                    updateStatus();
-                }, 5000);
+        // Delete functions with safeguards
+        async function deleteQueueItem(id, buttonElement) {
+            // Check if row still exists
+            const row = buttonElement.closest('tr');
+            if (!row || row.dataset.id != id) {
+                console.log('Item no longer exists, refreshing data...');
+                updateTableData();
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to delete this queue item?')) {
+                return;
+            }
+            
+            // Disable button to prevent double-clicks
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = '<span class="size-3 animate-spin">⟳</span>';
+            
+            try {
+                const response = await fetch(`/Home/DeleteQueueItem/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
                 
-                if (!isPaused) {
-                    startLogRefresh();
+                const result = await response.json();
+                if (result.success) {
+                    // Remove the row with animation
+                    row.style.transition = 'opacity 0.3s ease';
+                    row.style.opacity = '0';
+                    setTimeout(() => {
+                        updateTableData(); // Refresh to get latest state
+                        updateStatus(); // Update counts
+                    }, 300);
+                } else {
+                    alert('Error deleting item: ' + (result.error || 'Unknown error'));
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-3"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" /></svg> Delete';
                 }
+            } catch (error) {
+                alert('Error deleting item: ' + error.message);
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-3"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" /></svg> Delete';
+            }
+        }
+
+        async function deleteFailedItem(id, buttonElement) {
+            const row = buttonElement.closest('tr');
+            if (!row || row.dataset.id != id) {
+                console.log('Item no longer exists, refreshing data...');
+                updateTableData();
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to delete this failed download?')) {
+                return;
+            }
+            
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = '<span class="size-3 animate-spin">⟳</span>';
+            
+            try {
+                const response = await fetch(`/Home/DeleteFailedItem/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    row.style.transition = 'opacity 0.3s ease';
+                    row.style.opacity = '0';
+                    setTimeout(() => {
+                        updateTableData();
+                        updateStatus();
+                    }, 300);
+                } else {
+                    alert('Error deleting item: ' + (result.error || 'Unknown error'));
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-3"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" /></svg> Delete';
+                }
+            } catch (error) {
+                alert('Error deleting item: ' + error.message);
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-3"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" /></svg> Delete';
+            }
+        }
+
+        async function clearAllQueue() {
+            if (!confirm('Are you sure you want to clear all queue items? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/Home/ClearAllQueue', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    updateTableData();
+                    updateStatus();
+                } else {
+                    alert('Error clearing queue: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error clearing queue: ' + error.message);
+            }
+        }
+
+        async function clearAllFailed() {
+            if (!confirm('Are you sure you want to clear all failed downloads? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/Home/ClearAllFailed', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    updateTableData();
+                    updateStatus();
+                } else {
+                    alert('Error clearing failed downloads: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error clearing failed downloads: ' + error.message);
+            }
+        }
+
+        // URL Form handling
+        document.getElementById('urlForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const urlInput = document.getElementById('urlInput');
+            const addBtn = document.getElementById('addUrlBtn');
+            const messageDiv = document.getElementById('urlFormMessage');
+            const messageParagraph = messageDiv.querySelector('p');
+            
+            const url = urlInput.value.trim();
+            if (!url) {
+                showMessage('Please enter a valid URL', 'error');
+                return;
+            }
+            
+            addBtn.disabled = true;
+            addBtn.innerHTML = '<svg class="size-4 animate-spin" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Adding...</span>';
+            
+            try {
+                const response = await fetch('/Home/AddUrlToQueue', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('URL added to queue successfully!', 'success');
+                    urlInput.value = '';
+                    updateStatus();
+                    if (currentActiveTab === 'queue') {
+                        updateTableData();
+                    }
+                } else {
+                    showMessage('Error adding URL: ' + (result.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                showMessage('Error adding URL: ' + error.message, 'error');
+            } finally {
+                addBtn.disabled = false;
+                addBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.5v15m7.5-7.5h-15"/></svg><span>Add to Queue</span>';
+            }
+            
+            function showMessage(text, type) {
+                messageParagraph.textContent = text;
+                messageDiv.className = 'mt-3 block';
+                
+                if (type === 'success') {
+                    messageDiv.querySelector('div').className = 'rounded-md p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-900/50';
+                    messageParagraph.className = 'text-sm font-medium text-green-700 dark:text-green-300';
+                } else {
+                    messageDiv.querySelector('div').className = 'rounded-md p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50';
+                    messageParagraph.className = 'text-sm font-medium text-red-700 dark:text-red-300';
+                }
+                
+                setTimeout(() => {
+                    messageDiv.className = 'mt-3 hidden';
+                }, 5000);
             }
         });
 
-        // Add keyboard shortcut for pause/resume (spacebar)
-        document.addEventListener('keydown', function(e) {
-            // Don't trigger when user is typing in input fields
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            
-            if (e.code === 'Space') {
-                e.preventDefault();
-                togglePause();
-            }
+        // Tab click handlers
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                switchTab(btn.dataset.tab);
+                
+                // Clear and restart appropriate intervals
+                if (logInterval) clearInterval(logInterval);
+                
+                if (btn.dataset.tab === 'dashboard') {
+                    startLogRefresh();
+                } else {
+                    updateTableData(); // Refresh table data when switching to table tabs
+                }
+            });
         });
 
         // Theme toggle behavior
@@ -295,6 +805,46 @@ Loading logs...
                 }
             });
         });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            
+            if (e.code === 'Space') {
+                e.preventDefault();
+                togglePause();
+            } else if (e.code === 'Digit1') {
+                switchTab('dashboard');
+            } else if (e.code === 'Digit2') {
+                switchTab('queue');
+            } else if (e.code === 'Digit3') {
+                switchTab('failed');
+            }
+        });
+
+        // Visibility change handling
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) {
+                if (logInterval) clearInterval(logInterval);
+                if (statusInterval) clearInterval(statusInterval);
+                if (dataRefreshInterval) clearInterval(dataRefreshInterval);
+            } else {
+                updateStatus();
+                if (statusInterval) clearInterval(statusInterval);
+                statusInterval = setInterval(() => {
+                    updateStatus();
+                }, 5000);
+                
+                if (!isPaused && currentActiveTab === 'dashboard') {
+                    startLogRefresh();
+                }
+                
+                startDataRefresh();
+            }
+        });
+
+        // Initialize
+        window.addEventListener('load', startAutoRefresh);
     </script>
 
     <script src="/js/dark-mode.js"></script>

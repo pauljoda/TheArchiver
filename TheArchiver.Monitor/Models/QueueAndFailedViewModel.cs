@@ -6,6 +6,8 @@ public class QueueAndFailedViewModel
 {
     public List<DownloadQueueItem> QueueItems { get; set; } = new();
     public List<FailedDownloads> FailedItems { get; set; } = new();
+    public int QueueCount { get; set; }
+    public int FailedCount { get; set; }
 }
 
 

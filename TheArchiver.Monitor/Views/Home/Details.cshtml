@@ -56,12 +56,25 @@
             </div>
             <div class="p-4 sm:p-6">
                 <div id="tab-queue" class="tab-panel">
+                    <div class="mb-4 flex justify-between items-center">
+                        <h4 class="text-lg font-medium">Queue Items</h4>
+                        @if (Model.QueueItems.Any())
+                        {
+                            <button onclick="clearAllQueue()" class="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 active:bg-red-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" />
+                                </svg>
+                                Clear All
+                            </button>
+                        }
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead class="bg-gray-50 dark:bg-gray-900/30">
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Id</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Url</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
@@ -70,13 +83,39 @@
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-900/40">
                                     <td class="px-4 py-3 text-sm">@item.Id</td>
                                     <td class="px-4 py-3 text-sm break-all">@item.Url</td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <button onclick="deleteQueueItem(@item.Id)" class="inline-flex items-center gap-1 rounded bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-3">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" />
+                                            </svg>
+                                            Delete
+                                        </button>
+                                    </td>
                                 </tr>
                             }
                             </tbody>
                         </table>
+                        @if (!Model.QueueItems.Any())
+                        {
+                            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                                No items in queue
+                            </div>
+                        }
                     </div>
                 </div>
                 <div id="tab-failed" class="tab-panel hidden">
+                    <div class="mb-4 flex justify-between items-center">
+                        <h4 class="text-lg font-medium">Failed Downloads</h4>
+                        @if (Model.FailedItems.Any())
+                        {
+                            <button onclick="clearAllFailed()" class="inline-flex items-center gap-2 rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white hover:bg-red-700 active:bg-red-800">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" />
+                                </svg>
+                                Clear All
+                            </button>
+                        }
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                             <thead class="bg-gray-50 dark:bg-gray-900/30">
@@ -84,6 +123,7 @@
                                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Id</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Url</th>
                                     <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Error</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
@@ -93,10 +133,24 @@
                                     <td class="px-4 py-3 text-sm">@item.Id</td>
                                     <td class="px-4 py-3 text-sm break-all">@item.Url</td>
                                     <td class="px-4 py-3 text-sm">@item.ErrorMessage</td>
+                                    <td class="px-4 py-3 text-sm">
+                                        <button onclick="deleteFailedItem(@item.Id)" class="inline-flex items-center gap-1 rounded bg-red-600 px-2 py-1 text-xs font-medium text-white hover:bg-red-700">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="size-3">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7L5 7M10 11v6M14 11v6M6 7V4a1 1 0 011-1h10a1 1 0 011 1v3" />
+                                            </svg>
+                                            Delete
+                                        </button>
+                                    </td>
                                 </tr>
                             }
                             </tbody>
                         </table>
+                        @if (!Model.FailedItems.Any())
+                        {
+                            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                                No failed downloads
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -139,6 +193,103 @@
                 }
             });
         });
+
+        // Delete functions
+        async function deleteQueueItem(id) {
+            if (!confirm('Are you sure you want to delete this queue item?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/Home/DeleteQueueItem/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('Error deleting item: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error deleting item: ' + error.message);
+            }
+        }
+
+        async function deleteFailedItem(id) {
+            if (!confirm('Are you sure you want to delete this failed download?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/Home/DeleteFailedItem/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('Error deleting item: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error deleting item: ' + error.message);
+            }
+        }
+
+        async function clearAllQueue() {
+            if (!confirm('Are you sure you want to clear all queue items? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/Home/ClearAllQueue', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('Error clearing queue: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error clearing queue: ' + error.message);
+            }
+        }
+
+        async function clearAllFailed() {
+            if (!confirm('Are you sure you want to clear all failed downloads? This action cannot be undone.')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/Home/ClearAllFailed', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                });
+                
+                const result = await response.json();
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('Error clearing failed downloads: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Error clearing failed downloads: ' + error.message);
+            }
+        }
     </script>
 
     <script src="/js/dark-mode.js"></script>

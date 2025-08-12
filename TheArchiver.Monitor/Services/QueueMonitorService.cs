@@ -121,4 +121,66 @@ public class QueueMonitorService
             return false;
         }
     }
+
+    public async Task<bool> ClearAllQueueItemsAsync()
+    {
+        try
+        {
+            _context.DownloadQueueItems.RemoveRange(_context.DownloadQueueItems);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error clearing all queue items");
+            return false;
+        }
+    }
+
+    public async Task<bool> ClearAllFailedDownloadsAsync()
+    {
+        try
+        {
+            _context.FailedDownloads.RemoveRange(_context.FailedDownloads);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error clearing all failed downloads");
+            return false;
+        }
+    }
+
+    public async Task<bool> AddUrlToQueueAsync(string url)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return false;
+            }
+
+            var existingItem = await _context.DownloadQueueItems
+                .FirstOrDefaultAsync(x => x.Url == url);
+            
+            if (existingItem != null)
+            {
+                _logger.LogWarning("URL already exists in queue: {Url}", url);
+                return false;
+            }
+
+            var queueItem = new DownloadQueueItem { Url = url };
+            _context.DownloadQueueItems.Add(queueItem);
+            await _context.SaveChangesAsync();
+            
+            _logger.LogInformation("Successfully added URL to queue: {Url}", url);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding URL to queue: {Url}", url);
+            return false;
+        }
+    }
 }

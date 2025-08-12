@@ -22,17 +22,22 @@ public class HomeController : Controller
         try
         {
             var (queueCount, failedCount) = await _queueMonitorService.GetStatusCountsAsync();
-            var vm = new StatusCountsViewModel
+            var queueItems = await _queueMonitorService.GetQueueItemsAsync();
+            var failedItems = await _queueMonitorService.GetFailedDownloadsAsync();
+            
+            var vm = new QueueAndFailedViewModel
             {
                 QueueCount = queueCount,
-                FailedCount = failedCount
+                FailedCount = failedCount,
+                QueueItems = queueItems,
+                FailedItems = failedItems
             };
             return View(vm);
         }
         catch (Exception ex)
         {
             ViewBag.Error = ex.Message;
-            return View();
+            return View(new QueueAndFailedViewModel());
         }
     }
 
@@ -43,6 +48,24 @@ public class HomeController : Controller
         {
             var (queueCount, failedCount) = await _queueMonitorService.GetStatusCountsAsync();
             return Json(new { queueCount, failedCount });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { error = ex.Message });
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetQueueData()
+    {
+        try
+        {
+            var queueItems = await _queueMonitorService.GetQueueItemsAsync();
+            var failedItems = await _queueMonitorService.GetFailedDownloadsAsync();
+            return Json(new { 
+                queueItems = queueItems.Select(q => new { q.Id, q.Url }),
+                failedItems = failedItems.Select(f => new { f.Id, f.Url, f.ErrorMessage })
+            });
         }
         catch (Exception ex)
         {
@@ -127,6 +150,93 @@ public class HomeController : Controller
         {
             ViewBag.Error = ex.Message;
             return View(new QueueAndFailedViewModel());
+        }
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteQueueItem(int id)
+    {
+        try
+        {
+            var success = await _queueMonitorService.RemoveQueueItemAsync(id);
+            return Json(new { success });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, error = ex.Message });
+        }
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> DeleteFailedItem(int id)
+    {
+        try
+        {
+            var success = await _queueMonitorService.RemoveFailedDownloadAsync(id);
+            return Json(new { success });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, error = ex.Message });
+        }
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> ClearAllQueue()
+    {
+        try
+        {
+            var success = await _queueMonitorService.ClearAllQueueItemsAsync();
+            return Json(new { success });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, error = ex.Message });
+        }
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> ClearAllFailed()
+    {
+        try
+        {
+            var success = await _queueMonitorService.ClearAllFailedDownloadsAsync();
+            return Json(new { success });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, error = ex.Message });
+        }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> AddUrlToQueue([FromBody] AddUrlRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Url))
+            {
+                return Json(new { success = false, error = "URL is required" });
+            }
+
+            if (!Uri.TryCreate(request.Url, UriKind.Absolute, out _))
+            {
+                return Json(new { success = false, error = "Please provide a valid URL" });
+            }
+
+            var success = await _queueMonitorService.AddUrlToQueueAsync(request.Url);
+            if (success)
+            {
+                return Json(new { success = true });
+            }
+            else
+            {
+                return Json(new { success = false, error = "URL already exists in queue or failed to add" });
+            }
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, error = ex.Message });
         }
     }
 
