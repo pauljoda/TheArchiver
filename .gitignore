@@ -36,3 +36,5 @@ Thumbs.db
 
 # Debug
 npm-debug.log*
+
+plugins/*
