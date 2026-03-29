@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1774801638588,
+      "tag": "0000_parallel_maggott",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1774804001306,
+      "tag": "0001_lush_invaders",
+      "breakpoints": true
+    }
+  ]
+}

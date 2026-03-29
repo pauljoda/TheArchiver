@@ -1,0 +1,202 @@
+"use client";
+
+import { Suspense, useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
+import { Settings, ChevronRight } from "lucide-react";
+import { SettingsForm } from "@/components/settings/settings-form";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+
+interface SettingData {
+  key: string;
+  type: "string" | "number" | "boolean" | "password" | "select" | "action";
+  label: string;
+  description?: string;
+  value: string | number | boolean | null;
+  validation?: {
+    required?: boolean;
+    min?: number;
+    max?: number;
+    pattern?: string;
+    options?: Array<{ label: string; value: string }>;
+  };
+}
+
+const GROUP_LABELS: Record<string, string> = {
+  core: "Core",
+  notifications: "Notifications",
+  kavita: "Kavita",
+};
+
+function getGroupLabel(group: string): string {
+  if (GROUP_LABELS[group]) return GROUP_LABELS[group];
+  if (group.startsWith("plugin:")) return group.slice(7);
+  return group;
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center py-12">
+          <p className="text-sm text-muted-foreground font-mono">
+            Loading settings...
+          </p>
+        </div>
+      }
+    >
+      <SettingsContent />
+    </Suspense>
+  );
+}
+
+function SettingsContent() {
+  const searchParams = useSearchParams();
+  const [groups, setGroups] = useState<Record<string, SettingData[]>>({});
+  const [activeGroup, setActiveGroup] = useState<string>("");
+  const [loading, setLoading] = useState(true);
+
+  const fetchSettings = useCallback(async () => {
+    try {
+      const res = await fetch("/api/settings");
+      const data = await res.json();
+      setGroups(data.groups || {});
+    } catch (err) {
+      console.error("Failed to fetch settings:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
+  useEffect(() => {
+    const groupParam = searchParams.get("group");
+    if (groupParam && groups[groupParam]) {
+      setActiveGroup(groupParam);
+    } else {
+      setActiveGroup((prev) => {
+        if (prev && groups[prev]) return prev;
+        const keys = Object.keys(groups);
+        return keys.length > 0 ? keys[0] : "";
+      });
+    }
+  }, [groups, searchParams]);
+
+  async function handleSave(updates: Array<{ key: string; value: unknown }>) {
+    const res = await fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ settings: updates }),
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.error || "Failed to save settings");
+    }
+    const data = await res.json();
+    setGroups(data.groups || {});
+  }
+
+  async function handleAction(
+    settingKey: string
+  ): Promise<{ success: boolean; message: string }> {
+    const parts = settingKey.split(".");
+    if (parts.length < 3 || parts[0] !== "plugin") {
+      return { success: false, message: "Invalid action key" };
+    }
+    const pluginId = parts[1];
+    const actionKey = parts.slice(2).join(".");
+
+    const res = await fetch("/api/plugins/actions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pluginId, actionKey }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      return { success: false, message: data.error || "Action failed" };
+    }
+    return { success: data.success, message: data.message };
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <p className="text-sm text-muted-foreground font-mono">
+          Loading settings...
+        </p>
+      </div>
+    );
+  }
+
+  const groupKeys = Object.keys(groups);
+
+  return (
+    <div className="flex flex-col gap-6 animate-vault-enter">
+      {/* Page header */}
+      <div className="flex items-center gap-3">
+        <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
+          <Settings className="size-4 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-lg font-heading font-bold uppercase tracking-wider">
+            Settings
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Configure your archive engine
+          </p>
+        </div>
+      </div>
+
+      <Separator className="bg-border/50" />
+
+      {groupKeys.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          No settings configured yet.
+        </p>
+      ) : (
+        <div className="flex flex-col gap-6 md:flex-row">
+          {/* Sidebar nav */}
+          <nav className="flex flex-row gap-1 md:flex-col md:w-52 md:shrink-0">
+            {groupKeys.map((group) => (
+              <Button
+                key={group}
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "justify-between text-xs font-heading uppercase tracking-wider transition-all",
+                  activeGroup === group
+                    ? "bg-primary/10 text-primary hover:bg-primary/15"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+                onClick={() => setActiveGroup(group)}
+              >
+                {getGroupLabel(group)}
+                {activeGroup === group && (
+                  <ChevronRight className="size-3" />
+                )}
+              </Button>
+            ))}
+          </nav>
+
+          {/* Settings form */}
+          <div className="flex-1 min-w-0">
+            {activeGroup && groups[activeGroup] && (
+              <SettingsForm
+                title={getGroupLabel(activeGroup)}
+                settings={groups[activeGroup]}
+                onSave={handleSave}
+                onAction={
+                  activeGroup.startsWith("plugin:") ? handleAction : undefined
+                }
+              />
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
