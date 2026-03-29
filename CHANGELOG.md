@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Fixed
+- Plugin import dialog drop zone now actually accepts drag-and-drop files (was visual-only, missing event handlers)
+
 ### Added
 - **File browser** (`/files`) — browse, download, and delete files from the download directory
   - Breadcrumb navigation with parent directory traversal

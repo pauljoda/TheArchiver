@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Upload, Package, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +41,7 @@ export function PluginImportDialog({ onImported }: PluginImportDialogProps) {
   const [pendingSettings, setPendingSettings] = useState<SettingData[] | null>(
     null
   );
+  const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   function reset() {
@@ -51,9 +52,11 @@ export function PluginImportDialog({ onImported }: PluginImportDialogProps) {
     if (fileRef.current) fileRef.current.value = "";
   }
 
-  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  async function processFile(file: File) {
+    if (!file.name.endsWith(".zip")) {
+      setError("Only .zip files are accepted");
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -95,6 +98,35 @@ export function PluginImportDialog({ onImported }: PluginImportDialogProps) {
       setLoading(false);
     }
   }
+
+  function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  }
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setDragging(false);
+      const file = e.dataTransfer.files?.[0];
+      if (file) processFile(file);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    []
+  );
 
   async function handleSettingsSave(
     updates: Array<{ key: string; value: unknown }>
@@ -143,7 +175,17 @@ export function PluginImportDialog({ onImported }: PluginImportDialogProps) {
 
         <div className="flex flex-col gap-4">
           {!pendingSettings && (
-            <label className="group flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-border/60 bg-muted/20 p-10 transition-all hover:border-primary/40 hover:bg-primary/5">
+            <label
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`group flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed p-10 transition-all ${
+                dragging
+                  ? "border-primary bg-primary/10 scale-[1.02]"
+                  : "border-border/60 bg-muted/20 hover:border-primary/40 hover:bg-primary/5"
+              }`}
+            >
               <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 transition-colors group-hover:bg-primary/20">
                 <Upload className="size-5 text-primary" />
               </div>
