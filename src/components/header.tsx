@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Archive, Settings, Activity } from "lucide-react";
+import { Archive, Settings, Activity, FolderOpen } from "lucide-react";
 import { ThemeToggle } from "./theme-toggle";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export function Header() {
   return (
@@ -27,6 +28,21 @@ export function Header() {
         </Link>
 
         <div className="flex items-center gap-1">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-muted-foreground hover:text-foreground hover:bg-primary/10"
+                asChild
+              >
+                <Link href="/files">
+                  <FolderOpen className="size-4" />
+                </Link>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Files</TooltipContent>
+          </Tooltip>
           <Button
             variant="ghost"
             size="icon"

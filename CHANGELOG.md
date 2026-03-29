@@ -7,6 +7,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Added
+- **File browser** (`/files`) — browse, download, and delete files from the download directory
+  - Breadcrumb navigation with parent directory traversal
+  - Streaming file downloads (no memory buffering for large files)
+  - Per-file type icons (image, video, audio, archive, document)
+  - Delete with inline confirmation (matches plugin-list pattern)
+  - Column headers for name, size, and modified date
+  - Path traversal prevention with symlink escape detection
+- FolderOpen icon link in header navigation for quick access to file browser
+- `formatFileSize` and `formatRelativeDate` utility functions
 - Reload plugins button in the plugin management UI
 - `POST /api/plugins/reload` endpoint to reload all plugins without restarting
 - Plugin registry automatically reloads after a new plugin is imported
