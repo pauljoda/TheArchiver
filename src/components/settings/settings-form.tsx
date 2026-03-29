@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Save, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,6 +51,13 @@ export function SettingsForm({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    };
+  }, []);
 
   function handleChange(key: string, value: string | number | boolean) {
     setValues((prev) => ({ ...prev, [key]: value }));
@@ -69,7 +76,8 @@ export function SettingsForm({
         .map(([key, value]) => ({ key, value }));
       await onSave(updates);
       setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save");
     } finally {

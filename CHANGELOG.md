@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [2.0.1] - 2026-03-29
+
+### Fixed
+- `use-fetch` hook now uses AbortController to cancel in-flight requests on unmount
+- `console-log` polling uses AbortController cleanup and `useMemo` for filtered logs
+- `settings-form` setTimeout for "Saved" indicator now cleans up on unmount
+- Settings page useEffect no longer has circular `activeGroup` dependency
+- Download worker parallelizes DB operations (history insert + queue delete) via `Promise.all`
+- Download worker fires notifications and library scans non-blocking (no longer awaited)
+- Removed redundant re-fetch after plugin PATCH update
+- Logs API route uses async `fs.readFile` instead of blocking `readFileSync`, limits to last 500 lines
+- Added try-catch error handling to queue, failed, and history GET endpoints
+
 ## [2.0.0] - 2026-03-29
 
 ### Changed

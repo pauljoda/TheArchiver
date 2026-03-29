@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { Terminal, ArrowDownToLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -14,27 +14,11 @@ interface LogEntry {
 
 const POLL_INTERVAL = 3000;
 
-const LEVEL_STYLES: Record<string, { label: string; color: string; msgColor: string }> = {
-  ERROR: {
-    label: "text-red-400",
-    color: "text-red-400",
-    msgColor: "text-red-300",
-  },
-  WARN: {
-    label: "text-amber-400",
-    color: "text-amber-400",
-    msgColor: "text-amber-200",
-  },
-  INFO: {
-    label: "text-blue-400/60",
-    color: "text-blue-400/60",
-    msgColor: "text-zinc-400",
-  },
-  LOG: {
-    label: "text-zinc-600",
-    color: "text-zinc-600",
-    msgColor: "text-zinc-400",
-  },
+const LEVEL_STYLES: Record<string, { label: string; msgColor: string }> = {
+  ERROR: { label: "text-red-400", msgColor: "text-red-300" },
+  WARN: { label: "text-amber-400", msgColor: "text-amber-200" },
+  INFO: { label: "text-blue-400/60", msgColor: "text-zinc-400" },
+  LOG: { label: "text-zinc-600", msgColor: "text-zinc-400" },
 };
 
 export function ConsoleLog() {
@@ -43,19 +27,24 @@ export function ConsoleLog() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     async function fetchLogs() {
       try {
-        const res = await fetch("/api/logs");
+        const res = await fetch("/api/logs", { signal: controller.signal });
         const data = await res.json();
         setLogs(data);
       } catch {
-        // ignore
+        // ignore abort + network errors
       }
     }
 
     fetchLogs();
     const interval = setInterval(fetchLogs, POLL_INTERVAL);
-    return () => clearInterval(interval);
+    return () => {
+      controller.abort();
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
@@ -64,13 +53,16 @@ export function ConsoleLog() {
     }
   }, [logs, autoScroll]);
 
+  const serverLogs = useMemo(
+    () => logs.filter((e) => e.source === "Server"),
+    [logs]
+  );
+
   function handleScroll() {
     if (!scrollRef.current) return;
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
     setAutoScroll(scrollHeight - scrollTop - clientHeight < 40);
   }
-
-  const serverLogs = logs.filter((e) => e.source === "Server");
 
   return (
     <div className="relative overflow-hidden rounded-xl border border-border/50">

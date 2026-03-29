@@ -77,10 +77,14 @@ function SettingsContent() {
     const groupParam = searchParams.get("group");
     if (groupParam && groups[groupParam]) {
       setActiveGroup(groupParam);
-    } else if (!activeGroup && Object.keys(groups).length > 0) {
-      setActiveGroup(Object.keys(groups)[0]);
+    } else {
+      setActiveGroup((prev) => {
+        if (prev && groups[prev]) return prev;
+        const keys = Object.keys(groups);
+        return keys.length > 0 ? keys[0] : "";
+      });
     }
-  }, [groups, searchParams, activeGroup]);
+  }, [groups, searchParams]);
 
   async function handleSave(updates: Array<{ key: string; value: unknown }>) {
     const res = await fetch("/api/settings", {

@@ -71,35 +71,30 @@ async function processDownload(item: QueueItem): Promise<void> {
 
     if (result.success) {
       const now = new Date();
-      await db
-        .update(schema.downloadQueue)
-        .set({
+
+      // Insert history and delete from queue in parallel
+      await Promise.all([
+        db.insert(schema.downloadHistory).values({
+          url,
           status: "completed",
-          completedAt: now,
           pluginName: plugin.name,
-        })
-        .where(eq(schema.downloadQueue.id, queueItemId));
-
-      await db.insert(schema.downloadHistory).values({
-        url,
-        status: "completed",
-        pluginName: plugin.name,
-        completedAt: now,
-      });
-
-      await db
-        .delete(schema.downloadQueue)
-        .where(eq(schema.downloadQueue.id, queueItemId));
+          completedAt: now,
+        }),
+        db
+          .delete(schema.downloadQueue)
+          .where(eq(schema.downloadQueue.id, queueItemId)),
+      ]);
 
       logger.info(`Completed: ${result.message}`);
       emitSSEEvent({ type: "job:completed", data: { id: queueItemId } });
-      await sendNotification(
+
+      // Non-blocking: notification and library scan
+      sendNotification(
         "Download Complete",
         `${plugin.name}: ${result.message}`,
         "white_check_mark"
-      );
-
-      await triggerLibraryScan();
+      ).catch(() => {});
+      triggerLibraryScan().catch(() => {});
     } else {
       await markFailed(db, queueItemId, url, result.message, plugin.name);
       emitSSEEvent({ type: "job:failed", data: { id: queueItemId } });
@@ -128,23 +123,25 @@ async function markFailed(
 ): Promise<void> {
   const now = new Date();
 
-  await db
-    .update(schema.downloadQueue)
-    .set({
+  // Update queue status and insert history in parallel
+  await Promise.all([
+    db
+      .update(schema.downloadQueue)
+      .set({
+        status: "failed",
+        errorMessage,
+        completedAt: now,
+        pluginName: pluginName || null,
+      })
+      .where(eq(schema.downloadQueue.id, queueItemId)),
+    db.insert(schema.downloadHistory).values({
+      url,
       status: "failed",
+      pluginName: pluginName || null,
       errorMessage,
       completedAt: now,
-      pluginName: pluginName || null,
-    })
-    .where(eq(schema.downloadQueue.id, queueItemId));
-
-  await db.insert(schema.downloadHistory).values({
-    url,
-    status: "failed",
-    pluginName: pluginName || null,
-    errorMessage,
-    completedAt: now,
-  });
+    }),
+  ]);
 }
 
 async function poll(): Promise<void> {

@@ -41,13 +41,7 @@ export async function PATCH(
       }
     }
 
-    const updated = db
-      .select()
-      .from(schema.installedPlugins)
-      .where(eq(schema.installedPlugins.id, id))
-      .get();
-
-    return NextResponse.json(updated);
+    return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Error updating plugin:", err);
     return NextResponse.json(
