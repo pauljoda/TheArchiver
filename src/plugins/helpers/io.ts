@@ -3,6 +3,10 @@ import fsp from "fs/promises";
 import path from "path";
 import { Readable } from "stream";
 import { pipeline } from "stream/promises";
+import { execFile } from "child_process";
+import { promisify } from "util";
+
+const execFileAsync = promisify(execFile);
 
 const DEFAULT_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
@@ -67,6 +71,16 @@ export async function moveFile(src: string, dest: string): Promise<void> {
   const dir = path.dirname(dest);
   await fsp.mkdir(dir, { recursive: true });
   await fsp.rename(src, dest);
+}
+
+export async function createZip(
+  sourceDir: string,
+  outputPath: string
+): Promise<void> {
+  const absOutput = path.resolve(outputPath);
+  const dir = path.dirname(absOutput);
+  await fsp.mkdir(dir, { recursive: true });
+  await execFileAsync("zip", ["-r", absOutput, "."], { cwd: sourceDir });
 }
 
 export async function listFiles(

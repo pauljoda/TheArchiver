@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Fixed
 - Plugin import dialog drop zone now actually accepts drag-and-drop files (was visual-only, missing event handlers)
+- CBZ/zip creation fails on titles with special/Unicode characters (e.g. `●`) when plugins shell out via `exec()` — added `helpers.io.createZip()` using `execFile` with args array (no shell interpolation)
 
 ### Added
 - **File browser** (`/files`) — browse, download, and delete files from the download directory
