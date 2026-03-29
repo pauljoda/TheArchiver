@@ -1,5 +1,9 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    // Install console capture first so all startup logs are captured
+    const { installConsoleCapture } = await import("@/lib/log-buffer");
+    installConsoleCapture();
+
     // Run database migrations first
     const { migrate } = await import("drizzle-orm/better-sqlite3/migrator");
     const { getDb } = await import("@/db");
