@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
   - Path traversal prevention with symlink escape detection
 - FolderOpen icon link in header navigation for quick access to file browser
 - `formatFileSize` and `formatRelativeDate` utility functions
+- `GET /api/download?url=...` — queue downloads via query parameter (restores old URL-based API)
 - Reload plugins button in the plugin management UI
 - `POST /api/plugins/reload` endpoint to reload all plugins without restarting
 - Plugin registry automatically reloads after a new plugin is imported
