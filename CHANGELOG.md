@@ -13,6 +13,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Fixed
 - Newly imported plugins now register as valid endpoints immediately without requiring a restart
+- Docker: plugins volume (`/plugins`) now symlinked to `/app/plugins` so the app can find plugin files
+- Plugin action auth tokens (access_key, logged_in_sig, etc.) no longer create a visible `__INTERNAL` settings group — stored as hidden settings under the plugin's own group
+- Settings seeded from env vars (ntfy URL, Kavita config, etc.) now display their values in the UI even if the DB was initialized before the env var was set
+- Legacy `plugin:__internal` DB entries are migrated to the correct plugin group on startup
+- Internal plugin settings are now properly registered in the definitions map so `getSetting`/`setSetting` work for auth tokens
 
 ## [2.0.1] - 2026-03-29
 

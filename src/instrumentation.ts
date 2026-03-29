@@ -24,6 +24,58 @@ export async function register() {
     await initializeSettings();
     console.log("Settings initialized.");
 
+    // Migrate legacy plugin:__internal settings to correct plugin groups
+    {
+      const { eq } = await import("drizzle-orm");
+      const { schema } = await import("@/db");
+      const db = getDb();
+
+      const internalRows = db
+        .select()
+        .from(schema.settings)
+        .where(eq(schema.settings.group, "plugin:__internal"))
+        .all();
+
+      for (const row of internalRows) {
+        // Key format: plugin.{pluginId}.{settingKey}
+        const parts = row.key.split(".");
+        if (parts.length >= 3 && parts[0] === "plugin") {
+          const pluginId = parts[1];
+          const plugin = db
+            .select()
+            .from(schema.installedPlugins)
+            .where(eq(schema.installedPlugins.id, pluginId))
+            .get();
+          const pluginName = plugin?.name ?? pluginId;
+
+          db.update(schema.settings)
+            .set({ group: `plugin:${pluginName}` })
+            .where(eq(schema.settings.key, row.key))
+            .run();
+
+          // Register as hidden so it gets into definitions
+          registerSettings([
+            {
+              key: row.key,
+              group: `plugin:${pluginName}`,
+              type: "password",
+              label: row.label,
+              sensitive: true,
+              hidden: true,
+              sortOrder: 999,
+            },
+          ]);
+        }
+      }
+
+      if (internalRows.length > 0) {
+        await initializeSettings();
+        console.log(
+          `Migrated ${internalRows.length} legacy __internal settings.`
+        );
+      }
+    }
+
     // Start the download worker (which also inits plugins)
     const { startWorker } = await import("@/workers/download.worker");
     await startWorker();

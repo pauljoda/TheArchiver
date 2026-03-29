@@ -27,8 +27,8 @@ COPY --from=builder /app/public ./public
 # Copy drizzle migrations (needed at runtime for DB setup)
 COPY --from=builder /app/drizzle ./drizzle
 
-# Create persistent data directories
-RUN mkdir -p /data /downloads /plugins
+# Create persistent data directories and symlink plugins into the app
+RUN mkdir -p /data /downloads /plugins && ln -s /plugins /app/plugins
 
 VOLUME ["/data", "/downloads", "/plugins"]
 

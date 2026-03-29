@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 import { getPluginAction } from "@/plugins/registry";
-import { getSetting, setSetting } from "@/lib/settings";
+import {
+  getSetting,
+  setSetting,
+  registerSettings,
+  initializeSettings,
+} from "@/lib/settings";
 import { getDb, schema } from "@/db";
 import type { PluginSettingsAccessor } from "@/plugins/types";
 
@@ -45,36 +50,34 @@ export async function POST(request: NextRequest) {
 
     // Apply any settings updates returned by the action
     if (result.settingsUpdates?.length) {
+      // Look up the plugin's display name for the group label
       const db = getDb();
+      const dbPlugin = db
+        .select()
+        .from(schema.installedPlugins)
+        .where(eq(schema.installedPlugins.id, pluginId))
+        .get();
+      const pluginName = dbPlugin?.name ?? pluginId;
+
       for (const update of result.settingsUpdates) {
         const fullKey = `plugin.${pluginId}.${update.key}`;
         try {
           await setSetting(fullKey, update.value);
         } catch {
-          // Setting not in definitions — upsert directly into DB as hidden internal setting
-          const existing = db
-            .select()
-            .from(schema.settings)
-            .where(eq(schema.settings.key, fullKey))
-            .get();
-
-          if (existing) {
-            db.update(schema.settings)
-              .set({ value: update.value, updatedAt: new Date() })
-              .where(eq(schema.settings.key, fullKey))
-              .run();
-          } else {
-            db.insert(schema.settings)
-              .values({
-                key: fullKey,
-                value: update.value,
-                group: `plugin:__internal`,
-                type: "password",
-                label: update.key,
-                sortOrder: 0,
-              })
-              .run();
-          }
+          // Setting not in definitions — register as hidden internal setting
+          registerSettings([
+            {
+              key: fullKey,
+              group: `plugin:${pluginName}`,
+              type: "password",
+              label: update.key,
+              sensitive: true,
+              hidden: true,
+              sortOrder: 999,
+            },
+          ]);
+          await initializeSettings();
+          await setSetting(fullKey, update.value);
         }
       }
     }

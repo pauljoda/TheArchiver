@@ -71,7 +71,17 @@ export async function initializeSettings(): Promise<void> {
 
       cache.set(key, deserialize(value, def.type));
     } else {
-      // Update definition metadata but keep value
+      // If the DB value is null/empty and an env var is now set, seed from env
+      const hasEmptyValue =
+        existing.value === null || existing.value === "";
+      const envValue =
+        def.envVar && process.env[def.envVar] !== undefined
+          ? String(process.env[def.envVar])
+          : null;
+      const newValue =
+        hasEmptyValue && envValue ? envValue : existing.value;
+
+      // Update definition metadata (and value if seeded from env)
       db.update(schema.settings)
         .set({
           group: def.group,
@@ -82,11 +92,12 @@ export async function initializeSettings(): Promise<void> {
             def.defaultValue !== undefined ? String(def.defaultValue) : null,
           validation: def.validation ? JSON.stringify(def.validation) : null,
           sortOrder: def.sortOrder ?? 0,
+          ...(newValue !== existing.value ? { value: newValue } : {}),
         })
         .where(eq(schema.settings.key, key))
         .run();
 
-      cache.set(key, deserialize(existing.value, def.type));
+      cache.set(key, deserialize(newValue, def.type));
     }
   }
 
@@ -162,8 +173,15 @@ export function getAllSettingsGrouped(): Record<string, SettingWithValue[]> {
   const grouped: Record<string, SettingWithValue[]> = {};
 
   for (const row of rows) {
+    // Skip legacy __internal group entries
+    if (row.group === "plugin:__internal") continue;
+
     const def = definitions.get(row.key);
     const type = (row.type as SettingDefinition["type"]) || "string";
+    const isHidden = def?.hidden ?? false;
+
+    // Skip hidden settings — they should not appear in the UI
+    if (isHidden) continue;
 
     const setting: SettingWithValue = {
       key: row.key,
@@ -178,7 +196,7 @@ export function getAllSettingsGrouped(): Record<string, SettingWithValue[]> {
       sortOrder: row.sortOrder,
       value: deserialize(row.value, type) as string | number | boolean | null,
       sensitive: def?.sensitive,
-      hidden: def?.hidden,
+      hidden: isHidden,
     } as SettingWithValue;
 
     if (!grouped[row.group]) {
@@ -187,9 +205,13 @@ export function getAllSettingsGrouped(): Record<string, SettingWithValue[]> {
     grouped[row.group].push(setting);
   }
 
-  // Sort within groups
-  for (const group of Object.values(grouped)) {
-    group.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+  // Sort within groups and remove empty groups
+  for (const [group, settings] of Object.entries(grouped)) {
+    if (settings.length === 0) {
+      delete grouped[group];
+    } else {
+      settings.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    }
   }
 
   return grouped;
