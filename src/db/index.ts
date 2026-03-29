@@ -22,14 +22,21 @@ function createDatabase() {
   return drizzle(sqlite, { schema });
 }
 
-// Singleton for the database connection
-let _db: ReturnType<typeof createDatabase> | null = null;
+// Use globalThis to ensure a single DB connection across all Next.js
+// webpack bundles (API routes, instrumentation, worker, etc.)
+// Without this, each webpack chunk gets its own _db variable and
+// creates separate SQLite connections, causing stale reads.
+interface DbGlobal {
+  __archiverDb?: ReturnType<typeof createDatabase>;
+}
+
+const g = globalThis as unknown as DbGlobal;
 
 export function getDb() {
-  if (!_db) {
-    _db = createDatabase();
+  if (!g.__archiverDb) {
+    g.__archiverDb = createDatabase();
   }
-  return _db;
+  return g.__archiverDb;
 }
 
 export type Db = ReturnType<typeof getDb>;

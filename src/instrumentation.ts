@@ -28,7 +28,7 @@ export async function register() {
     await initializeSettings();
     console.log("Settings initialized.");
 
-    // Migrate legacy plugin:__internal settings to correct plugin groups
+    // Migrate any legacy plugin:__internal settings to correct group
     {
       const { eq } = await import("drizzle-orm");
       const { schema } = await import("@/db");
@@ -41,7 +41,6 @@ export async function register() {
         .all();
 
       for (const row of internalRows) {
-        // Key format: plugin.{pluginId}.{settingKey}
         const parts = row.key.split(".");
         if (parts.length >= 3 && parts[0] === "plugin") {
           const pluginId = parts[1];
@@ -56,24 +55,10 @@ export async function register() {
             .set({ group: `plugin:${pluginName}` })
             .where(eq(schema.settings.key, row.key))
             .run();
-
-          // Register as hidden so it gets into definitions
-          registerSettings([
-            {
-              key: row.key,
-              group: `plugin:${pluginName}`,
-              type: "password",
-              label: row.label,
-              sensitive: true,
-              hidden: true,
-              sortOrder: 999,
-            },
-          ]);
         }
       }
 
       if (internalRows.length > 0) {
-        await initializeSettings();
         console.log(
           `Migrated ${internalRows.length} legacy __internal settings.`
         );

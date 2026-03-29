@@ -278,3 +278,7 @@ function validate(value: unknown, def: SettingDefinition): void {
 export function isInitialized(): boolean {
   return g.__settingsInitialized ?? false;
 }
+
+export function isDefinitionRegistered(key: string): boolean {
+  return definitions.has(key);
+}

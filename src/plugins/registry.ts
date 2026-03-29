@@ -11,7 +11,11 @@ import type {
   PluginSettingDefinition,
 } from "./types";
 import type { SettingDefinition } from "@/lib/settings";
-import { registerSettings, initializeSettings } from "@/lib/settings";
+import {
+  registerSettings,
+  initializeSettings,
+  isDefinitionRegistered,
+} from "@/lib/settings";
 import { getDb, schema } from "@/db";
 import { eq } from "drizzle-orm";
 import * as htmlHelpers from "./helpers/html";
@@ -250,6 +254,47 @@ export async function initPlugins(pluginsDir?: string): Promise<void> {
 
   // Initialize any newly registered plugin settings
   await initializeSettings();
+
+  // Re-register orphaned plugin settings (e.g. auth tokens created by
+  // plugin actions) as hidden. These exist in the DB but aren't in the
+  // manifest, so they lose their hidden flag on reboot.
+  const allSettings = db.select().from(schema.settings).all();
+  let orphanCount = 0;
+  for (const row of allSettings) {
+    if (!row.key.startsWith("plugin.")) continue;
+    if (isDefinitionRegistered(row.key)) continue;
+
+    // This is a plugin setting in the DB that has no definition — register
+    // it as hidden so it doesn't appear in the settings UI
+    const parts = row.key.split(".");
+    const pluginId = parts[1];
+    const dbPlugin = db
+      .select()
+      .from(schema.installedPlugins)
+      .where(eq(schema.installedPlugins.id, pluginId))
+      .get();
+    const pluginName = dbPlugin?.name ?? pluginId;
+
+    registerSettings([
+      {
+        key: row.key,
+        group: `plugin:${pluginName}`,
+        type: "password",
+        label: row.label,
+        sensitive: true,
+        hidden: true,
+        sortOrder: 999,
+      },
+    ]);
+    orphanCount++;
+  }
+
+  if (orphanCount > 0) {
+    await initializeSettings();
+    console.log(
+      `Re-registered ${orphanCount} hidden plugin settings.`
+    );
+  }
 
   setInitialized(true);
 }
