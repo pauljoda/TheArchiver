@@ -78,9 +78,10 @@ export function PluginImportDialog({ onImported }: PluginImportDialogProps) {
         throw new Error(data.error || "Failed to install plugin");
       }
 
+      const verb = data.updated ? "updated" : "installed";
       if (data.requiresConfiguration && data.settings?.length) {
         setSuccess(
-          `Plugin "${data.plugin.name}" installed. Please configure required settings:`
+          `Plugin "${data.plugin.name}" ${verb}. Please configure required settings:`
         );
         setPendingSettings(
           data.settings.map((s: SettingData) => ({
@@ -89,7 +90,7 @@ export function PluginImportDialog({ onImported }: PluginImportDialogProps) {
           }))
         );
       } else {
-        setSuccess(`Plugin "${data.plugin.name}" installed successfully.`);
+        setSuccess(`Plugin "${data.plugin.name}" ${verb} successfully.`);
         onImported();
       }
     } catch (err) {

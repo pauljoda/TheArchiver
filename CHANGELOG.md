@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Orphaned core settings (e.g. removed Kavita group) are now cleaned up from the database on boot
 
 ### Added
+- **Plugin update support** — importing a plugin that already exists now updates it in-place (preserves settings)
+- Per-plugin update button (upload icon) in the plugin list for quick updates
 - **File browser** (`/files`) — browse, download, and delete files from the download directory
   - Breadcrumb navigation with parent directory traversal
   - Streaming file downloads (no memory buffering for large files)

@@ -137,43 +137,53 @@ export async function POST(request: NextRequest) {
     const pluginId = slugify(manifest.name);
     const db = getDb();
 
-    // Check for conflict
+    // Check if plugin already exists (update vs fresh install)
     const existing = db
       .select()
       .from(schema.installedPlugins)
       .where(eq(schema.installedPlugins.id, pluginId))
       .get();
 
-    if (existing) {
-      return NextResponse.json(
-        {
-          error: `Plugin "${manifest.name}" is already installed. Remove it first to reinstall.`,
-        },
-        { status: 409 }
-      );
-    }
+    const isUpdate = !!existing;
 
-    // Copy to plugins directory
+    // Copy to plugins directory (replace old files on update)
     const pluginsDir = process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
     const destDir = path.join(pluginsDir, pluginId);
+    if (isUpdate) {
+      await fs.rm(destDir, { recursive: true, force: true });
+    }
     await fs.mkdir(destDir, { recursive: true });
 
     await copyDir(rootDir, destDir);
 
-    // Insert DB record
+    // Insert or update DB record
     const hasSettings = !!(manifest.settings?.length);
-    db.insert(schema.installedPlugins)
-      .values({
-        id: pluginId,
-        name: manifest.name,
-        version: manifest.version || "1.0.0",
-        description: manifest.description || null,
-        author: manifest.author || null,
-        urlPatterns: JSON.stringify(manifest.urlPatterns),
-        enabled: true,
-        hasSettings,
-      })
-      .run();
+    if (isUpdate) {
+      db.update(schema.installedPlugins)
+        .set({
+          name: manifest.name,
+          version: manifest.version || "1.0.0",
+          description: manifest.description || null,
+          author: manifest.author || null,
+          urlPatterns: JSON.stringify(manifest.urlPatterns),
+          hasSettings,
+        })
+        .where(eq(schema.installedPlugins.id, pluginId))
+        .run();
+    } else {
+      db.insert(schema.installedPlugins)
+        .values({
+          id: pluginId,
+          name: manifest.name,
+          version: manifest.version || "1.0.0",
+          description: manifest.description || null,
+          author: manifest.author || null,
+          urlPatterns: JSON.stringify(manifest.urlPatterns),
+          enabled: true,
+          hasSettings,
+        })
+        .run();
+    }
 
     // Register settings
     let settingDefs: SettingDefinition[] = [];
@@ -213,13 +223,14 @@ export async function POST(request: NextRequest) {
           description: manifest.description || null,
           author: manifest.author || null,
           urlPatterns: manifest.urlPatterns,
-          enabled: true,
+          enabled: existing?.enabled ?? true,
           hasSettings,
         },
+        updated: isUpdate,
         requiresConfiguration,
         settings: settingDefs,
       },
-      { status: 201 }
+      { status: isUpdate ? 200 : 201 }
     );
   } catch (err) {
     console.error("Error installing plugin:", err);

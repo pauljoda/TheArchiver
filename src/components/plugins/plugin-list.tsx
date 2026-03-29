@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
-import { Puzzle, Settings, Trash2, Power, User, RefreshCw } from "lucide-react";
+import { Puzzle, Settings, Trash2, Power, User, RefreshCw, Upload } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -36,7 +36,9 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [reloading, setReloading] = useState(false);
+  const updateFileRef = useRef<HTMLInputElement>(null);
 
   async function handleReload() {
     setReloading(true);
@@ -76,6 +78,29 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
       console.error("Failed to remove plugin:", err);
     } finally {
       setRemovingId(null);
+    }
+  }
+
+  async function handleUpdate(file: File) {
+    if (!file.name.endsWith(".zip")) return;
+    setUpdatingId("pending");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/plugins/install", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        console.error("Failed to update plugin:", data.error);
+      }
+      onRefresh?.();
+    } catch (err) {
+      console.error("Failed to update plugin:", err);
+    } finally {
+      setUpdatingId(null);
+      if (updateFileRef.current) updateFileRef.current.value = "";
     }
   }
 
@@ -217,6 +242,23 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
                       <TooltipContent>Settings</TooltipContent>
                     </Tooltip>
                   )}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                        disabled={updatingId !== null}
+                        onClick={() => {
+                          setUpdatingId(plugin.id);
+                          updateFileRef.current?.click();
+                        }}
+                      >
+                        <Upload className={cn("size-3.5", updatingId === plugin.id && "animate-pulse")} />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Update</TooltipContent>
+                  </Tooltip>
                   {confirmRemove === plugin.id ? (
                     <div className="flex items-center gap-1 animate-slide-in">
                       <Button
@@ -258,6 +300,17 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
           </div>
         )}
       </CardContent>
+      <input
+        ref={updateFileRef}
+        type="file"
+        accept=".zip"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) handleUpdate(file);
+          else setUpdatingId(null);
+        }}
+      />
     </Card>
   );
 }
