@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Puzzle, Settings, Trash2, Power, User } from "lucide-react";
+import { Puzzle, Settings, Trash2, Power, User, RefreshCw } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -36,6 +36,19 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const [reloading, setReloading] = useState(false);
+
+  async function handleReload() {
+    setReloading(true);
+    try {
+      await fetch("/api/plugins/reload", { method: "POST" });
+      onRefresh?.();
+    } catch (err) {
+      console.error("Failed to reload plugins:", err);
+    } finally {
+      setReloading(false);
+    }
+  }
 
   async function handleToggle(id: string, enabled: boolean) {
     setTogglingId(id);
@@ -77,7 +90,23 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
             {plugins.length} installed
           </Badge>
         </div>
-        <PluginImportDialog onImported={() => onRefresh?.()} />
+        <div className="flex items-center gap-1.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 text-muted-foreground hover:text-foreground"
+                disabled={reloading}
+                onClick={handleReload}
+              >
+                <RefreshCw className={cn("size-3.5", reloading && "animate-spin")} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Reload plugins</TooltipContent>
+          </Tooltip>
+          <PluginImportDialog onImported={() => onRefresh?.()} />
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         {plugins.length === 0 ? (

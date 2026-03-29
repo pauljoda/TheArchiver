@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- Reload plugins button in the plugin management UI
+- `POST /api/plugins/reload` endpoint to reload all plugins without restarting
+- Plugin registry automatically reloads after a new plugin is imported
+
+### Fixed
+- Newly imported plugins now register as valid endpoints immediately without requiring a restart
+
 ## [2.0.1] - 2026-03-29
 
 ### Fixed

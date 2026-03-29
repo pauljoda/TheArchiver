@@ -342,6 +342,13 @@ export async function loadSinglePlugin(
   }
 }
 
+export async function reloadPlugins(pluginsDir?: string): Promise<void> {
+  // Clear all registered plugins
+  plugins.clear();
+  initialized = false;
+  await initPlugins(pluginsDir);
+}
+
 export function unloadPlugin(pluginId: string): void {
   const keysToRemove: string[] = [];
   for (const [pattern, registered] of plugins) {

@@ -4,7 +4,7 @@ import fs from "fs/promises";
 import os from "os";
 import { getDb, schema } from "@/db";
 import { eq } from "drizzle-orm";
-import { loadSinglePlugin } from "@/plugins/registry";
+import { reloadPlugins } from "@/plugins/registry";
 import {
   registerSettings,
   initializeSettings,
@@ -187,8 +187,8 @@ export async function POST(request: NextRequest) {
       await initializeSettings();
     }
 
-    // Load plugin into memory
-    await loadSinglePlugin(pluginId);
+    // Reload all plugins to ensure registry is in sync
+    await reloadPlugins();
 
     // Check if any required settings are missing values
     let requiresConfiguration = false;
