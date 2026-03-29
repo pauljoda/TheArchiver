@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Fixed
 - Plugin import dialog drop zone now actually accepts drag-and-drop files (was visual-only, missing event handlers)
+- Plugin `exec()` calls with relative paths break after `cd` — plugin loader now auto-resolves relative paths to absolute
 - CBZ/zip creation fails in Docker — `zip` package was missing from Alpine image
 - `helpers.io.createZip()` added using `execFile` with args array (shell-safe for special characters)
 - Server console log lines now have proper spacing between timestamp, level, and message

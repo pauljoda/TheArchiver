@@ -23,9 +23,50 @@ import * as ioHelpers from "./helpers/io";
 import * as urlHelpers from "./helpers/url";
 import * as stringHelpers from "./helpers/string";
 
+/**
+ * Wrap child_process.exec to resolve relative paths in shell commands.
+ *
+ * Plugins often do `cd "relative/temp" && zip -r "relative/output" .`
+ * which breaks because after `cd`, the second relative path resolves
+ * from the new cwd, not the original process root.  Resolving all
+ * relative paths inside double-quotes to absolute paths fixes this.
+ */
+function patchChildProcess(
+  original: typeof import("child_process")
+): typeof import("child_process") {
+  const origExec = original.exec;
+
+  const patched = function exec(
+    cmd: string,
+    ...rest: unknown[]
+  ): ReturnType<typeof origExec> {
+    const fixed = cmd.replace(
+      /"((?:[a-zA-Z0-9._])[^"]*\/[^"]*)"/g,
+      (match, p: string) => {
+        if (path.isAbsolute(p)) return match;
+        return `"${path.resolve(p)}"`;
+      }
+    );
+    return (origExec as Function).call(original, fixed, ...rest);
+  } as typeof origExec;
+
+  return { ...original, exec: patched };
+}
+
 function loadPluginModule(pluginPath: string): Record<string, unknown> {
   const code = fs.readFileSync(pluginPath, "utf-8");
-  const pluginRequire = createRequire(pluginPath);
+  const baseRequire = createRequire(pluginPath);
+
+  // Wrap require to patch child_process for plugins
+  const pluginRequire = Object.assign(
+    function (id: string) {
+      const mod = baseRequire(id);
+      if (id === "child_process") return patchChildProcess(mod);
+      return mod;
+    },
+    { resolve: baseRequire.resolve }
+  );
+
   const mod = { exports: {} as Record<string, unknown> };
   const wrapper = `(function(exports, require, module, __filename, __dirname) {\n${code}\n});`;
   const compiled = vm.runInThisContext(wrapper, { filename: pluginPath });
