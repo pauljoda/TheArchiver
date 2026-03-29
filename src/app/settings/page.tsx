@@ -186,6 +186,7 @@ function SettingsContent() {
           <div className="flex-1 min-w-0">
             {activeGroup && groups[activeGroup] && (
               <SettingsForm
+                key={activeGroup}
                 title={getGroupLabel(activeGroup)}
                 settings={groups[activeGroup]}
                 onSave={handleSave}

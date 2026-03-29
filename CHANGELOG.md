@@ -26,6 +26,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Docker: `PLUGINS_DIR` env var (`/plugins`) ensures the app reads from the volume-mounted path instead of `/app/plugins`
 - Plugin registry, settings, and DB connection singletons all use `globalThis` so state is shared across all Next.js webpack bundles — fixes plugin URL matching, settings persistence, and env default display
 - Orphaned plugin settings (auth tokens from plugin actions) are re-registered as hidden on every boot, preventing them from showing in the settings UI after restart
+- Settings form now remounts when switching groups (`key={activeGroup}`) — fixes values appearing blank when navigating between Core/Notifications/Plugin settings
 - Server console log viewer now works in Docker/production — replaced dev-only `.next/dev/logs` file reader with an in-memory ring buffer that captures `console.log/warn/error` output
 - Plugin action auth tokens (access_key, logged_in_sig, etc.) no longer create a visible `__INTERNAL` settings group — stored as hidden settings under the plugin's own group
 - Settings seeded from env vars (ntfy URL, Kavita config, etc.) now display their values in the UI even if the DB was initialized before the env var was set
