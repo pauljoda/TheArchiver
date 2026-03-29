@@ -26,7 +26,6 @@ interface SettingData {
 const GROUP_LABELS: Record<string, string> = {
   core: "Core",
   notifications: "Notifications",
-  kavita: "Kavita",
 };
 
 function getGroupLabel(group: string): string {
