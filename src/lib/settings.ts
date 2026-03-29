@@ -112,6 +112,16 @@ export async function initializeSettings(): Promise<void> {
     }
   }
 
+  // Clean up orphaned non-plugin settings (e.g. removed core settings)
+  const allRows = db.select({ key: schema.settings.key }).from(schema.settings).all();
+  for (const row of allRows) {
+    if (row.key.startsWith("plugin.")) continue; // plugin settings handled by registry
+    if (!definitions.has(row.key)) {
+      db.delete(schema.settings).where(eq(schema.settings.key, row.key)).run();
+      cache.delete(row.key);
+    }
+  }
+
   g.__settingsInitialized = true;
 }
 

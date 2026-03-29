@@ -11,7 +11,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Fixed
 - Plugin import dialog drop zone now actually accepts drag-and-drop files (was visual-only, missing event handlers)
-- CBZ/zip creation fails on titles with special/Unicode characters (e.g. `●`) when plugins shell out via `exec()` — added `helpers.io.createZip()` using `execFile` with args array (no shell interpolation)
+- CBZ/zip creation fails in Docker — `zip` package was missing from Alpine image
+- `helpers.io.createZip()` added using `execFile` with args array (shell-safe for special characters)
+- Server console log lines now have proper spacing between timestamp, level, and message
+- Server console log viewer wraps properly on mobile screens
+- Orphaned core settings (e.g. removed Kavita group) are now cleaned up from the database on boot
 
 ### Added
 - **File browser** (`/files`) — browse, download, and delete files from the download directory

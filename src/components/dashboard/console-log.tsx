@@ -121,7 +121,7 @@ export function ConsoleLog() {
               return (
                 <div
                   key={i}
-                  className="group flex gap-0 py-px hover:bg-zinc-900/60 -mx-4 px-4 rounded"
+                  className="group flex flex-wrap sm:flex-nowrap gap-x-4 py-px hover:bg-zinc-900/60 -mx-4 px-4 rounded"
                 >
                   <span className="text-zinc-700 shrink-0 w-20 select-none">
                     {entry.timestamp}
@@ -134,7 +134,7 @@ export function ConsoleLog() {
                   >
                     {entry.level}
                   </span>
-                  <span className={cn("break-all", style.msgColor)}>
+                  <span className={cn("break-all min-w-0 w-full sm:w-auto", style.msgColor)}>
                     {entry.message}
                   </span>
                 </div>
