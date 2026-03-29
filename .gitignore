@@ -1,5 +1,38 @@
-bin/
-obj/
-/packages/
-riderModule.iml
-/_ReSharper.Caches/
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+tsconfig.tsbuildinfo
+
+# Production
+build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Data
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Downloads (local dev)
+downloads/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Debug
+npm-debug.log*

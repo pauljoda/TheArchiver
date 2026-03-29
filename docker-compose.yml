@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+      - ./downloads:/downloads
+      - ./plugins:/plugins
+    environment:
+      - DATABASE_URL=file:/data/archiver.db
+      - SHARE_LOCATION=/downloads
+      - MAX_CONCURRENT_DOWNLOADS=10
+      # Uncomment and configure as needed:
+      # - NTFY_URL=https://ntfy.example.com/archiver
+      # - KAVITA_BASE_URL=https://kavita.example.com
+      # - KAVITA_API_KEY=your-api-key
+      # - KAVITA_LIBRARY_ID=5
+    restart: unless-stopped

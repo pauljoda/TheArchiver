@@ -1,0 +1,33 @@
+{
+  "name": "Archive.org",
+  "version": "2.0.0",
+  "description": "Download content from Archive.org with optional authentication",
+  "author": "TheArchiver",
+  "urlPatterns": ["https://archive.org"],
+  "settings": [
+    {
+      "key": "email",
+      "type": "string",
+      "label": "Email",
+      "description": "Your Archive.org account email address",
+      "required": false,
+      "sortOrder": 0
+    },
+    {
+      "key": "password",
+      "type": "password",
+      "label": "Password",
+      "description": "Your Archive.org account password",
+      "required": false,
+      "sortOrder": 1
+    },
+    {
+      "key": "authenticate",
+      "type": "action",
+      "label": "Authenticate",
+      "description": "Login to Archive.org and fetch session cookies",
+      "required": false,
+      "sortOrder": 2
+    }
+  ]
+}
