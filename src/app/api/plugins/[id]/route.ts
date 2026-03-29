@@ -84,7 +84,8 @@ export async function DELETE(
       .run();
 
     // Delete files
-    const pluginDir = path.resolve(process.cwd(), "plugins", id);
+    const pluginsDir = process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
+    const pluginDir = path.join(pluginsDir, id);
     await fs.rm(pluginDir, { recursive: true, force: true }).catch(() => {});
 
     return NextResponse.json({ success: true });

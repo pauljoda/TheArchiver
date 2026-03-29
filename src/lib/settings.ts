@@ -25,9 +25,20 @@ export interface SettingWithValue extends SettingDefinition {
   value: string | number | boolean | null;
 }
 
-const definitions = new Map<string, SettingDefinition>();
-const cache = new Map<string, unknown>();
-let initialized = false;
+// Use globalThis to ensure a single shared instance across all Next.js
+// webpack bundles (API routes, instrumentation, worker, etc.)
+interface SettingsGlobal {
+  __settingDefinitions?: Map<string, SettingDefinition>;
+  __settingCache?: Map<string, unknown>;
+  __settingsInitialized?: boolean;
+}
+
+const g = globalThis as unknown as SettingsGlobal;
+if (!g.__settingDefinitions) g.__settingDefinitions = new Map();
+if (!g.__settingCache) g.__settingCache = new Map();
+
+const definitions = g.__settingDefinitions;
+const cache = g.__settingCache;
 
 export function registerSettings(defs: SettingDefinition[]): void {
   for (const def of defs) {
@@ -101,7 +112,7 @@ export async function initializeSettings(): Promise<void> {
     }
   }
 
-  initialized = true;
+  g.__settingsInitialized = true;
 }
 
 function deserialize(
@@ -121,7 +132,7 @@ function deserialize(
 }
 
 export function getSetting<T = string>(key: string): T {
-  if (!initialized) {
+  if (!g.__settingsInitialized) {
     throw new Error(
       `Settings not initialized. Cannot read "${key}" before initializeSettings() completes.`
     );
@@ -265,5 +276,5 @@ function validate(value: unknown, def: SettingDefinition): void {
 }
 
 export function isInitialized(): boolean {
-  return initialized;
+  return g.__settingsInitialized ?? false;
 }

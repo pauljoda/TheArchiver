@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Copy to plugins directory
-    const pluginsDir = path.resolve(process.cwd(), "plugins");
+    const pluginsDir = process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
     const destDir = path.join(pluginsDir, pluginId);
     await fs.mkdir(destDir, { recursive: true });
 

@@ -41,8 +41,24 @@ interface RegisteredPlugin {
   patterns: string[];
 }
 
-const plugins: Map<string, RegisteredPlugin> = new Map();
-let initialized = false;
+// Use globalThis to ensure a single shared instance across all Next.js
+// webpack bundles (API routes, instrumentation, worker, etc.)
+interface PluginRegistryGlobal {
+  __pluginRegistry?: Map<string, RegisteredPlugin>;
+  __pluginRegistryInitialized?: boolean;
+}
+
+const g = globalThis as unknown as PluginRegistryGlobal;
+if (!g.__pluginRegistry) g.__pluginRegistry = new Map();
+
+const plugins = g.__pluginRegistry;
+
+function getInitialized() {
+  return g.__pluginRegistryInitialized ?? false;
+}
+function setInitialized(v: boolean) {
+  g.__pluginRegistryInitialized = v;
+}
 
 export const helpers: PluginHelpers = {
   html: htmlHelpers,
@@ -94,9 +110,9 @@ function registerPlugin(
 }
 
 export async function initPlugins(pluginsDir?: string): Promise<void> {
-  if (initialized) return;
+  if (getInitialized()) return;
 
-  const dir = pluginsDir || path.resolve(process.cwd(), "plugins");
+  const dir = pluginsDir || process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
   const db = getDb();
 
   // Load plugins tracked in DB
@@ -235,7 +251,7 @@ export async function initPlugins(pluginsDir?: string): Promise<void> {
   // Initialize any newly registered plugin settings
   await initializeSettings();
 
-  initialized = true;
+  setInitialized(true);
 }
 
 export function getPluginForUrl(
@@ -307,7 +323,7 @@ export async function loadSinglePlugin(
   pluginId: string,
   pluginsDir?: string
 ): Promise<void> {
-  const dir = pluginsDir || path.resolve(process.cwd(), "plugins");
+  const dir = pluginsDir || process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
   const pluginDir = path.join(dir, pluginId);
 
   const indexFile = ["index.js", "index.mjs"].find((f) =>
@@ -345,7 +361,7 @@ export async function loadSinglePlugin(
 export async function reloadPlugins(pluginsDir?: string): Promise<void> {
   // Clear all registered plugins
   plugins.clear();
-  initialized = false;
+  setInitialized(false);
   await initPlugins(pluginsDir);
 }
 
