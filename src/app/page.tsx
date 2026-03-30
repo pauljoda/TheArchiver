@@ -50,48 +50,48 @@ export default function Home() {
           <TabsList className="h-auto w-full justify-start gap-1 rounded-lg bg-secondary/50 p-1.5">
             <TabsTrigger
               value="queue"
-              className="gap-2 rounded-md px-4 py-2 text-xs font-heading font-medium uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
+              className="gap-2 rounded-md px-2 py-2 text-xs font-heading font-medium uppercase tracking-wider sm:px-4 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
             >
-              <ListOrdered className="size-3.5" />
-              Queue
+              <ListOrdered className="size-4 sm:size-3.5" />
+              <span className="hidden sm:inline">Queue</span>
               {queue.data.length > 0 && (
-                <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold text-primary">
+                <span className="ml-1 hidden size-5 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold text-primary sm:flex">
                   {queue.data.length}
                 </span>
               )}
             </TabsTrigger>
             <TabsTrigger
               value="failed"
-              className="gap-2 rounded-md px-4 py-2 text-xs font-heading font-medium uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
+              className="gap-2 rounded-md px-2 py-2 text-xs font-heading font-medium uppercase tracking-wider sm:px-4 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
             >
-              <AlertTriangle className="size-3.5" />
-              Failed
+              <AlertTriangle className="size-4 sm:size-3.5" />
+              <span className="hidden sm:inline">Failed</span>
               {failed.data.length > 0 && (
-                <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-destructive/15 text-[10px] font-bold text-destructive">
+                <span className="ml-1 hidden size-5 items-center justify-center rounded-full bg-destructive/15 text-[10px] font-bold text-destructive sm:flex">
                   {failed.data.length}
                 </span>
               )}
             </TabsTrigger>
             <TabsTrigger
               value="history"
-              className="gap-2 rounded-md px-4 py-2 text-xs font-heading font-medium uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
+              className="gap-2 rounded-md px-2 py-2 text-xs font-heading font-medium uppercase tracking-wider sm:px-4 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
             >
-              <Clock className="size-3.5" />
-              History
+              <Clock className="size-4 sm:size-3.5" />
+              <span className="hidden sm:inline">History</span>
             </TabsTrigger>
             <TabsTrigger
               value="plugins"
-              className="gap-2 rounded-md px-4 py-2 text-xs font-heading font-medium uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
+              className="gap-2 rounded-md px-2 py-2 text-xs font-heading font-medium uppercase tracking-wider sm:px-4 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
             >
-              <Puzzle className="size-3.5" />
-              Plugins
+              <Puzzle className="size-4 sm:size-3.5" />
+              <span className="hidden sm:inline">Plugins</span>
             </TabsTrigger>
             <TabsTrigger
               value="logs"
-              className="gap-2 rounded-md px-4 py-2 text-xs font-heading font-medium uppercase tracking-wider data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
+              className="gap-2 rounded-md px-2 py-2 text-xs font-heading font-medium uppercase tracking-wider sm:px-4 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
             >
-              <Terminal className="size-3.5" />
-              Logs
+              <Terminal className="size-4 sm:size-3.5" />
+              <span className="hidden sm:inline">Logs</span>
             </TabsTrigger>
           </TabsList>
 
