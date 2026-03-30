@@ -6,7 +6,7 @@
       "runtimeExecutable": "npx",
       "runtimeArgs": ["next", "dev", "--turbopack"],
       "port": 3000,
-      "autoPort": true
+      "autoPort": false
     }
   ]
 }

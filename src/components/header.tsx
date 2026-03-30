@@ -14,7 +14,6 @@ export function Header() {
         <Link href="/" className="group flex items-center gap-3">
           <div className="relative flex items-center justify-center size-9 rounded-lg bg-primary/10 ring-1 ring-primary/20 transition-all group-hover:bg-primary/15 group-hover:ring-primary/40 group-hover:shadow-[0_0_15px_var(--amber-glow)]">
             <Archive className="size-4 text-primary" />
-            <div className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-primary animate-pulse-amber" />
           </div>
           <div className="flex flex-col">
             <span className="text-sm font-heading font-bold tracking-tight">

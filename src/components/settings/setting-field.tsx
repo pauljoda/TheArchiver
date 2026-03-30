@@ -13,11 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SiteDirectoryMap } from "./site-directory-map";
 import { cn } from "@/lib/utils";
 
 interface SettingFieldProps {
   settingKey: string;
-  type: "string" | "number" | "boolean" | "password" | "select" | "action";
+  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map";
   label: string;
   description?: string;
   value: string | number | boolean | null;
@@ -100,6 +101,19 @@ export function SettingField({
           <p className="text-[11px] text-muted-foreground">{description}</p>
         )}
       </div>
+    );
+  }
+
+  if (type === "site-directory-map") {
+    return (
+      <SiteDirectoryMap
+        settingKey={settingKey}
+        label={label}
+        description={description}
+        value={value as string | null}
+        options={validation?.options ?? []}
+        onChange={onChange}
+      />
     );
   }
 

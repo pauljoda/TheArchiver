@@ -4,7 +4,7 @@ import { eq, like } from "drizzle-orm";
 export interface SettingDefinition {
   key: string;
   group: string;
-  type: "string" | "number" | "boolean" | "password" | "select" | "action";
+  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map";
   label: string;
   description?: string;
   defaultValue?: string | number | boolean;
@@ -280,7 +280,7 @@ function validate(value: unknown, def: SettingDefinition): void {
     throw new Error(`Setting "${def.key}" does not match required pattern`);
   }
 
-  if (v.options && !v.options.some((o) => o.value === str)) {
+  if (def.type === "select" && v.options && !v.options.some((o) => o.value === str)) {
     throw new Error(`Setting "${def.key}" must be one of the allowed values`);
   }
 }

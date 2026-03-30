@@ -5,7 +5,7 @@ export interface DownloadResult {
 
 export interface PluginSettingDefinition {
   key: string;
-  type: "string" | "number" | "boolean" | "password" | "select" | "action";
+  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map";
   label: string;
   description?: string;
   defaultValue?: string | number | boolean;

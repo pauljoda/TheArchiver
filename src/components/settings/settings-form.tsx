@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 interface SettingData {
   key: string;
-  type: "string" | "number" | "boolean" | "password" | "select" | "action";
+  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map";
   label: string;
   description?: string;
   value: string | number | boolean | null;

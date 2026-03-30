@@ -15,7 +15,8 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-RUN apk add --no-cache ffmpeg zip
+RUN apk add --no-cache ffmpeg zip python3 py3-pip \
+    && pip3 install --break-system-packages yt-dlp
 
 ENV NODE_ENV=production
 
