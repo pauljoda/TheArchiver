@@ -89,7 +89,7 @@ export function CreateFolderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[90vw] max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-heading text-sm uppercase tracking-wider">
             <FolderPlus className="size-4" />

@@ -83,10 +83,10 @@ function FolderTreeNode({
   }
 
   return (
-    <div>
+    <div className="overflow-hidden">
       <div
         className={cn(
-          "flex items-center gap-1 py-1.5 px-2 rounded-md cursor-pointer transition-colors text-sm",
+          "flex items-center gap-1 py-1.5 px-2 rounded-md cursor-pointer transition-colors text-sm min-w-0",
           isSelected
             ? "bg-primary/15 text-primary"
             : "hover:bg-muted/50 text-foreground",
@@ -200,7 +200,7 @@ export function MoveCopyDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[90vw] max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-heading text-sm uppercase tracking-wider">
             {action === "move" ? (
@@ -211,7 +211,7 @@ export function MoveCopyDialog({
             {action === "move" ? "Move" : "Copy"} to...
           </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="h-72 rounded-md border border-border/50 bg-muted/10 p-2">
+        <ScrollArea className="min-h-0 flex-1 rounded-md border border-border/50 bg-muted/10 p-2">
           {/* Root node */}
           <div
             className={cn(
