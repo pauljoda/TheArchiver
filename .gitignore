@@ -37,4 +37,16 @@ Thumbs.db
 # Debug
 npm-debug.log*
 
+# Claude Code
+.claude/
+AGENTS.md
+
+# Test output
+test-results/
+
+# Old screenshots
+Screenshots/
+
+# User-installed plugins (example-plugin is tracked as a template)
 plugins/*
+!plugins/example-plugin/

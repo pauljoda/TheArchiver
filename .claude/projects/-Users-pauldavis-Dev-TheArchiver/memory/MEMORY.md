@@ -1,2 +1,0 @@
-- [Next.js migration](project_migration.md) — Migrated from .NET Aspire to Next.js on 2026-03-29, branch next-js-migration
-- [User profile](user_profile.md) — Paul builds self-hosted tools, uses Docker/Traefik, prefers clean UIs
