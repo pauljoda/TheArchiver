@@ -12,6 +12,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Fixed
 - Settings with null values were stored as the string `"null"` instead of actual null, causing corrupted values on read
+- Removed misleading progress bars from dashboard stat cards (quantities don't have progress)
 
 ### Removed
 - Kavita settings from core settings — now managed by plugin

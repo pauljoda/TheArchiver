@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Puzzle,
-  TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -115,20 +114,6 @@ export function StatsCards({
               </div>
             </div>
 
-            {/* Bottom accent line */}
-            {count > 0 && (
-              <div
-                className={cn(
-                  "absolute bottom-0 left-0 h-0.5 transition-all duration-500",
-                  stat.key === "failed"
-                    ? "bg-destructive"
-                    : stat.key === "completed"
-                    ? "bg-emerald-500"
-                    : "bg-primary"
-                )}
-                style={{ width: `${Math.min(100, count * 10)}%` }}
-              />
-            )}
           </div>
         );
       })}
