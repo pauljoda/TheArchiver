@@ -191,11 +191,28 @@ export function getAllSettingsGrouped(): Record<string, SettingWithValue[]> {
   const db = getDb();
   const rows = db.select().from(schema.settings).all();
 
+  // Build a set of enabled plugin names so we can hide settings for disabled/missing plugins
+  // Settings groups use the format "plugin:{pluginName}" where pluginName is the display name
+  const enabledPluginNames = new Set(
+    db
+      .select({ name: schema.installedPlugins.name })
+      .from(schema.installedPlugins)
+      .where(eq(schema.installedPlugins.enabled, true))
+      .all()
+      .map((p) => p.name)
+  );
+
   const grouped: Record<string, SettingWithValue[]> = {};
 
   for (const row of rows) {
     // Skip legacy __internal group entries
     if (row.group === "plugin:__internal") continue;
+
+    // Skip settings for plugins that are disabled or not installed
+    if (row.group.startsWith("plugin:")) {
+      const pluginName = row.group.slice("plugin:".length);
+      if (!enabledPluginNames.has(pluginName)) continue;
+    }
 
     const def = definitions.get(row.key);
     const type = (row.type as SettingDefinition["type"]) || "string";

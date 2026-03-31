@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Plugin removal UI offers two options: "Remove" (keep settings) and "Purge Settings" (remove plugin and all its settings)
 
 ### Fixed
+- Settings page no longer shows settings groups for disabled or uninstalled plugins — only enabled plugin settings are visible
+
+### Fixed
 - Settings with null values were stored as the string `"null"` instead of actual null, causing corrupted values on read
 - Removed misleading progress bars from dashboard stat cards (quantities don't have progress)
 
