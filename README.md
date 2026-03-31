@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="https://pauljoda.github.io/TheArchiver/">Website</a> &bull;
   <a href="#quick-start">Quick Start</a> &bull;
   <a href="#why-the-archiver">Why</a> &bull;
   <a href="#features">Features</a> &bull;
