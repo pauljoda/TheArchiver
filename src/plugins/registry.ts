@@ -22,6 +22,7 @@ import * as htmlHelpers from "./helpers/html";
 import * as ioHelpers from "./helpers/io";
 import * as urlHelpers from "./helpers/url";
 import * as stringHelpers from "./helpers/string";
+import filesPlugin from "./builtins/files";
 
 /**
  * Wrap child_process.exec to resolve relative paths in shell commands.
@@ -93,6 +94,7 @@ interface PluginRegistryGlobal {
   __pluginRegistry?: Map<string, RegisteredPlugin>;
   __pluginRegistryInitialized?: boolean;
   __fileTypePlugins?: RegisteredPlugin[];
+  __fallbackPlugin?: RegisteredPlugin;
 }
 
 const g = globalThis as unknown as PluginRegistryGlobal;
@@ -165,11 +167,63 @@ function registerPlugin(
   }
 }
 
+const BUILTIN_FILES_ID = "builtin-files";
+
 export async function initPlugins(pluginsDir?: string): Promise<void> {
   if (getInitialized()) return;
 
   const dir = pluginsDir || process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
   const db = getDb();
+
+  // ── Load built-in Files plugin ──
+  {
+    const existing = db
+      .select()
+      .from(schema.installedPlugins)
+      .where(eq(schema.installedPlugins.id, BUILTIN_FILES_ID))
+      .get();
+
+    if (!existing) {
+      db.insert(schema.installedPlugins)
+        .values({
+          id: BUILTIN_FILES_ID,
+          name: filesPlugin.name,
+          version: filesPlugin.version || "1.0.0",
+          description: filesPlugin.description || "Download any file and organize by extension",
+          author: filesPlugin.author || "TheArchiver",
+          urlPatterns: JSON.stringify([]),
+          fileTypes: null,
+          enabled: true,
+          hasSettings: true,
+        })
+        .run();
+    }
+
+    const builtinRow = db
+      .select()
+      .from(schema.installedPlugins)
+      .where(eq(schema.installedPlugins.id, BUILTIN_FILES_ID))
+      .get();
+
+    if (builtinRow?.enabled) {
+      if (filesPlugin.settings?.length) {
+        const settingDefs = pluginSettingsToDefinitions(
+          BUILTIN_FILES_ID,
+          filesPlugin.name,
+          filesPlugin.settings
+        );
+        registerSettings(settingDefs);
+      }
+      g.__fallbackPlugin = {
+        plugin: filesPlugin,
+        pluginId: BUILTIN_FILES_ID,
+        patterns: [],
+      };
+      console.log("Loaded built-in plugin: Files (fallback)");
+    } else {
+      g.__fallbackPlugin = undefined;
+    }
+  }
 
   // Load plugins tracked in DB
   const dbPlugins = db.select().from(schema.installedPlugins).all();
@@ -177,6 +231,8 @@ export async function initPlugins(pluginsDir?: string): Promise<void> {
 
   for (const dbPlugin of dbPlugins) {
     if (!dbPlugin.enabled) continue;
+    // Skip built-in plugins — they are loaded directly, not from disk
+    if (dbPlugin.id.startsWith("builtin-")) continue;
 
     const pluginDir = path.join(dir, dbPlugin.id);
     const indexFile = ["index.js", "index.mjs"].find((f) =>
@@ -392,6 +448,14 @@ export function getPluginForUrl(
       }
     }
 
+    // Ultimate fallback: built-in Files plugin
+    if (g.__fallbackPlugin) {
+      return {
+        plugin: g.__fallbackPlugin.plugin,
+        pluginId: g.__fallbackPlugin.pluginId,
+      };
+    }
+
     return null;
   } catch {
     return null;
@@ -434,6 +498,25 @@ export async function loadSinglePlugin(
   pluginId: string,
   pluginsDir?: string
 ): Promise<void> {
+  // Handle built-in plugin re-enable
+  if (pluginId === BUILTIN_FILES_ID) {
+    if (filesPlugin.settings?.length) {
+      const settingDefs = pluginSettingsToDefinitions(
+        BUILTIN_FILES_ID,
+        filesPlugin.name,
+        filesPlugin.settings
+      );
+      registerSettings(settingDefs);
+      await initializeSettings();
+    }
+    g.__fallbackPlugin = {
+      plugin: filesPlugin,
+      pluginId: BUILTIN_FILES_ID,
+      patterns: [],
+    };
+    return;
+  }
+
   const dir = pluginsDir || process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
   const pluginDir = path.join(dir, pluginId);
 
@@ -473,6 +556,7 @@ export async function reloadPlugins(pluginsDir?: string): Promise<void> {
   // Clear all registered plugins
   plugins.clear();
   fileTypePlugins.length = 0;
+  g.__fallbackPlugin = undefined;
   setInitialized(false);
   await initPlugins(pluginsDir);
 }
@@ -490,6 +574,10 @@ export function unloadPlugin(pluginId: string): void {
 
   const ftIdx = fileTypePlugins.findIndex(r => r.pluginId === pluginId);
   if (ftIdx >= 0) fileTypePlugins.splice(ftIdx, 1);
+
+  if (g.__fallbackPlugin?.pluginId === pluginId) {
+    g.__fallbackPlugin = undefined;
+  }
 }
 
 function normalizePattern(pattern: string): string {

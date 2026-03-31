@@ -7,6 +7,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Added
+- Built-in "Files" plugin — universal fallback that downloads any file type when no other plugin matches a URL
+- Extension-to-folder routing: files are automatically organized into folders (Images, Videos, Audio, Documents, Archives, etc.) based on their extension
+- New `extension-directory-map` setting type with chip-based autocomplete UI for managing extension-to-folder mappings
+- "Organize by Hostname" toggle to optionally create per-website subfolders within each extension folder
+- Query parameter resilience: downloads retry with stripped query params if the original URL fails
+- Users can add custom file extensions and folder mappings beyond the 150+ seeded defaults
+- Built-in plugins are protected from deletion (can only be disabled)
 - History clearing: "Clear All" button to delete all history entries, and per-entry delete button on hover
 - API routes: `DELETE /api/history/clear` and `DELETE /api/history/[id]`
 

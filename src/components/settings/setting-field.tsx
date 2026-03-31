@@ -14,12 +14,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SiteDirectoryMap } from "./site-directory-map";
+import { ExtensionDirectoryMap } from "./extension-directory-map";
 import { FileUploadField } from "./file-upload-field";
 import { cn } from "@/lib/utils";
 
 interface SettingFieldProps {
   settingKey: string;
-  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map" | "file";
+  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map" | "extension-directory-map" | "file";
   label: string;
   description?: string;
   value: string | number | boolean | null;
@@ -110,6 +111,19 @@ export function SettingField({
   if (type === "site-directory-map") {
     return (
       <SiteDirectoryMap
+        settingKey={settingKey}
+        label={label}
+        description={description}
+        value={value as string | null}
+        options={validation?.options ?? []}
+        onChange={onChange}
+      />
+    );
+  }
+
+  if (type === "extension-directory-map") {
+    return (
+      <ExtensionDirectoryMap
         settingKey={settingKey}
         label={label}
         description={description}

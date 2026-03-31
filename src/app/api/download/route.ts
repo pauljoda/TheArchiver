@@ -35,7 +35,7 @@ function queueDownload(url: string): NextResponse {
       pluginName,
       message: match
         ? `Queued for download via ${match.plugin.name}`
-        : "Queued for download (no matching plugin found)",
+        : "Queued for download (no matching plugin — enable the Files plugin for universal downloads)",
     },
     { status: 201 }
   );

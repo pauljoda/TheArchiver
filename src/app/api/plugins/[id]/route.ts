@@ -60,6 +60,14 @@ export async function DELETE(
     const deleteSettings = request.nextUrl.searchParams.get("deleteSettings") === "true";
     const db = getDb();
 
+    // Built-in plugins cannot be deleted — only disabled
+    if (id.startsWith("builtin-")) {
+      return NextResponse.json(
+        { error: "Built-in plugins cannot be deleted, only disabled" },
+        { status: 400 }
+      );
+    }
+
     const existing = db
       .select()
       .from(schema.installedPlugins)
