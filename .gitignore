@@ -46,6 +46,7 @@ test-results/
 
 # Old screenshots
 Screenshots/
+!website/public/screenshots/
 
 # User-installed plugins (example-plugin is tracked as a template)
 plugins/*
