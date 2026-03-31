@@ -7,6 +7,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Added
+- **Plugin View System** — Plugins can now ship custom file explorer views as compiled JS bundles
+  - New `viewProvider` field in plugin manifests declares a view with `viewId`, `label`, `icon`, and `entryPoint`
+  - View provider registry tracks which plugins can render which directories (based on `save_directory` setting)
+  - `PluginViewHost` component dynamically loads plugin JS bundles via `<script>` tag and provides a rich API (`fetchFiles`, `fetchFile`, `navigate`, theme colors)
+  - View toggle bar allows switching between "Files" (standard browser) and plugin-provided views
+  - When multiple plugins claim the same directory, all views appear as toggle options
+  - Plugin views get full-page width for immersive experiences
+- **Reddit Browser View** (Socials plugin) — Faux Reddit interface for browsing archived Reddit content
+  - Subreddit grid at root level with post counts and sample thumbnails
+  - Post card grid per subreddit with score, author, date, and flair from Post.nfo metadata
+  - Full post detail view with image gallery (lightbox, prev/next navigation, thumbnails), parsed metadata, and threaded comment tree
+  - Reddit-inspired styling with nested comment indentation, upvote badges, author highlighting, and flair tags
+  - Vanilla JS bundle (zero dependencies) with CSS custom property theme integration
+- New API endpoints:
+  - `GET /api/files/view-providers?path=` — Query which plugin views can render a directory
+  - `GET /api/plugins/view?pluginId=` — Serve plugin view JS bundles
+
+### Changed
+- Layout container (`max-w-7xl`) moved from root layout to individual pages, allowing the files page to go full-width when a plugin view is active
+
+### Added
 - Built-in "Files" plugin — universal fallback that downloads any file type when no other plugin matches a URL
 - Extension-to-folder routing: files are automatically organized into folders (Images, Videos, Audio, Documents, Archives, etc.) based on their extension
 - New `extension-directory-map` setting type with chip-based autocomplete UI for managing extension-to-folder mappings

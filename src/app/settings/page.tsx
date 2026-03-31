@@ -36,17 +36,19 @@ function getGroupLabel(group: string): string {
 
 export default function SettingsPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center py-12">
-          <p className="text-sm text-muted-foreground font-mono">
-            Loading settings...
-          </p>
-        </div>
-      }
-    >
-      <SettingsContent />
-    </Suspense>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center py-12">
+            <p className="text-sm text-muted-foreground font-mono">
+              Loading settings...
+            </p>
+          </div>
+        }
+      >
+        <SettingsContent />
+      </Suspense>
+    </div>
   );
 }
 

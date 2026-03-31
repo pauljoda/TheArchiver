@@ -9,12 +9,14 @@ import type {
   PluginHelpers,
   PluginManifest,
   PluginSettingDefinition,
+  PluginViewDeclaration,
 } from "./types";
 import type { SettingDefinition } from "@/lib/settings";
 import {
   registerSettings,
   initializeSettings,
   isDefinitionRegistered,
+  getSetting,
 } from "@/lib/settings";
 import { getDb, schema } from "@/db";
 import { eq } from "drizzle-orm";
@@ -88,6 +90,23 @@ interface RegisteredPlugin {
   fileTypes?: string[];
 }
 
+export interface ViewProviderRegistration {
+  pluginId: string;
+  viewId: string;
+  label: string;
+  icon?: string;
+  entryPoint: string;
+  /** Setting key to resolve the tracked directory (e.g., "plugin.plugin-social.save_directory") */
+  directorySettingKey: string;
+}
+
+export interface ViewProviderInfo {
+  pluginId: string;
+  viewId: string;
+  label: string;
+  icon?: string;
+}
+
 // Use globalThis to ensure a single shared instance across all Next.js
 // webpack bundles (API routes, instrumentation, worker, etc.)
 interface PluginRegistryGlobal {
@@ -95,14 +114,17 @@ interface PluginRegistryGlobal {
   __pluginRegistryInitialized?: boolean;
   __fileTypePlugins?: RegisteredPlugin[];
   __fallbackPlugin?: RegisteredPlugin;
+  __viewProviderRegistry?: Map<string, ViewProviderRegistration>;
 }
 
 const g = globalThis as unknown as PluginRegistryGlobal;
 if (!g.__pluginRegistry) g.__pluginRegistry = new Map();
 if (!g.__fileTypePlugins) g.__fileTypePlugins = [];
+if (!g.__viewProviderRegistry) g.__viewProviderRegistry = new Map();
 
 const plugins = g.__pluginRegistry;
 const fileTypePlugins = g.__fileTypePlugins;
+const viewProviders = g.__viewProviderRegistry!;
 
 function getInitialized() {
   return g.__pluginRegistryInitialized ?? false;
@@ -142,6 +164,21 @@ function pluginSettingsToDefinitions(
     sensitive: d.type === "password",
     hidden: d.hidden,
   }));
+}
+
+function registerViewProvider(
+  pluginId: string,
+  view: PluginViewDeclaration,
+  directorySettingKey: string
+): void {
+  viewProviders.set(pluginId, {
+    pluginId,
+    viewId: view.viewId,
+    label: view.label,
+    icon: view.icon,
+    entryPoint: view.entryPoint,
+    directorySettingKey,
+  });
 }
 
 function registerPlugin(
@@ -252,16 +289,17 @@ export async function initPlugins(pluginsDir?: string): Promise<void> {
       const plugin = (pluginModule.default || pluginModule) as ArchiverPlugin;
 
       // Register plugin settings if manifest declares them
+      let manifest: PluginManifest | null = null;
       const manifestPath = path.join(pluginDir, "manifest.json");
       if (fs.existsSync(manifestPath)) {
-        const manifest: PluginManifest = JSON.parse(
+        manifest = JSON.parse(
           fs.readFileSync(manifestPath, "utf-8")
         );
-        if (manifest.settings?.length) {
+        if (manifest!.settings?.length) {
           const settingDefs = pluginSettingsToDefinitions(
             dbPlugin.id,
             dbPlugin.name,
-            manifest.settings
+            manifest!.settings!
           );
           registerSettings(settingDefs);
         }
@@ -275,6 +313,17 @@ export async function initPlugins(pluginsDir?: string): Promise<void> {
       }
 
       registerPlugin(plugin, dbPlugin.id);
+
+      // Register view provider if manifest declares one
+      const viewDecl = manifest?.viewProvider || plugin.viewProvider;
+      if (viewDecl) {
+        registerViewProvider(
+          dbPlugin.id,
+          viewDecl,
+          `plugin.${dbPlugin.id}.save_directory`
+        );
+      }
+
       const patternInfo = plugin.urlPatterns.length
         ? plugin.urlPatterns.join(", ")
         : `file types: ${plugin.fileTypes?.join(", ") || "none"}`;
@@ -353,6 +402,17 @@ export async function initPlugins(pluginsDir?: string): Promise<void> {
         }
 
         registerPlugin(plugin, pluginId);
+
+        // Register view provider if declared
+        const viewDecl = manifest?.viewProvider || plugin.viewProvider;
+        if (viewDecl) {
+          registerViewProvider(
+            pluginId,
+            viewDecl,
+            `plugin.${pluginId}.save_directory`
+          );
+        }
+
         const autoPatternInfo = plugin.urlPatterns.length
           ? plugin.urlPatterns.join(", ")
           : `file types: ${plugin.fileTypes?.join(", ") || "none"}`;
@@ -534,7 +594,7 @@ export async function loadSinglePlugin(
 
   registerPlugin(plugin, pluginId);
 
-  // Load manifest settings
+  // Load manifest settings and view provider
   const manifestPath = path.join(pluginDir, "manifest.json");
   if (fs.existsSync(manifestPath)) {
     const manifest: PluginManifest = JSON.parse(
@@ -549,6 +609,10 @@ export async function loadSinglePlugin(
       registerSettings(settingDefs);
       await initializeSettings();
     }
+    const viewDecl = manifest.viewProvider || plugin.viewProvider;
+    if (viewDecl) {
+      registerViewProvider(pluginId, viewDecl, `plugin.${pluginId}.save_directory`);
+    }
   }
 }
 
@@ -556,6 +620,7 @@ export async function reloadPlugins(pluginsDir?: string): Promise<void> {
   // Clear all registered plugins
   plugins.clear();
   fileTypePlugins.length = 0;
+  viewProviders.clear();
   g.__fallbackPlugin = undefined;
   setInitialized(false);
   await initPlugins(pluginsDir);
@@ -578,6 +643,52 @@ export function unloadPlugin(pluginId: string): void {
   if (g.__fallbackPlugin?.pluginId === pluginId) {
     g.__fallbackPlugin = undefined;
   }
+
+  viewProviders.delete(pluginId);
+}
+
+export function getViewProvidersForPath(relativePath: string): ViewProviderInfo[] {
+  const results: ViewProviderInfo[] = [];
+
+  for (const reg of viewProviders.values()) {
+    let trackedDir: string;
+    try {
+      trackedDir = getSetting<string>(reg.directorySettingKey);
+    } catch {
+      // Settings not initialized or key not found — skip
+      continue;
+    }
+
+    if (!trackedDir) continue;
+
+    // Normalize: remove leading/trailing slashes for comparison
+    const normalizedTracked = trackedDir.replace(/^\/+|\/+$/g, "");
+    const normalizedPath = relativePath.replace(/^\/+|\/+$/g, "");
+
+    if (
+      normalizedPath === normalizedTracked ||
+      normalizedPath.startsWith(normalizedTracked + "/")
+    ) {
+      results.push({
+        pluginId: reg.pluginId,
+        viewId: reg.viewId,
+        label: reg.label,
+        icon: reg.icon,
+      });
+    }
+  }
+
+  return results;
+}
+
+export function getViewProviderEntry(pluginId: string): { entryPoint: string; pluginsDir: string } | null {
+  const reg = viewProviders.get(pluginId);
+  if (!reg) return null;
+  const dir = process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
+  return {
+    entryPoint: path.join(dir, pluginId, reg.entryPoint),
+    pluginsDir: dir,
+  };
 }
 
 function normalizePattern(pattern: string): string {

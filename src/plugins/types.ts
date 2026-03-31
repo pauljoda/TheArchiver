@@ -22,6 +22,17 @@ export interface PluginSettingDefinition {
   sortOrder?: number;
 }
 
+export interface PluginViewDeclaration {
+  /** Unique view provider ID */
+  viewId: string;
+  /** Display name in the view toggle (e.g., "Reddit Browser") */
+  label: string;
+  /** lucide-react icon name for the toggle button */
+  icon?: string;
+  /** Relative path to the compiled JS view bundle (e.g., "view/index.js") */
+  entryPoint: string;
+}
+
 export interface PluginManifest {
   name: string;
   version?: string;
@@ -30,6 +41,7 @@ export interface PluginManifest {
   urlPatterns: string[];
   fileTypes?: string[];
   settings?: PluginSettingDefinition[];
+  viewProvider?: PluginViewDeclaration;
 }
 
 export interface PluginSettingsAccessor {
@@ -79,6 +91,7 @@ export interface ArchiverPlugin {
   fileTypes?: string[];
   settings?: PluginSettingDefinition[];
   actions?: Record<string, (context: ActionContext) => Promise<ActionResult>>;
+  viewProvider?: PluginViewDeclaration;
   download: (context: DownloadContext) => Promise<DownloadResult>;
 }
 

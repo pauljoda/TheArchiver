@@ -33,6 +33,7 @@ export default function Home() {
   useSSE(refreshAll);
 
   return (
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
     <div className="flex flex-col gap-8">
       {/* Stats row */}
       <div className="animate-vault-enter" style={{ animationDelay: "0ms" }}>
@@ -116,6 +117,7 @@ export default function Home() {
           </TabsContent>
         </Tabs>
       </div>
+    </div>
     </div>
   );
 }
