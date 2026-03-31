@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Added
+- History clearing: "Clear All" button to delete all history entries, and per-entry delete button on hover
+- API routes: `DELETE /api/history/clear` and `DELETE /api/history/[id]`
+
 ### Changed
 - Plugin settings now persist across uninstall/reinstall — removing a plugin keeps its settings in the database so re-adding recovers previous configuration
 - Plugin removal UI offers two options: "Remove" (keep settings) and "Purge Settings" (remove plugin and all its settings)

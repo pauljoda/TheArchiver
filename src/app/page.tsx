@@ -104,7 +104,7 @@ export default function Home() {
           </TabsContent>
 
           <TabsContent value="history" className="animate-vault-fade">
-            <RecentActivity items={history.data} />
+            <RecentActivity items={history.data} onRefresh={refreshAll} />
           </TabsContent>
 
           <TabsContent value="plugins" className="animate-vault-fade">

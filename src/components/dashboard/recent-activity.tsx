@@ -1,6 +1,7 @@
 "use client";
 
-import { CheckCircle2, XCircle, Archive } from "lucide-react";
+import { CheckCircle2, XCircle, Archive, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -22,12 +23,23 @@ interface HistoryItem {
 
 interface RecentActivityProps {
   items: HistoryItem[];
+  onRefresh: () => void;
 }
 
-export function RecentActivity({ items }: RecentActivityProps) {
+export function RecentActivity({ items, onRefresh }: RecentActivityProps) {
+  async function handleDelete(id: number) {
+    await fetch(`/api/history/${id}`, { method: "DELETE" });
+    onRefresh();
+  }
+
+  async function handleClearAll() {
+    await fetch("/api/history/clear", { method: "DELETE" });
+    onRefresh();
+  }
+
   return (
     <Card className="overflow-hidden border-border/50">
-      <CardHeader className="border-b border-border/50 bg-card">
+      <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 bg-card">
         <div className="flex items-center gap-3">
           <CardTitle className="font-heading text-sm uppercase tracking-wider">
             Archive History
@@ -38,6 +50,11 @@ export function RecentActivity({ items }: RecentActivityProps) {
             </Badge>
           )}
         </div>
+        {items.length > 0 && (
+          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleClearAll}>
+            Clear All
+          </Button>
+        )}
       </CardHeader>
       <CardContent className="p-0">
         {items.length === 0 ? (
@@ -107,17 +124,32 @@ export function RecentActivity({ items }: RecentActivityProps) {
                   </div>
                 </div>
 
-                {/* Timestamp */}
-                <span className="hidden sm:block text-[10px] font-mono text-muted-foreground/50 shrink-0">
-                  {item.completedAt
-                    ? new Date(item.completedAt).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })
-                    : ""}
-                </span>
+                {/* Timestamp & Actions */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="hidden sm:block text-[10px] font-mono text-muted-foreground/50">
+                    {item.completedAt
+                      ? new Date(item.completedAt).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : ""}
+                  </span>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleDelete(item.id)}
+                      >
+                        <Trash2 className="size-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Delete</TooltipContent>
+                  </Tooltip>
+                </div>
               </div>
             ))}
           </div>

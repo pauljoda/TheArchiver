@@ -8,7 +8,8 @@ export interface SSEEvent {
     | "job:failed"
     | "job:log"
     | "queue:cleared"
-    | "failed:cleared";
+    | "failed:cleared"
+    | "history:cleared";
   data: Record<string, unknown>;
 }
 
