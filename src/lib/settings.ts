@@ -129,7 +129,7 @@ function deserialize(
   raw: string | null,
   type: SettingDefinition["type"]
 ): unknown {
-  if (raw === null || raw === "") return type === "boolean" ? false : raw;
+  if (raw === null || raw === "" || raw === "null") return type === "boolean" ? false : null;
 
   switch (type) {
     case "number":
@@ -168,7 +168,7 @@ export async function setSetting(
 
   validate(value, def);
 
-  const serialized = String(value);
+  const serialized = value === null || value === undefined ? null : String(value);
   const db = getDb();
 
   db.update(schema.settings)

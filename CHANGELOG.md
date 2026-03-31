@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Changed
+- Plugin settings now persist across uninstall/reinstall — removing a plugin keeps its settings in the database so re-adding recovers previous configuration
+- Plugin removal UI offers two options: "Remove" (keep settings) and "Purge Settings" (remove plugin and all its settings)
+
+### Fixed
+- Settings with null values were stored as the string `"null"` instead of actual null, causing corrupted values on read
+
 ### Removed
 - Kavita settings from core settings — now managed by plugin
 

@@ -68,10 +68,13 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
     }
   }
 
-  async function handleRemove(id: string) {
+  async function handleRemove(id: string, deleteSettings = false) {
     setRemovingId(id);
     try {
-      await fetch(`/api/plugins/${id}`, { method: "DELETE" });
+      const url = deleteSettings
+        ? `/api/plugins/${id}?deleteSettings=true`
+        : `/api/plugins/${id}`;
+      await fetch(url, { method: "DELETE" });
       setConfirmRemove(null);
       onRefresh?.();
     } catch (err) {
@@ -266,9 +269,18 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
                         size="sm"
                         className="h-7 text-[10px] font-heading uppercase tracking-wider"
                         disabled={removingId === plugin.id}
-                        onClick={() => handleRemove(plugin.id)}
+                        onClick={() => handleRemove(plugin.id, false)}
                       >
-                        {removingId === plugin.id ? "..." : "Confirm"}
+                        {removingId === plugin.id ? "..." : "Remove"}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="h-7 text-[10px] font-heading uppercase tracking-wider bg-destructive/80"
+                        disabled={removingId === plugin.id}
+                        onClick={() => handleRemove(plugin.id, true)}
+                      >
+                        {removingId === plugin.id ? "..." : "Purge Settings"}
                       </Button>
                       <Button
                         variant="ghost"

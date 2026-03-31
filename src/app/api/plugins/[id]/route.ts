@@ -52,11 +52,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { id } = await params;
+    const deleteSettings = request.nextUrl.searchParams.get("deleteSettings") === "true";
     const db = getDb();
 
     const existing = db
@@ -75,8 +76,10 @@ export async function DELETE(
     // Unload from memory
     unloadPlugin(id);
 
-    // Delete settings
-    await deleteSettingsByPrefix(`plugin.${id}.`);
+    // Only delete settings if explicitly requested
+    if (deleteSettings) {
+      await deleteSettingsByPrefix(`plugin.${id}.`);
+    }
 
     // Delete DB record
     db.delete(schema.installedPlugins)
