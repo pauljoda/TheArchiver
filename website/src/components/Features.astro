@@ -1,0 +1,205 @@
+---
+const features = [
+  {
+    id: "01",
+    title: "Plugin-Based Downloads",
+    desc: "Drop-in TypeScript plugins matched by URL pattern. First match handles the download automatically.",
+  },
+  {
+    id: "02",
+    title: "Real-Time Dashboard",
+    desc: "Live queue monitoring, download stats, history, and server console via Server-Sent Events.",
+  },
+  {
+    id: "03",
+    title: "File Browser",
+    desc: "Browse, organize, rename, move, copy, and download your archived content directly from the UI.",
+  },
+  {
+    id: "04",
+    title: "REST API",
+    desc: "Simple POST or GET endpoint. Integrate with anything that can make an HTTP request.",
+  },
+  {
+    id: "05",
+    title: "Multi-Device",
+    desc: "Archive from Apple Shortcuts, browser bookmarklets, Tasker, IFTTT, n8n, or any automation tool.",
+  },
+  {
+    id: "06",
+    title: "Push Notifications",
+    desc: "Get notified via ntfy.sh when downloads complete or fail. Configure from the Settings page.",
+  },
+];
+---
+
+<section class="manifest" id="features">
+  <div class="container">
+    <div class="manifest-header reveal">
+      <span class="section-label">System Capabilities</span>
+      <h2 class="section-title">Everything you need to <span class="text-amber">archive the web</span></h2>
+    </div>
+
+    <div class="manifest-grid">
+      {features.map((f, i) => (
+        <div class="manifest-entry reveal" style={`transition-delay: ${i * 0.06}s`}>
+          <span class="entry-index">{f.id}</span>
+          <div class="entry-content">
+            <h3 class="entry-title">{f.title}</h3>
+            <p class="entry-desc">{f.desc}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- Tech stack bar -->
+    <div class="tech-bar reveal" style="transition-delay: 0.4s">
+      <span class="tech-item">Next.js 16</span>
+      <span class="tech-sep">/</span>
+      <span class="tech-item">React 19</span>
+      <span class="tech-sep">/</span>
+      <span class="tech-item">SQLite</span>
+      <span class="tech-sep">/</span>
+      <span class="tech-item">Drizzle ORM</span>
+      <span class="tech-sep">/</span>
+      <span class="tech-item">SSE</span>
+      <span class="tech-sep">/</span>
+      <span class="tech-item">Docker</span>
+    </div>
+  </div>
+</section>
+
+<style>
+  .manifest {
+    padding: 5rem 1.5rem 4rem;
+    position: relative;
+  }
+
+  .manifest::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  .manifest-header {
+    margin-bottom: 3rem;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--amber);
+    display: block;
+    margin-bottom: 0.6rem;
+  }
+
+  .section-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.4rem, 3.5vw, 2rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--foreground);
+  }
+
+  .text-amber {
+    color: var(--amber);
+  }
+
+  /* ── Manifest grid ── */
+  .manifest-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  @media (min-width: 768px) {
+    .manifest-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .manifest-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 0;
+    border-bottom: 1px solid oklch(0.2 0.012 260);
+  }
+
+  /* On two-column, add right border on left column entries */
+  @media (min-width: 768px) {
+    .manifest-entry {
+      padding: 1.25rem 1.5rem;
+    }
+    .manifest-entry:nth-child(odd) {
+      border-right: 1px solid oklch(0.2 0.012 260);
+    }
+    /* Remove bottom border on last row */
+    .manifest-entry:nth-last-child(-n+2) {
+      border-bottom: none;
+    }
+  }
+
+  .entry-index {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--amber);
+    opacity: 0.6;
+    min-width: 1.5rem;
+    padding-top: 0.15rem;
+    flex-shrink: 0;
+  }
+
+  .entry-title {
+    font-family: var(--font-heading);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin-bottom: 0.25rem;
+    line-height: 1.3;
+  }
+
+  .entry-desc {
+    font-size: 0.82rem;
+    color: var(--muted-foreground);
+    line-height: 1.55;
+  }
+
+  /* ── Tech stack bar ── */
+  .tech-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid oklch(0.2 0.012 260);
+  }
+
+  .tech-item {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    color: oklch(0.45 0.015 260);
+    text-transform: uppercase;
+  }
+
+  .tech-sep {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    color: oklch(0.25 0.012 260);
+  }
+</style>

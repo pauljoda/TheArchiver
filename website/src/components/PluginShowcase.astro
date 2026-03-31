@@ -1,0 +1,214 @@
+<section class="plugin-showcase" id="plugins">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Plugin System</span>
+      <h2 class="section-title">Extend with <span class="text-amber">TypeScript plugins</span></h2>
+    </div>
+
+    <div class="showcase-grid">
+      <div class="showcase-info reveal">
+        <ul class="feature-list">
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>TypeScript-first with full type safety</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>URL pattern matching &mdash; first match wins</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Built-in helpers for HTML, file I/O, strings</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Install via UI upload or filesystem</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Hot-reload without server restart</span>
+          </li>
+          <li>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Declare custom settings per plugin</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="code-wrapper reveal" style="transition-delay: 0.15s">
+        <div class="terminal noise-bg scanlines">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-amber"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="terminal-title">my-plugin/index.ts</span>
+          </div>
+          <div class="terminal-body">
+            <div class="code-line"><span class="keyword">import</span> <span class="punct">{"{"}</span> definePlugin <span class="punct">{"}"}</span> <span class="keyword">from</span> <span class="string">"../../src/plugins/types"</span><span class="punct">;</span></div>
+            <div class="code-line spacer"></div>
+            <div class="code-line"><span class="keyword">export default</span> <span class="func">definePlugin</span><span class="punct">({"{"}</span></div>
+            <div class="code-line indent"><span class="prop">name</span><span class="punct">:</span> <span class="string">"My Plugin"</span><span class="punct">,</span></div>
+            <div class="code-line indent"><span class="prop">urlPatterns</span><span class="punct">:</span> <span class="punct">[</span><span class="string">"https://example.com"</span><span class="punct">],</span></div>
+            <div class="code-line spacer"></div>
+            <div class="code-line indent"><span class="keyword">async</span> <span class="func">download</span><span class="punct">(</span><span class="param">context</span><span class="punct">)</span> <span class="punct">{"{"}</span></div>
+            <div class="code-line indent2"><span class="keyword">const</span> <span class="punct">{"{"}</span> url<span class="punct">,</span> helpers<span class="punct">,</span> logger <span class="punct">{"}"}</span> <span class="punct">=</span> context<span class="punct">;</span></div>
+            <div class="code-line spacer"></div>
+            <div class="code-line indent2"><span class="comment">// Fetch and parse HTML</span></div>
+            <div class="code-line indent2"><span class="keyword">const</span> html <span class="punct">=</span> <span class="keyword">await</span> helpers<span class="punct">.</span>html<span class="punct">.</span><span class="func">fetchPage</span><span class="punct">(</span>url<span class="punct">);</span></div>
+            <div class="code-line indent2"><span class="keyword">const</span> $ <span class="punct">=</span> helpers<span class="punct">.</span>html<span class="punct">.</span><span class="func">parse</span><span class="punct">(</span>html<span class="punct">);</span></div>
+            <div class="code-line spacer"></div>
+            <div class="code-line indent2"><span class="comment">// Download files</span></div>
+            <div class="code-line indent2"><span class="keyword">await</span> helpers<span class="punct">.</span>io<span class="punct">.</span><span class="func">downloadFile</span><span class="punct">(</span>imageUrl<span class="punct">,</span> path<span class="punct">);</span></div>
+            <div class="code-line spacer"></div>
+            <div class="code-line indent2"><span class="keyword">return</span> <span class="punct">{"{"}</span> <span class="prop">success</span><span class="punct">:</span> <span class="keyword">true</span> <span class="punct">{"}"}</span><span class="punct">;</span></div>
+            <div class="code-line indent"><span class="punct">{"}"}</span><span class="punct">,</span></div>
+            <div class="code-line"><span class="punct">{"}"}</span><span class="punct">);</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .plugin-showcase {
+    padding: 6rem 1.5rem;
+    position: relative;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--amber);
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+
+  .section-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--foreground);
+  }
+
+  .text-amber {
+    color: var(--amber);
+  }
+
+  .showcase-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  @media (min-width: 1024px) {
+    .showcase-grid {
+      grid-template-columns: 1fr 1.3fr;
+      gap: 3rem;
+    }
+  }
+
+  /* Feature list */
+  .feature-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .feature-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.95rem;
+    color: var(--foreground);
+    line-height: 1.4;
+  }
+
+  .feature-list li svg {
+    flex-shrink: 0;
+  }
+
+  /* Terminal / Code block */
+  .code-wrapper {
+    position: relative;
+  }
+
+  .terminal {
+    background: var(--surface-deep);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) * 1.4);
+    overflow: hidden;
+  }
+
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: oklch(0.12 0.012 260);
+  }
+
+  .terminal-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .dot-red { background: oklch(0.6 0.2 25); }
+  .dot-amber { background: var(--amber-dim); }
+  .dot-green { background: oklch(0.65 0.17 145); }
+
+  .terminal-title {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted-foreground);
+    letter-spacing: 0.05em;
+  }
+
+  .terminal-body {
+    padding: 1rem 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.8;
+    position: relative;
+    z-index: 3;
+    overflow-x: auto;
+  }
+
+  .code-line {
+    white-space: nowrap;
+  }
+  .code-line.indent { padding-left: 1.5rem; }
+  .code-line.indent2 { padding-left: 3rem; }
+  .code-line.spacer { height: 0.5rem; }
+
+  .keyword { color: oklch(0.7 0.15 300); }
+  .func { color: oklch(0.75 0.15 220); }
+  .string { color: oklch(0.7 0.17 145); }
+  .punct { color: var(--muted-foreground); }
+  .prop { color: var(--amber); }
+  .param { color: var(--foreground); }
+  .comment { color: oklch(0.45 0.02 260); font-style: italic; }
+</style>

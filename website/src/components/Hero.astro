@@ -1,0 +1,369 @@
+---
+const version = "2.1.0";
+const base = import.meta.env.BASE_URL;
+---
+
+<section class="hero noise-bg">
+  <div class="hero-glow"></div>
+
+  <div class="hero-inner">
+    <!-- Compact header -->
+    <nav class="hero-nav animate-vault-enter">
+      <div class="nav-brand">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 512 512" class="nav-icon">
+          <defs>
+            <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#1a1a2e" />
+              <stop offset="100%" stop-color="#16162a" />
+            </linearGradient>
+            <linearGradient id="amber" x1="0" y1="0" x2="0.5" y2="1">
+              <stop offset="0%" stop-color="#f5c542" />
+              <stop offset="100%" stop-color="#d4a22a" />
+            </linearGradient>
+          </defs>
+          <rect width="512" height="512" rx="108" fill="url(#bg)" />
+          <rect width="504" height="504" x="4" y="4" rx="104" fill="none" stroke="#d4a22a" stroke-opacity="0.25" stroke-width="4" />
+          <g transform="translate(116, 116) scale(11.67)" fill="none" stroke="url(#amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+            <path d="M10 12h4" />
+            <rect width="20" height="5" x="2" y="3" rx="1" fill="url(#amber)" fill-opacity="0.15" />
+          </g>
+        </svg>
+        <span class="nav-name">The Archiver</span>
+        <span class="nav-version">v{version}</span>
+      </div>
+      <a href="https://github.com/pauljoda/TheArchiver" target="_blank" rel="noopener" class="nav-github" aria-label="View on GitHub">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+        <span class="github-text">GitHub</span>
+      </a>
+    </nav>
+
+    <!-- Headline -->
+    <div class="hero-copy animate-vault-enter delay-1">
+      <h1 class="hero-title">
+        Your Web. <span class="text-amber">Your Archive.</span><br class="title-break" /> Your Server.
+      </h1>
+      <p class="hero-sub">
+        Self-hosted, plugin-based web content archiver.<br class="sub-break" />
+        One Docker container. One command. Done.
+      </p>
+    </div>
+
+    <!-- CTAs -->
+    <div class="hero-actions animate-vault-enter delay-2">
+      <a href="#quick-start" class="btn-primary">Get Started</a>
+      <a href="https://github.com/pauljoda/TheArchiver" target="_blank" rel="noopener" class="btn-ghost">View Source</a>
+    </div>
+
+    <!-- Screenshot -->
+    <div class="screenshot-wrap animate-vault-enter delay-3">
+      <div class="screenshot-glow"></div>
+      <div class="screenshot-frame">
+        <div class="frame-img">
+          <img
+            src={`${base}screenshots/dashboard.png`}
+            alt="The Archiver Dashboard — real-time queue monitoring, stats, plugin management, and server console"
+            width="1280"
+            height="800"
+            loading="eager"
+          />
+        </div>
+      </div>
+      <div class="screenshot-fade"></div>
+    </div>
+  </div>
+
+  <!-- Scroll cue -->
+  <div class="scroll-cue animate-vault-fade delay-5">
+    <div class="scroll-track"><div class="scroll-pip"></div></div>
+  </div>
+</section>
+
+<style>
+  /* ── Hero section ── */
+  .hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    padding: 0 1rem 0;
+  }
+
+  @media (min-width: 640px) {
+    .hero {
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+  }
+
+  .hero-glow {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    translate: -50% -50%;
+    width: 800px;
+    height: 600px;
+    background: radial-gradient(
+      ellipse,
+      oklch(0.78 0.14 70 / 6%) 0%,
+      oklch(0.78 0.14 70 / 2%) 35%,
+      transparent 70%
+    );
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    width: 100%;
+    max-width: 960px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ── Nav ── */
+  .hero-nav {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .nav-icon {
+    border-radius: 5px;
+    flex-shrink: 0;
+  }
+
+  .nav-name {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--foreground);
+    letter-spacing: 0.03em;
+  }
+
+  .nav-version {
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--amber);
+    background: oklch(0.78 0.14 70 / 8%);
+    border: 1px solid oklch(0.78 0.14 70 / 12%);
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+  }
+
+  .nav-github {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    transition: color 0.15s;
+  }
+  .nav-github:hover { color: var(--amber); }
+
+  .github-text {
+    display: none;
+  }
+  @media (min-width: 480px) {
+    .github-text { display: inline; }
+  }
+
+  /* ── Copy ── */
+  .hero-copy {
+    text-align: center;
+    padding: 1.5rem 0 1rem;
+  }
+
+  .hero-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.5rem, 5vw, 2.8rem);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--foreground);
+    margin-bottom: 0.6rem;
+  }
+
+  .text-amber { color: var(--amber); }
+
+  .title-break { display: none; }
+  @media (min-width: 640px) {
+    .title-break { display: inline; }
+  }
+
+  .hero-sub {
+    font-size: clamp(0.85rem, 1.8vw, 1rem);
+    color: var(--muted-foreground);
+    line-height: 1.55;
+  }
+
+  .sub-break { display: none; }
+  @media (min-width: 640px) {
+    .sub-break { display: inline; }
+  }
+
+  /* ── Buttons ── */
+  .hero-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding-bottom: 2rem;
+  }
+
+  .btn-primary,
+  .btn-ghost {
+    font-family: var(--font-heading);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 0.5rem 1.2rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .btn-primary {
+    background: var(--amber);
+    color: var(--primary-foreground);
+    border: 1px solid var(--amber);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 0 20px var(--amber-glow), 0 0 50px oklch(0.78 0.14 70 / 6%);
+    translate: 0 -1px;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted-foreground);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover {
+    color: var(--foreground);
+    border-color: oklch(0.4 0.015 260);
+    translate: 0 -1px;
+  }
+
+  /* ── Screenshot ── */
+  .screenshot-wrap {
+    width: 100%;
+    position: relative;
+  }
+
+  .screenshot-glow {
+    position: absolute;
+    inset: -40px -60px;
+    background: radial-gradient(
+      ellipse at 50% 30%,
+      oklch(0.78 0.14 70 / 5%) 0%,
+      transparent 60%
+    );
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .screenshot-frame {
+    position: relative;
+    z-index: 1;
+    border: 1px solid oklch(0.28 0.015 260);
+    border-radius: 10px;
+    overflow: hidden;
+    background: oklch(0.11 0.01 260);
+    box-shadow:
+      0 4px 30px oklch(0 0 0 / 35%),
+      0 0 0 1px oklch(0.78 0.14 70 / 3%);
+    transform: perspective(1600px) rotateX(2.5deg);
+    transform-origin: center top;
+  }
+
+  .frame-img {
+    line-height: 0;
+    overflow: hidden;
+    border-radius: inherit;
+  }
+
+  .frame-img img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Bottom fade */
+  .screenshot-fade {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 45%;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      oklch(0.13 0.012 260 / 70%) 55%,
+      var(--background) 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  /* ── Scroll cue ── */
+  .scroll-cue {
+    position: absolute;
+    bottom: 1.2rem;
+    left: 50%;
+    translate: -50% 0;
+    z-index: 4;
+    display: none;
+  }
+
+  @media (min-width: 640px) {
+    .scroll-cue { display: block; }
+  }
+
+  .scroll-track {
+    width: 1px;
+    height: 32px;
+    background: oklch(0.22 0.012 260);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .scroll-pip {
+    width: 1px;
+    height: 10px;
+    background: var(--amber-dim);
+    border-radius: 1px;
+    animation: pip-drop 2.2s ease-in-out infinite;
+  }
+
+  @keyframes pip-drop {
+    0%   { translate: 0 -10px; opacity: 0; }
+    25%  { opacity: 1; }
+    75%  { opacity: 1; }
+    100% { translate: 0 32px; opacity: 0; }
+  }
+
+  /* ── Mobile tweaks ── */
+  @media (max-width: 639px) {
+    .hero { padding: 0 0.75rem; }
+    .hero-copy { padding: 1rem 0 0.75rem; }
+    .hero-actions { padding-bottom: 1.25rem; }
+    .screenshot-frame {
+      border-radius: 8px;
+      transform: perspective(1200px) rotateX(2deg);
+    }
+    .screenshot-fade { height: 35%; }
+  }
+</style>

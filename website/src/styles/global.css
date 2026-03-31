@@ -1,0 +1,177 @@
+/* ── VAULT THEME — Ported from TheArchiver app ── */
+
+@import "@fontsource-variable/jetbrains-mono";
+@import "@fontsource-variable/dm-sans";
+
+:root {
+  /* Dark vault palette (landing page is dark-only) */
+  --background: oklch(0.13 0.012 260);
+  --foreground: oklch(0.93 0.01 80);
+  --card: oklch(0.17 0.012 260);
+  --card-foreground: oklch(0.93 0.01 80);
+  --border: oklch(0.25 0.015 260);
+  --muted: oklch(0.22 0.012 260);
+  --muted-foreground: oklch(0.6 0.02 80);
+  --primary: oklch(0.78 0.14 70);
+  --primary-foreground: oklch(0.13 0.012 260);
+
+  /* Custom vault tokens */
+  --amber: oklch(0.78 0.14 70);
+  --amber-dim: oklch(0.65 0.12 60);
+  --amber-glow: oklch(0.78 0.14 70 / 15%);
+  --surface-noise: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  --surface-deep: oklch(0.10 0.012 260);
+
+  /* Typography */
+  --font-heading: "JetBrains Mono Variable", "JetBrains Mono", monospace;
+  --font-sans: "DM Sans Variable", "DM Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", monospace;
+
+  /* Radius */
+  --radius: 0.5rem;
+}
+
+/* ── Reset & Base ── */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ── Noise texture overlay ── */
+.noise-bg {
+  position: relative;
+}
+.noise-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: var(--surface-noise);
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+/* ── Amber glow effect ── */
+.amber-glow {
+  box-shadow: 0 0 20px var(--amber-glow), 0 0 60px oklch(0.78 0.14 70 / 5%);
+}
+
+/* ── Terminal scanlines ── */
+.scanlines {
+  position: relative;
+}
+.scanlines::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    oklch(0 0 0 / 3%) 2px,
+    oklch(0 0 0 / 3%) 4px
+  );
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 2;
+}
+
+/* ── Keyframes ── */
+@keyframes vault-enter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vault-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes pulse-amber {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px var(--amber-glow), 0 0 60px oklch(0.78 0.14 70 / 5%); }
+  50% { box-shadow: 0 0 30px var(--amber-glow), 0 0 80px oklch(0.78 0.14 70 / 10%); }
+}
+
+/* ── Animation utilities ── */
+.animate-vault-enter {
+  animation: vault-enter 0.5s ease-out both;
+}
+
+.animate-vault-fade {
+  animation: vault-fade 0.4s ease-out both;
+}
+
+/* Stagger delays */
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
+.delay-6 { animation-delay: 0.6s; }
+
+/* ── Scroll reveal ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── Custom scrollbar ── */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* ── Selection color ── */
+::selection {
+  background: oklch(0.78 0.14 70 / 30%);
+  color: var(--foreground);
+}

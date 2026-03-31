@@ -1,0 +1,168 @@
+---
+const version = "2.1.0";
+const base = import.meta.env.BASE_URL;
+---
+
+<footer class="footer noise-bg">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="brand-row">
+          <img src={`${base}icon.svg`} alt="" width="32" height="32" class="brand-icon" />
+          <div>
+            <div class="brand-name">The Archiver</div>
+            <span class="brand-version">v{version}</span>
+          </div>
+        </div>
+        <p class="brand-desc">Self-hosted web content archiver.<br />One container. Zero dependencies.</p>
+      </div>
+
+      <div class="footer-links">
+        <div class="link-group">
+          <h4 class="link-group-title">Resources</h4>
+          <ul>
+            <li><a href="https://github.com/pauljoda/TheArchiver" target="_blank" rel="noopener">GitHub Repository</a></li>
+            <li><a href="https://github.com/pauljoda/TheArchiver/pkgs/container/the-archiver" target="_blank" rel="noopener">Docker Image</a></li>
+            <li><a href="https://github.com/pauljoda/TheArchiver#readme" target="_blank" rel="noopener">Documentation</a></li>
+          </ul>
+        </div>
+        <div class="link-group">
+          <h4 class="link-group-title">Integrate</h4>
+          <ul>
+            <li><a href="https://github.com/pauljoda/TheArchiver#api-reference" target="_blank" rel="noopener">REST API</a></li>
+            <li><a href="https://github.com/pauljoda/TheArchiver#apple-shortcuts" target="_blank" rel="noopener">Apple Shortcuts</a></li>
+            <li><a href="https://github.com/pauljoda/TheArchiver#plugin-system" target="_blank" rel="noopener">Write a Plugin</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <span class="footer-legal">MIT License</span>
+      <span class="footer-sep">&middot;</span>
+      <span class="footer-built">Built with <a href="https://astro.build" target="_blank" rel="noopener">Astro</a></span>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .footer {
+    padding: 3rem 1.5rem 1.5rem;
+    background: var(--surface-deep);
+    border-top: 1px solid var(--border);
+    position: relative;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .footer-top {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid oklch(0.2 0.012 260);
+  }
+
+  @media (min-width: 768px) {
+    .footer-top {
+      grid-template-columns: 1.2fr 1fr;
+    }
+  }
+
+  .brand-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .brand-icon {
+    border-radius: 8px;
+  }
+
+  .brand-name {
+    font-family: var(--font-heading);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--foreground);
+    letter-spacing: 0.02em;
+  }
+
+  .brand-version {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: var(--amber);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .brand-desc {
+    font-size: 0.85rem;
+    color: var(--muted-foreground);
+    line-height: 1.5;
+  }
+
+  .footer-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .link-group-title {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--foreground);
+    margin-bottom: 0.75rem;
+  }
+
+  .link-group ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .link-group a {
+    font-size: 0.82rem;
+    color: var(--muted-foreground);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .link-group a:hover {
+    color: var(--amber);
+  }
+
+  .footer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding-top: 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: oklch(0.4 0.015 260);
+  }
+
+  .footer-sep {
+    opacity: 0.4;
+  }
+
+  .footer-bottom a {
+    color: oklch(0.5 0.015 260);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .footer-bottom a:hover {
+    color: var(--amber);
+  }
+</style>

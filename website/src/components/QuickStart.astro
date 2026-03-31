@@ -1,0 +1,283 @@
+<section class="quickstart" id="quick-start">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="section-label">Quick Start</span>
+      <h2 class="section-title">Up and running in <span class="text-amber">30 seconds</span></h2>
+    </div>
+
+    <div class="quickstart-grid">
+      <div class="steps reveal">
+        <div class="step">
+          <div class="step-number">01</div>
+          <div class="step-content">
+            <h3 class="step-title">Run the container</h3>
+            <p class="step-desc">Single Docker command. No Redis, no external database, no orchestration.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">02</div>
+          <div class="step-content">
+            <h3 class="step-title">Open the dashboard</h3>
+            <p class="step-desc">Navigate to <code>localhost:3000</code> to access the full web interface.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-number">03</div>
+          <div class="step-content">
+            <h3 class="step-title">Archive a URL</h3>
+            <p class="step-desc">Submit via the UI, REST API, Apple Shortcut, or bookmarklet. A matching plugin handles the rest.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="terminal-wrapper reveal" style="transition-delay: 0.15s">
+        <div class="terminal noise-bg scanlines">
+          <div class="terminal-header">
+            <div class="terminal-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-amber"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <span class="terminal-title">terminal</span>
+          </div>
+          <div class="terminal-body">
+            <div class="terminal-line">
+              <span class="prompt">$</span>
+              <span class="cmd">docker run</span>
+              <span class="flag">-d</span>
+              <span class="cmd">\</span>
+            </div>
+            <div class="terminal-line indent">
+              <span class="flag">-p</span>
+              <span class="value">3000:3000</span>
+              <span class="cmd">\</span>
+            </div>
+            <div class="terminal-line indent">
+              <span class="flag">-v</span>
+              <span class="value">./data:/data</span>
+              <span class="cmd">\</span>
+            </div>
+            <div class="terminal-line indent">
+              <span class="flag">-v</span>
+              <span class="value">./downloads:/downloads</span>
+              <span class="cmd">\</span>
+            </div>
+            <div class="terminal-line indent">
+              <span class="flag">-v</span>
+              <span class="value">./plugins:/plugins</span>
+              <span class="cmd">\</span>
+            </div>
+            <div class="terminal-line indent">
+              <span class="value">ghcr.io/pauljoda/the-archiver:latest</span>
+            </div>
+            <div class="terminal-line spacer"></div>
+            <div class="terminal-line">
+              <span class="comment"># Archive a URL via the API</span>
+            </div>
+            <div class="terminal-line">
+              <span class="prompt">$</span>
+              <span class="cmd">curl</span>
+              <span class="flag">-X POST</span>
+              <span class="value">http://localhost:3000/api/download</span>
+              <span class="cmd">\</span>
+            </div>
+            <div class="terminal-line indent">
+              <span class="flag">-H</span>
+              <span class="string">"Content-Type: application/json"</span>
+              <span class="cmd">\</span>
+            </div>
+            <div class="terminal-line indent">
+              <span class="flag">-d</span>
+              <span class="string">{`'{"url": "https://example.com/content"}'`}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .quickstart {
+    padding: 6rem 1.5rem;
+    background: var(--surface-deep);
+    position: relative;
+  }
+
+  .quickstart::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-header {
+    text-align: center;
+    margin-bottom: 3.5rem;
+  }
+
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--amber);
+    display: block;
+    margin-bottom: 0.75rem;
+  }
+
+  .section-title {
+    font-family: var(--font-heading);
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--foreground);
+  }
+
+  .text-amber {
+    color: var(--amber);
+  }
+
+  .quickstart-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  @media (min-width: 1024px) {
+    .quickstart-grid {
+      grid-template-columns: 1fr 1.2fr;
+      gap: 3rem;
+    }
+  }
+
+  /* Steps */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .step {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .step-number {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--amber);
+    background: oklch(0.78 0.14 70 / 8%);
+    border: 1px solid oklch(0.78 0.14 70 / 15%);
+    border-radius: calc(var(--radius) * 0.6);
+    padding: 0.3rem 0.6rem;
+    min-width: 2.2rem;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .step-title {
+    font-family: var(--font-heading);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--foreground);
+    margin-bottom: 0.25rem;
+  }
+
+  .step-desc {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    line-height: 1.5;
+  }
+
+  .step-desc code {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--amber);
+    background: oklch(0.78 0.14 70 / 8%);
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+  }
+
+  /* Terminal */
+  .terminal-wrapper {
+    position: relative;
+  }
+
+  .terminal {
+    background: var(--surface-deep);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) * 1.4);
+    overflow: hidden;
+  }
+
+  .terminal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: oklch(0.12 0.012 260);
+  }
+
+  .terminal-dots {
+    display: flex;
+    gap: 6px;
+  }
+
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  .dot-red { background: oklch(0.6 0.2 25); }
+  .dot-amber { background: var(--amber-dim); }
+  .dot-green { background: oklch(0.65 0.17 145); }
+
+  .terminal-title {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    color: var(--muted-foreground);
+    letter-spacing: 0.05em;
+  }
+
+  .terminal-body {
+    padding: 1rem 1.25rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    line-height: 1.7;
+    position: relative;
+    z-index: 3;
+  }
+
+  .terminal-line {
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+
+  .terminal-line.indent {
+    padding-left: 1.5rem;
+  }
+
+  .terminal-line.spacer {
+    height: 0.75rem;
+  }
+
+  .prompt { color: oklch(0.65 0.17 145); margin-right: 0.5rem; }
+  .cmd { color: var(--foreground); }
+  .flag { color: oklch(0.7 0.15 250); }
+  .value { color: var(--amber); }
+  .string { color: oklch(0.7 0.17 145); }
+  .comment { color: var(--muted-foreground); font-style: italic; }
+</style>
