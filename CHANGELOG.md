@@ -19,6 +19,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Orphaned core settings (e.g. removed Kavita group) are now cleaned up from the database on boot
 
 ### Added
+- **File manager operations** — full file management from the browser UI
+  - Create new folders within the current directory
+  - Rename files and folders via context menu
+  - Move files/folders to another directory with folder tree picker
+  - Copy files/folders to another directory with folder tree picker
+  - Multi-select with checkboxes (shift+click for range, Ctrl/Cmd+A for all)
+  - Batch move, copy, and delete for selected items
+  - Selection toolbar with quick actions
+  - Per-row dropdown menu replacing inline action buttons
+  - New API endpoints: POST (mkdir), PATCH (rename), PUT (move/copy), batch DELETE
+  - `resolveSafeNewPath()` security helper for target paths that don't yet exist
 - **Plugin update support** — importing a plugin that already exists now updates it in-place (preserves settings)
 - Per-plugin update button (upload icon) in the plugin list for quick updates
 - **File browser** (`/files`) — browse, download, and delete files from the download directory

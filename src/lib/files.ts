@@ -64,6 +64,50 @@ export function resolveSafePath(relativePath: string): {
   return { absolute: realPath, root: realRoot };
 }
 
+/**
+ * Like resolveSafePath, but for paths that don't exist yet (create, rename, move targets).
+ * Validates the parent directory exists and the target does NOT already exist.
+ */
+export function resolveSafeNewPath(relativePath: string): {
+  absolute: string;
+  root: string;
+  parentAbsolute: string;
+} {
+  const root = path.resolve(
+    getSetting<string>("core.share_location") || "./downloads"
+  );
+
+  if (relativePath.includes("\0")) {
+    throw new FileError("Invalid path", "INVALID");
+  }
+
+  const normalized = relativePath.replace(/\\/g, "/");
+  if (normalized.split("/").some((seg) => seg === ".." || seg === ".")) {
+    throw new FileError("Path traversal not allowed", "TRAVERSAL");
+  }
+
+  const resolved = path.resolve(root, normalized);
+
+  if (resolved !== root && !resolved.startsWith(root + path.sep)) {
+    throw new FileError("Path traversal not allowed", "TRAVERSAL");
+  }
+
+  // Verify parent directory exists
+  const parentDir = path.dirname(resolved);
+  const parentRelative = getRelativePath(parentDir, root) || "";
+  // This validates the parent exists and is within root
+  const { absolute: parentAbsolute } = resolveSafePath(
+    parentRelative || ""
+  );
+
+  // Target must NOT already exist
+  if (fs.existsSync(resolved)) {
+    throw new FileError("Path already exists", "INVALID");
+  }
+
+  return { absolute: resolved, root, parentAbsolute };
+}
+
 /** Get the relative path from the download root. */
 export function getRelativePath(absolute: string, root: string): string {
   if (absolute === root) return "";
