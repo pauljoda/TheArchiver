@@ -78,6 +78,9 @@
               <span class="prompt">$</span>
               <span class="cmd">curl</span>
               <span class="flag">-X POST</span>
+              <span class="cmd">\</span>
+            </div>
+            <div class="terminal-line indent">
               <span class="value">http://localhost:3000/api/download</span>
               <span class="cmd">\</span>
             </div>
@@ -102,6 +105,7 @@
     padding: 6rem 1.5rem;
     background: var(--surface-deep);
     position: relative;
+    overflow: hidden;
   }
 
   .quickstart::before {
@@ -259,11 +263,25 @@
     line-height: 1.7;
     position: relative;
     z-index: 3;
+    overflow-x: auto;
   }
 
   .terminal-line {
     white-space: nowrap;
-    overflow-x: auto;
+  }
+
+  @media (max-width: 639px) {
+    .terminal-body {
+      font-size: 0.62rem;
+      padding: 0.75rem 0.75rem;
+    }
+    .terminal-line {
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .terminal-line.indent {
+      padding-left: 1rem;
+    }
   }
 
   .terminal-line.indent {

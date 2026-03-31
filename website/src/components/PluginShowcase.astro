@@ -76,6 +76,7 @@
   .plugin-showcase {
     padding: 6rem 1.5rem;
     position: relative;
+    overflow: hidden;
   }
 
   .container {
@@ -202,6 +203,20 @@
   }
   .code-line.indent { padding-left: 1.5rem; }
   .code-line.indent2 { padding-left: 3rem; }
+
+  @media (max-width: 639px) {
+    .terminal-body {
+      font-size: 0.58rem;
+      padding: 0.75rem 0.75rem;
+      line-height: 1.6;
+    }
+    .code-line {
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .code-line.indent { padding-left: 1rem; }
+    .code-line.indent2 { padding-left: 2rem; }
+  }
   .code-line.spacer { height: 0.5rem; }
 
   .keyword { color: oklch(0.7 0.15 300); }
