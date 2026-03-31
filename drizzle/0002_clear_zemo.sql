@@ -1,0 +1,1 @@
+ALTER TABLE `installed_plugins` ADD `file_types` text;

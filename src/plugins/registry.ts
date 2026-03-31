@@ -84,6 +84,7 @@ interface RegisteredPlugin {
   plugin: ArchiverPlugin;
   pluginId: string;
   patterns: string[];
+  fileTypes?: string[];
 }
 
 // Use globalThis to ensure a single shared instance across all Next.js
@@ -91,12 +92,15 @@ interface RegisteredPlugin {
 interface PluginRegistryGlobal {
   __pluginRegistry?: Map<string, RegisteredPlugin>;
   __pluginRegistryInitialized?: boolean;
+  __fileTypePlugins?: RegisteredPlugin[];
 }
 
 const g = globalThis as unknown as PluginRegistryGlobal;
 if (!g.__pluginRegistry) g.__pluginRegistry = new Map();
+if (!g.__fileTypePlugins) g.__fileTypePlugins = [];
 
 const plugins = g.__pluginRegistry;
+const fileTypePlugins = g.__fileTypePlugins;
 
 function getInitialized() {
   return g.__pluginRegistryInitialized ?? false;
@@ -146,11 +150,18 @@ function registerPlugin(
     plugin,
     pluginId,
     patterns: plugin.urlPatterns,
+    fileTypes: plugin.fileTypes,
   };
 
   for (const pattern of plugin.urlPatterns) {
     const normalized = normalizePattern(pattern);
     plugins.set(normalized, registered);
+  }
+
+  if (plugin.fileTypes?.length) {
+    const existing = fileTypePlugins.findIndex(r => r.pluginId === pluginId);
+    if (existing >= 0) fileTypePlugins[existing] = registered;
+    else fileTypePlugins.push(registered);
   }
 }
 
@@ -208,9 +219,10 @@ export async function initPlugins(pluginsDir?: string): Promise<void> {
       }
 
       registerPlugin(plugin, dbPlugin.id);
-      console.log(
-        `Loaded plugin: ${plugin.name} (${plugin.urlPatterns.join(", ")})`
-      );
+      const patternInfo = plugin.urlPatterns.length
+        ? plugin.urlPatterns.join(", ")
+        : `file types: ${plugin.fileTypes?.join(", ") || "none"}`;
+      console.log(`Loaded plugin: ${plugin.name} (${patternInfo})`);
     } catch (err) {
       console.error(`Failed to load plugin ${dbPlugin.id}:`, err);
     }
@@ -236,9 +248,9 @@ export async function initPlugins(pluginsDir?: string): Promise<void> {
         const pluginModule = loadPluginModule(pluginPath);
         const plugin = (pluginModule.default || pluginModule) as ArchiverPlugin;
 
-        if (!plugin.name || !plugin.urlPatterns || !plugin.download) {
+        if (!plugin.name || (!plugin.urlPatterns?.length && !plugin.fileTypes?.length) || !plugin.download) {
           console.warn(
-            `Plugin in ${entry.name} is missing required fields (name, urlPatterns, download)`
+            `Plugin in ${entry.name} is missing required fields (name, urlPatterns or fileTypes, download)`
           );
           continue;
         }
@@ -266,6 +278,7 @@ export async function initPlugins(pluginsDir?: string): Promise<void> {
               manifest?.description || plugin.description || null,
             author: manifest?.author || plugin.author || null,
             urlPatterns: JSON.stringify(plugin.urlPatterns),
+            fileTypes: plugin.fileTypes?.length ? JSON.stringify(plugin.fileTypes) : null,
             enabled: true,
             hasSettings,
           })
@@ -284,9 +297,10 @@ export async function initPlugins(pluginsDir?: string): Promise<void> {
         }
 
         registerPlugin(plugin, pluginId);
-        console.log(
-          `Auto-registered plugin: ${plugin.name} (${plugin.urlPatterns.join(", ")})`
-        );
+        const autoPatternInfo = plugin.urlPatterns.length
+          ? plugin.urlPatterns.join(", ")
+          : `file types: ${plugin.fileTypes?.join(", ") || "none"}`;
+        console.log(`Auto-registered plugin: ${plugin.name} (${autoPatternInfo})`);
       } catch (err) {
         console.error(`Failed to load plugin from ${entry.name}:`, err);
       }
@@ -344,7 +358,8 @@ export function getPluginForUrl(
   url: string
 ): { plugin: ArchiverPlugin; pluginId: string } | null {
   try {
-    const hostname = new URL(url).hostname;
+    const parsed = new URL(url);
+    const hostname = parsed.hostname;
 
     // Try exact match first
     if (plugins.has(hostname)) {
@@ -361,9 +376,19 @@ export function getPluginForUrl(
         }
       }
       // Also match by origin (scheme + host)
-      const origin = new URL(url).origin;
+      const origin = parsed.origin;
       if (pattern === origin || pattern === hostname) {
         return { plugin: registered.plugin, pluginId: registered.pluginId };
+      }
+    }
+
+    // File-type fallback: match by file extension in URL path
+    const ext = path.extname(parsed.pathname).toLowerCase();
+    if (ext) {
+      for (const registered of fileTypePlugins) {
+        if (registered.fileTypes?.includes(ext)) {
+          return { plugin: registered.plugin, pluginId: registered.pluginId };
+        }
       }
     }
 
@@ -447,6 +472,7 @@ export async function loadSinglePlugin(
 export async function reloadPlugins(pluginsDir?: string): Promise<void> {
   // Clear all registered plugins
   plugins.clear();
+  fileTypePlugins.length = 0;
   setInitialized(false);
   await initPlugins(pluginsDir);
 }
@@ -461,6 +487,9 @@ export function unloadPlugin(pluginId: string): void {
   for (const key of keysToRemove) {
     plugins.delete(key);
   }
+
+  const ftIdx = fileTypePlugins.findIndex(r => r.pluginId === pluginId);
+  if (ftIdx >= 0) fileTypePlugins.splice(ftIdx, 1);
 }
 
 function normalizePattern(pattern: string): string {

@@ -28,6 +28,7 @@ export interface PluginManifest {
   description?: string;
   author?: string;
   urlPatterns: string[];
+  fileTypes?: string[];
   settings?: PluginSettingDefinition[];
 }
 
@@ -75,6 +76,7 @@ export interface ArchiverPlugin {
   description?: string;
   author?: string;
   urlPatterns: string[];
+  fileTypes?: string[];
   settings?: PluginSettingDefinition[];
   actions?: Record<string, (context: ActionContext) => Promise<ActionResult>>;
   download: (context: DownloadContext) => Promise<DownloadResult>;

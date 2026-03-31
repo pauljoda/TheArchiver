@@ -13,6 +13,7 @@ export async function GET() {
       description: p.description,
       author: p.author,
       urlPatterns: JSON.parse(p.urlPatterns) as string[],
+      fileTypes: p.fileTypes ? JSON.parse(p.fileTypes) as string[] : [],
       enabled: p.enabled,
       hasSettings: p.hasSettings,
       installedAt: p.installedAt,

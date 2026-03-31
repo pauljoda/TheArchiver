@@ -24,6 +24,7 @@ export const installedPlugins = sqliteTable("installed_plugins", {
   description: text("description"),
   author: text("author"),
   urlPatterns: text("url_patterns").notNull(),
+  fileTypes: text("file_types"),
   enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
   hasSettings: integer("has_settings", { mode: "boolean" })
     .notNull()

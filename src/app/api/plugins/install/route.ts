@@ -97,9 +97,9 @@ export async function POST(request: NextRequest) {
       await fs.readFile(manifestPath, "utf-8")
     );
 
-    if (!manifest.name || !manifest.urlPatterns?.length) {
+    if (!manifest.name || (!manifest.urlPatterns?.length && !manifest.fileTypes?.length)) {
       return NextResponse.json(
-        { error: "manifest.json must have name and urlPatterns" },
+        { error: "manifest.json must have name and urlPatterns or fileTypes" },
         { status: 400 }
       );
     }
@@ -165,7 +165,8 @@ export async function POST(request: NextRequest) {
           version: manifest.version || "1.0.0",
           description: manifest.description || null,
           author: manifest.author || null,
-          urlPatterns: JSON.stringify(manifest.urlPatterns),
+          urlPatterns: JSON.stringify(manifest.urlPatterns || []),
+          fileTypes: manifest.fileTypes?.length ? JSON.stringify(manifest.fileTypes) : null,
           hasSettings,
         })
         .where(eq(schema.installedPlugins.id, pluginId))
@@ -178,7 +179,8 @@ export async function POST(request: NextRequest) {
           version: manifest.version || "1.0.0",
           description: manifest.description || null,
           author: manifest.author || null,
-          urlPatterns: JSON.stringify(manifest.urlPatterns),
+          urlPatterns: JSON.stringify(manifest.urlPatterns || []),
+          fileTypes: manifest.fileTypes?.length ? JSON.stringify(manifest.fileTypes) : null,
           enabled: true,
           hasSettings,
         })
@@ -222,7 +224,8 @@ export async function POST(request: NextRequest) {
           version: manifest.version || "1.0.0",
           description: manifest.description || null,
           author: manifest.author || null,
-          urlPatterns: manifest.urlPatterns,
+          urlPatterns: manifest.urlPatterns || [],
+          fileTypes: manifest.fileTypes || [],
           enabled: existing?.enabled ?? true,
           hasSettings,
         },

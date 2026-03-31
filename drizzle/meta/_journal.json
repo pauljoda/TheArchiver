@@ -15,6 +15,13 @@
       "when": 1774804001306,
       "tag": "0001_lush_invaders",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774937484972,
+      "tag": "0002_clear_zemo",
+      "breakpoints": true
     }
   ]
 }
