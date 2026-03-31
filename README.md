@@ -1,25 +1,81 @@
-# The Archiver
+<p align="center">
+  <img src="src/app/icon.svg" alt="The Archiver" width="120" height="120" />
+</p>
 
-A plugin-based web content archiver built with Next.js. Submit URLs, and matching plugins will download and save the content to your local disk.
+<h1 align="center">The Archiver</h1>
 
-## Architecture
+<p align="center">
+  <strong>A self-hosted, plugin-based web content archiver</strong><br/>
+  Submit URLs. Matching plugins download and save the content to your local disk.<br/>
+  No external dependencies. Single container. Just works.
+</p>
 
-- **Next.js 16** — Full-stack React app (frontend + API routes + background worker)
-- **SQLite** — Embedded database via Drizzle ORM (zero external dependencies)
-- **Plugin System** — Drop-in TypeScript plugins matched by URL pattern
-- **shadcn/ui** — Dashboard with dark/light theme
+<p align="center">
+  <a href="#quick-start">Quick Start</a> &bull;
+  <a href="#features">Features</a> &bull;
+  <a href="#plugin-system">Plugin System</a> &bull;
+  <a href="#configuration">Configuration</a> &bull;
+  <a href="#api-reference">API Reference</a> &bull;
+  <a href="#development">Development</a>
+</p>
 
-Single container deployment — no Redis, no external database, no orchestration required.
+---
+
+## Screenshots
+
+<details open>
+<summary><strong>Dashboard</strong> — Queue, stats, and real-time monitoring</summary>
+<br/>
+<img src="docs/screenshots/dashboard.png" alt="Dashboard - Dark Theme" width="100%" />
+</details>
+
+<details>
+<summary><strong>Add to Archive</strong> — Submit any URL for download</summary>
+<br/>
+<img src="docs/screenshots/add-url-dialog.png" alt="Add URL Dialog" width="100%" />
+</details>
+
+<details>
+<summary><strong>Plugin Management</strong> — Install, configure, enable/disable plugins</summary>
+<br/>
+<img src="docs/screenshots/plugins.png" alt="Plugin Management" width="100%" />
+</details>
+
+<details>
+<summary><strong>Server Console</strong> — Live log output with color-coded levels</summary>
+<br/>
+<img src="docs/screenshots/logs.png" alt="Server Console Logs" width="100%" />
+</details>
+
+<details>
+<summary><strong>Settings</strong> — Grouped configuration for core and per-plugin settings</summary>
+<br/>
+<img src="docs/screenshots/settings.png" alt="Settings Page" width="100%" />
+</details>
+
+<details>
+<summary><strong>File Browser</strong> — Browse, manage, and download archived content</summary>
+<br/>
+<img src="docs/screenshots/files.png" alt="File Browser" width="100%" />
+</details>
+
+<details>
+<summary><strong>Light Theme</strong> — System-aware theme with manual toggle</summary>
+<br/>
+<img src="docs/screenshots/dashboard-light.png" alt="Dashboard - Light Theme" width="100%" />
+</details>
+
+---
 
 ## Quick Start
 
-### Docker (recommended)
+### Docker Compose (recommended)
 
 ```bash
 docker compose up -d
 ```
 
-Or pull directly from GHCR:
+### Docker Run
 
 ```bash
 docker run -d \
@@ -32,18 +88,58 @@ docker run -d \
 
 Open [http://localhost:3000](http://localhost:3000) to access the dashboard.
 
-### Development
+---
 
-```bash
-npm install
-npm run dev
-```
+## Features
 
-This starts the dev server with Turbopack on [http://localhost:3000](http://localhost:3000). Database migrations run automatically at startup.
+### Dashboard
+At-a-glance stats for queued, failed, and archived downloads with a count of active plugins. The tabbed interface gives you access to the download queue, failed items, history, plugins, and server logs — all in one place.
+
+### Download Queue
+Submit any URL via the **Add URL** button or the REST API. A matching plugin picks it up automatically and downloads the content to your configured directory. Monitor progress in real-time via Server-Sent Events.
+
+### Plugin System
+Drop-in TypeScript plugins matched by URL pattern. Install plugins by uploading a `.zip` file, or place them directly in the `plugins/` directory. Enable, disable, configure, and update plugins from the UI without restarting the server.
+
+### File Browser
+Browse your entire download archive from the browser. Create folders, rename, move, copy, and delete files. Multi-select with shift+click and batch operations. Download files directly from the UI.
+
+### Settings
+Grouped configuration UI with separate sections for core settings, notifications, and each installed plugin. Plugin settings appear automatically when a plugin is enabled and hide when disabled.
+
+### Server Console
+Live log viewer with a retro terminal aesthetic. Color-coded log levels (info, warn, error) and timestamped entries. Useful for monitoring downloads in progress and debugging plugin behavior.
+
+### Notifications
+Push notifications via [ntfy](https://ntfy.sh) for download completion and failure events. Configure the endpoint from the Settings page.
+
+### Kavita Integration
+Automatically trigger a Kavita library scan after downloads complete. Configurable delay and library targeting via plugin settings.
+
+### Theme Support
+Dark and light themes with system-aware defaults and a manual toggle. The dark theme uses a "Vault" industrial aesthetic with amber/gold accents.
+
+---
+
+## Architecture
+
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | Next.js 16 (App Router) |
+| **Database** | SQLite via Drizzle ORM |
+| **UI** | React 19 + shadcn/ui + Tailwind CSS v4 |
+| **Fonts** | JetBrains Mono (headings) + DM Sans (body) |
+| **Worker** | SQLite polling (no Redis, no BullMQ) |
+| **Real-time** | Server-Sent Events (SSE) |
+| **Container** | Single Docker image (Alpine + FFmpeg) |
+
+Single-container deployment. No Redis, no external database, no orchestration required.
+
+---
 
 ## Configuration
 
-Copy `.env.example` to `.env.local` and configure as needed:
+All settings can be configured from the Settings page in the UI, or via environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -51,13 +147,12 @@ Copy `.env.example` to `.env.local` and configure as needed:
 | `SHARE_LOCATION` | `./downloads` | Root download directory |
 | `MAX_CONCURRENT_DOWNLOADS` | `10` | Parallel download limit |
 | `NTFY_URL` | — | ntfy notification endpoint |
-| `KAVITA_BASE_URL` | — | Kavita server URL |
-| `KAVITA_API_KEY` | — | Kavita API key |
-| `KAVITA_LIBRARY_ID` | — | Kavita library to scan after downloads |
 
-All settings can also be configured from the Settings page in the UI.
+Plugin-specific settings (Kavita integration, authentication tokens, etc.) are managed through the Settings UI under each plugin's group.
 
-## Plugin Development
+---
+
+## Plugin System
 
 Plugins are TypeScript folders in the `plugins/` directory. Each folder contains an `index.ts` that exports a plugin definition.
 
@@ -65,9 +160,10 @@ Plugins are TypeScript folders in the `plugins/` directory. Each folder contains
 plugins/
   my-plugin/
     index.ts
+    manifest.json   # optional — declares settings and metadata
 ```
 
-### Plugin API
+### Writing a Plugin
 
 ```typescript
 import { definePlugin } from "../../src/plugins/types";
@@ -98,31 +194,27 @@ export default definePlugin({
 | Helper | Methods |
 |--------|---------|
 | `helpers.html` | `fetchPage`, `parse`, `select`, `selectAttr` |
-| `helpers.io` | `downloadFile`, `downloadFiles`, `ensureDir`, `moveFile` |
+| `helpers.io` | `downloadFile`, `downloadFiles`, `ensureDir`, `moveFile`, `createZip` |
 | `helpers.url` | `extractBaseUrl`, `extractHostname`, `joinUrl` |
 | `helpers.string` | `sanitizeFilename`, `padNumber`, `slugify` |
 
-Plugins can also be installed at runtime via .zip upload from the Plugins tab in the dashboard.
+### Installing Plugins
 
-## Features
+**From the UI:** Go to the Plugins tab and click **Import**. Upload a `.zip` file containing the plugin folder.
 
-- **Dashboard** — Stats cards, download queue, failed items, history, and server console
-- **Queue Management** — Add URLs, monitor progress, delete items
-- **Failed Downloads** — Review errors, retry or clear failures
-- **Plugin Management** — View, enable/disable, configure, and import plugins
-- **Settings** — Grouped configuration UI with per-plugin settings
-- **Real-time Updates** — SSE-based live UI updates
-- **Dark/Light Theme** — System-aware with manual toggle
-- **Notifications** — ntfy integration for download status
-- **Kavita Integration** — Auto-trigger library scans after downloads
-- **FFmpeg** — Audio/video merge utility for media downloads
+**Manually:** Place the plugin folder in the `plugins/` directory (or the Docker volume at `/plugins`). Click the reload button in the Plugins tab, or restart the server.
 
-## API
+**Updating:** Re-import a plugin `.zip` with the same name to update it in-place. Existing settings are preserved.
+
+---
+
+## API Reference
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/health` | Health check |
-| `POST` | `/api/download` | Add URL to queue |
+| `POST` | `/api/download` | Add URL to queue (JSON body: `{ "url": "..." }`) |
+| `GET` | `/api/download?url=...` | Add URL to queue (query parameter) |
 | `GET` | `/api/queue` | List queued items |
 | `DELETE` | `/api/queue/:id` | Remove queue item |
 | `DELETE` | `/api/queue/clear` | Clear all queued items |
@@ -131,16 +223,84 @@ Plugins can also be installed at runtime via .zip upload from the Plugins tab in
 | `POST` | `/api/failed/:id/retry` | Retry failed item |
 | `DELETE` | `/api/failed/clear` | Clear all failed items |
 | `GET` | `/api/history` | Download history |
+| `DELETE` | `/api/history/:id` | Delete history entry |
+| `DELETE` | `/api/history/clear` | Clear all history |
 | `GET` | `/api/plugins` | List loaded plugins |
+| `POST` | `/api/plugins/reload` | Reload all plugins |
 | `GET` | `/api/settings` | Get all settings (grouped) |
 | `PUT` | `/api/settings` | Update settings |
 | `GET` | `/api/events` | SSE stream for real-time updates |
 | `GET` | `/api/logs` | Server console logs |
 
-## Docker Volumes
+---
+
+## Docker
+
+### Volumes
 
 | Path | Purpose |
 |------|---------|
 | `/data` | SQLite database |
 | `/downloads` | Downloaded content |
 | `/plugins` | User-installed plugins |
+
+### Docker Compose
+
+```yaml
+services:
+  app:
+    image: ghcr.io/pauljoda/the-archiver:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+      - ./downloads:/downloads
+      - ./plugins:/plugins
+    environment:
+      - DATABASE_URL=file:/data/archiver.db
+      - SHARE_LOCATION=/downloads
+      - MAX_CONCURRENT_DOWNLOADS=10
+    restart: unless-stopped
+```
+
+The Docker image is a single Alpine-based container with FFmpeg included. Multi-arch builds (amd64 + arm64) are published to `ghcr.io/pauljoda/the-archiver` on every push to `main`.
+
+---
+
+## Development
+
+```bash
+npm install
+npm run dev
+```
+
+This starts the dev server with Turbopack on [http://localhost:3000](http://localhost:3000). Database migrations run automatically at startup.
+
+### Database
+
+SQLite via Drizzle ORM. To modify the schema:
+
+1. Edit `src/db/schema.ts`
+2. Run `npm run db:generate` to create a migration
+3. Migrations run automatically at server start
+
+### Project Structure
+
+```
+src/
+  app/           Next.js App Router pages and API routes
+  components/    React components (shadcn/ui + feature components)
+  db/            Drizzle ORM schema and connection
+  lib/           Server utilities (settings, notifications, events)
+  plugins/       Plugin registry, types, and helpers
+  workers/       Download worker (SQLite polling)
+  hooks/         Client-side React hooks
+plugins/         User-installed plugins
+drizzle/         SQL migration files
+```
+
+---
+
+## License
+
+MIT
