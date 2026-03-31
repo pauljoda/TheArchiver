@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import pkg from "../../package.json";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -34,7 +35,7 @@ export default function RootLayout({
               <footer className="border-t border-border/50 py-4">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                   <p className="text-center text-xs font-mono text-muted-foreground/50 tracking-wider uppercase">
-                    Vault v1.0 &middot; Archive Engine Online
+                    v{pkg.version} &middot; Archive Engine Online
                   </p>
                 </div>
               </footer>

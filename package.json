@@ -1,6 +1,6 @@
 {
   "name": "the-archiver",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "scripts": {
     "dev": "docker start archiver-redis 2>/dev/null || docker run -d --name archiver-redis -p 6379:6379 redis:7-alpine; drizzle-kit generate && drizzle-kit migrate && next dev --turbopack",
