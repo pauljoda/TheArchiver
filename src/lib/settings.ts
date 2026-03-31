@@ -4,7 +4,7 @@ import { eq, like } from "drizzle-orm";
 export interface SettingDefinition {
   key: string;
   group: string;
-  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map";
+  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map" | "file";
   label: string;
   description?: string;
   defaultValue?: string | number | boolean;

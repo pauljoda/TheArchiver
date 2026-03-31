@@ -5,7 +5,7 @@ export interface DownloadResult {
 
 export interface PluginSettingDefinition {
   key: string;
-  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map";
+  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map" | "file";
   label: string;
   description?: string;
   defaultValue?: string | number | boolean;
@@ -16,6 +16,8 @@ export interface PluginSettingDefinition {
     max?: number;
     pattern?: string;
     options?: Array<{ label: string; value: string }>;
+    accept?: string;
+    maxSize?: number;
   };
   sortOrder?: number;
 }

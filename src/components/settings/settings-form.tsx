@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 interface SettingData {
   key: string;
-  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map";
+  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map" | "file";
   label: string;
   description?: string;
   value: string | number | boolean | null;
@@ -71,7 +71,7 @@ export function SettingsForm({
       const updates = Object.entries(values)
         .filter(([key]) => {
           const setting = settings.find((s) => s.key === key);
-          return setting != null && setting.type !== "action";
+          return setting != null && setting.type !== "action" && setting.type !== "file";
         })
         .map(([key, value]) => ({ key, value }));
       await onSave(updates);
@@ -93,7 +93,7 @@ export function SettingsForm({
       const updates = Object.entries(values)
         .filter(([k]) => {
           const setting = settings.find((s) => s.key === k);
-          return setting != null && setting.type !== "action";
+          return setting != null && setting.type !== "action" && setting.type !== "file";
         })
         .map(([k, value]) => ({ key: k, value }));
       await onSave(updates);

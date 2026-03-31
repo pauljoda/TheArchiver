@@ -14,11 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { SiteDirectoryMap } from "./site-directory-map";
+import { FileUploadField } from "./file-upload-field";
 import { cn } from "@/lib/utils";
 
 interface SettingFieldProps {
   settingKey: string;
-  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map";
+  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map" | "file";
   label: string;
   description?: string;
   value: string | number | boolean | null;
@@ -28,6 +29,8 @@ interface SettingFieldProps {
     max?: number;
     pattern?: string;
     options?: Array<{ label: string; value: string }>;
+    accept?: string;
+    maxSize?: number;
   };
   onChange: (key: string, value: string | number | boolean) => void;
   onAction?: (key: string) => Promise<{ success: boolean; message: string }>;
@@ -112,6 +115,23 @@ export function SettingField({
         description={description}
         value={value as string | null}
         options={validation?.options ?? []}
+        onChange={onChange}
+      />
+    );
+  }
+
+  if (type === "file") {
+    // Extract pluginId from settingKey (format: plugin.{pluginId}.{key})
+    const parts = settingKey.split(".");
+    const pluginId = parts.length >= 3 ? parts[1] : "";
+    return (
+      <FileUploadField
+        settingKey={parts.length >= 3 ? parts.slice(2).join(".") : settingKey}
+        pluginId={pluginId}
+        label={label}
+        description={description}
+        value={value as string | null}
+        validation={validation}
         onChange={onChange}
       />
     );
