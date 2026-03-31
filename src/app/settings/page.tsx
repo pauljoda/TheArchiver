@@ -158,15 +158,15 @@ function SettingsContent() {
         </p>
       ) : (
         <div className="flex flex-col gap-6 md:flex-row">
-          {/* Sidebar nav */}
-          <nav className="flex flex-row gap-1 md:flex-col md:w-52 md:shrink-0">
+          {/* Sidebar nav — horizontal scrolling tabs on mobile, vertical sidebar on md+ */}
+          <nav className="flex flex-row gap-1 overflow-x-auto scrollbar-none pb-2 -mb-2 md:flex-col md:w-52 md:shrink-0 md:overflow-x-visible md:pb-0 md:mb-0">
             {groupKeys.map((group) => (
               <Button
                 key={group}
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "justify-between text-xs font-heading uppercase tracking-wider transition-all",
+                  "justify-between shrink-0 text-xs font-heading uppercase tracking-wider transition-all",
                   activeGroup === group
                     ? "bg-primary/10 text-primary hover:bg-primary/15"
                     : "text-muted-foreground hover:text-foreground"
@@ -175,7 +175,7 @@ function SettingsContent() {
               >
                 {getGroupLabel(group)}
                 {activeGroup === group && (
-                  <ChevronRight className="size-3" />
+                  <ChevronRight className="size-3 hidden md:block" />
                 )}
               </Button>
             ))}
