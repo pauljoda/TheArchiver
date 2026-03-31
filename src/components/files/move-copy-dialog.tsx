@@ -18,6 +18,11 @@ import {
   Copy,
   HardDrive,
 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -111,7 +116,14 @@ function FolderTreeNode({
             isSelected ? "text-primary" : "text-muted-foreground"
           )}
         />
-        <span className="truncate font-mono text-xs">{name}</span>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="truncate font-mono text-xs">{name}</span>
+          </TooltipTrigger>
+          <TooltipContent side="right" className="max-w-80 break-all">
+            {name}
+          </TooltipContent>
+        </Tooltip>
       </div>
       {expanded &&
         children.map((child) => (
@@ -200,7 +212,7 @@ export function MoveCopyDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[90vw] max-w-2xl max-h-[85vh] flex flex-col">
+      <DialogContent className="w-[90vw] max-w-3xl h-[70vh] max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-heading text-sm uppercase tracking-wider">
             {action === "move" ? (
