@@ -7,6 +7,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Added
+- **File Detail/Preview View** — Click any file in the browser to open a full-viewport preview overlay
+  - **Image preview** for jpg, png, gif, webp, svg, bmp, ico, avif, tiff with click-to-zoom
+  - **Video player** for mp4, webm, mov with browser-native controls and seeking (HTTP Range support)
+  - **Audio player** for mp3, flac, wav, ogg, aac, wma, m4a
+  - **Text/code preview** for txt, md, json, xml, html, css, js, ts, py, sh, yaml, csv, and more — with line numbers and 500KB truncation for large files
+  - **PDF preview** via embedded browser viewer
+  - **Generic fallback** with file metadata and download button for unsupported formats
+  - Left/right arrow key navigation between files in the current directory
+  - Toolbar with download, rename, move, copy, and delete actions (reuses existing dialogs)
+  - Toggleable file info panel showing name, path, type, size, and modified date
+  - URL state sync via `&file=` query parameter for deep-linking and browser back support
+- New API endpoint: `GET /api/files/preview?path=` — Serves files inline with correct MIME types and HTTP 206 Range support
 - **Plugin View System** — Plugins can now ship custom file explorer views as compiled JS bundles
   - New `viewProvider` field in plugin manifests declares a view with `viewId`, `label`, `icon`, and `entryPoint`
   - View provider registry tracks which plugins can render which directories (based on `save_directory` setting)

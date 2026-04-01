@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { FolderOpen } from "lucide-react";
 import { FileBrowser } from "@/components/files/file-browser";
+import { FileDetailView } from "@/components/files/file-detail-view";
 import { PluginViewHost } from "@/components/files/plugin-view-host";
 import {
   ViewToggle,
@@ -25,12 +26,19 @@ function getPathFromUrl(): string {
   return params.get("path") || "";
 }
 
+function getFileFromUrl(): string {
+  if (typeof window === "undefined") return "";
+  const params = new URLSearchParams(window.location.search);
+  return params.get("file") || "";
+}
+
 export default function FilesPage() {
   const [currentPath, setCurrentPath] = useState(getPathFromUrl);
   const [files, setFiles] = useState<FileEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewProviders, setViewProviders] = useState<ViewProviderInfo[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
+  const [previewFile, setPreviewFile] = useState<FileEntry | null>(null);
   // Track whether user explicitly chose "Files" view so we don't auto-switch
   const userExplicitlyChoseFiles = useRef(false);
 
@@ -74,14 +82,21 @@ export default function FilesPage() {
   useEffect(() => {
     // Replace current entry so the initial load has state
     const initialPath = getPathFromUrl();
-    const url = initialPath
-      ? `/files?path=${encodeURIComponent(initialPath)}`
-      : "/files";
-    window.history.replaceState({ path: initialPath }, "", url);
+    const initialFile = getFileFromUrl();
+    const params = new URLSearchParams();
+    if (initialPath) params.set("path", initialPath);
+    if (initialFile) params.set("file", initialFile);
+    const url = params.toString() ? `/files?${params}` : "/files";
+    window.history.replaceState({ path: initialPath, file: initialFile }, "", url);
 
     function onPopState() {
       // Browser handled the history entry — just sync React state
       setCurrentPath(getPathFromUrl());
+      const filePath = getFileFromUrl();
+      if (!filePath) {
+        setPreviewFile(null);
+      }
+      // If filePath is set, we resolve it once files are loaded (see effect below)
     }
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
@@ -109,6 +124,48 @@ export default function FilesPage() {
   function handleRefresh() {
     fetchFiles(currentPath);
   }
+
+  // Resolve file URL param into previewFile once files are loaded
+  useEffect(() => {
+    const filePath = getFileFromUrl();
+    if (filePath && files.length > 0 && !previewFile) {
+      const match = files.find((f) => f.path === filePath);
+      if (match && !match.isDirectory) {
+        setPreviewFile(match);
+      }
+    }
+  }, [files, previewFile]);
+
+  function buildUrl(path: string, file?: string) {
+    const params = new URLSearchParams();
+    if (path) params.set("path", path);
+    if (file) params.set("file", file);
+    return params.toString() ? `/files?${params}` : "/files";
+  }
+
+  const handleFileOpen = useCallback(
+    (file: FileEntry) => {
+      setPreviewFile(file);
+      const url = buildUrl(currentPath, file.path);
+      window.history.pushState({ path: currentPath, file: file.path }, "", url);
+    },
+    [currentPath]
+  );
+
+  const handleFileChange = useCallback(
+    (file: FileEntry) => {
+      setPreviewFile(file);
+      const url = buildUrl(currentPath, file.path);
+      window.history.replaceState({ path: currentPath, file: file.path }, "", url);
+    },
+    [currentPath]
+  );
+
+  const handlePreviewClose = useCallback(() => {
+    setPreviewFile(null);
+    const url = buildUrl(currentPath);
+    window.history.pushState({ path: currentPath }, "", url);
+  }, [currentPath]);
 
   function handleViewSelect(viewId: string | null) {
     setActiveViewId(viewId);
@@ -184,8 +241,20 @@ export default function FilesPage() {
             loading={loading}
             onNavigate={handleNavigate}
             onRefresh={handleRefresh}
+            onFileOpen={handleFileOpen}
           />
         </div>
+      )}
+
+      {/* File detail overlay */}
+      {previewFile && (
+        <FileDetailView
+          file={previewFile}
+          files={files}
+          onClose={handlePreviewClose}
+          onFileChange={handleFileChange}
+          onRefresh={handleRefresh}
+        />
       )}
     </div>
   );

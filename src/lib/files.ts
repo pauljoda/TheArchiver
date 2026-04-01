@@ -114,6 +114,64 @@ export function getRelativePath(absolute: string, root: string): string {
   return absolute.slice(root.length + 1);
 }
 
+/** Map a filename to its MIME type for inline preview. */
+export function getMimeType(filename: string): string {
+  const ext = path.extname(filename).toLowerCase();
+  const map: Record<string, string> = {
+    // Images
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".svg": "image/svg+xml",
+    ".bmp": "image/bmp",
+    ".ico": "image/x-icon",
+    ".avif": "image/avif",
+    ".tiff": "image/tiff",
+    // Video
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".mov": "video/quicktime",
+    ".mkv": "video/x-matroska",
+    ".avi": "video/x-msvideo",
+    ".flv": "video/x-flv",
+    ".wmv": "video/x-ms-wmv",
+    // Audio
+    ".mp3": "audio/mpeg",
+    ".flac": "audio/flac",
+    ".wav": "audio/wav",
+    ".ogg": "audio/ogg",
+    ".aac": "audio/aac",
+    ".wma": "audio/x-ms-wma",
+    ".m4a": "audio/mp4",
+    // PDF
+    ".pdf": "application/pdf",
+    // Text / code
+    ".txt": "text/plain",
+    ".md": "text/plain",
+    ".json": "application/json",
+    ".xml": "text/xml",
+    ".html": "text/html",
+    ".css": "text/css",
+    ".js": "text/javascript",
+    ".ts": "text/plain",
+    ".jsx": "text/plain",
+    ".tsx": "text/plain",
+    ".py": "text/plain",
+    ".sh": "text/plain",
+    ".yaml": "text/plain",
+    ".yml": "text/plain",
+    ".toml": "text/plain",
+    ".ini": "text/plain",
+    ".cfg": "text/plain",
+    ".log": "text/plain",
+    ".csv": "text/csv",
+    ".env": "text/plain",
+  };
+  return map[ext] || "application/octet-stream";
+}
+
 /** Get an appropriate file type category from extension. */
 export function getFileCategory(
   filename: string

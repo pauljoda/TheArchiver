@@ -62,6 +62,7 @@ interface FileBrowserProps {
   loading: boolean;
   onNavigate: (path: string) => void;
   onRefresh: () => void;
+  onFileOpen?: (file: FileEntry) => void;
 }
 
 const FILE_ICONS: Record<string, typeof File> = {
@@ -94,6 +95,7 @@ export function FileBrowser({
   loading,
   onNavigate,
   onRefresh,
+  onFileOpen,
 }: FileBrowserProps) {
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
@@ -347,8 +349,7 @@ export function FileBrowser({
                   <div
                     key={file.path}
                     className={cn(
-                      "group flex items-center gap-4 px-5 py-3.5 transition-colors animate-vault-enter",
-                      file.isDirectory && "cursor-pointer",
+                      "group flex items-center gap-4 px-5 py-3.5 transition-colors animate-vault-enter cursor-pointer",
                       isSelected
                         ? "bg-primary/5"
                         : "hover:bg-muted/30"
@@ -357,7 +358,7 @@ export function FileBrowser({
                     onClick={
                       file.isDirectory
                         ? () => onNavigate(file.path)
-                        : undefined
+                        : () => onFileOpen?.(file)
                     }
                   >
                     {/* Checkbox */}
