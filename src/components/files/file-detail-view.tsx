@@ -289,7 +289,7 @@ export function FileDetailView({
             <AudioPreview filePath={file.path} fileName={file.name} />
           )}
           {previewType === "text" && (
-            <TextPreview filePath={file.path} fileSize={file.size} />
+            <TextPreview filePath={file.path} fileName={file.name} fileSize={file.size} />
           )}
           {previewType === "pdf" && (
             <PdfPreview filePath={file.path} />

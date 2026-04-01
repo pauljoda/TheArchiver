@@ -33,12 +33,13 @@ function getFileFromUrl(): string {
 }
 
 export default function FilesPage() {
-  const [currentPath, setCurrentPath] = useState(getPathFromUrl);
+  const [currentPath, setCurrentPath] = useState("");
   const [files, setFiles] = useState<FileEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewProviders, setViewProviders] = useState<ViewProviderInfo[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
   const [previewFile, setPreviewFile] = useState<FileEntry | null>(null);
+  const [mounted, setMounted] = useState(false);
   // Track whether user explicitly chose "Files" view so we don't auto-switch
   const userExplicitlyChoseFiles = useRef(false);
 
@@ -78,11 +79,16 @@ export default function FilesPage() {
     return [];
   }, []);
 
-  // Set initial history state and listen for browser back/forward
+  // Sync state from URL on mount and listen for browser back/forward
   useEffect(() => {
-    // Replace current entry so the initial load has state
     const initialPath = getPathFromUrl();
     const initialFile = getFileFromUrl();
+
+    // Set initial state from URL
+    setCurrentPath(initialPath);
+    setMounted(true);
+
+    // Replace current entry so the initial load has state
     const params = new URLSearchParams();
     if (initialPath) params.set("path", initialPath);
     if (initialFile) params.set("file", initialFile);
@@ -103,6 +109,7 @@ export default function FilesPage() {
   }, []);
 
   useEffect(() => {
+    if (!mounted) return;
     fetchFiles(currentPath);
     fetchViewProviders(currentPath).then((providers) => {
       if (providers.length > 0 && !userExplicitlyChoseFiles.current) {
@@ -112,7 +119,7 @@ export default function FilesPage() {
         userExplicitlyChoseFiles.current = false;
       }
     });
-  }, [currentPath, fetchFiles, fetchViewProviders]);
+  }, [mounted, currentPath, fetchFiles, fetchViewProviders]);
 
   const handleNavigate = useCallback((path: string) => {
     // Push to browser history so back/forward works
