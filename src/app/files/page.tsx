@@ -231,7 +231,7 @@ export default function FilesPage() {
 
       {/* Content area */}
       {isPluginView && activeProvider ? (
-        <div className="w-full px-4 sm:px-6 lg:px-8 pb-8">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pb-8">
           <PluginViewHost
             pluginId={activeProvider.pluginId}
             viewId={activeProvider.viewId}
