@@ -19,8 +19,14 @@ interface FileEntry {
   modifiedAt: string;
 }
 
+function getPathFromUrl(): string {
+  if (typeof window === "undefined") return "";
+  const params = new URLSearchParams(window.location.search);
+  return params.get("path") || "";
+}
+
 export default function FilesPage() {
-  const [currentPath, setCurrentPath] = useState("");
+  const [currentPath, setCurrentPath] = useState(getPathFromUrl);
   const [files, setFiles] = useState<FileEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewProviders, setViewProviders] = useState<ViewProviderInfo[]>([]);
@@ -64,6 +70,23 @@ export default function FilesPage() {
     return [];
   }, []);
 
+  // Set initial history state and listen for browser back/forward
+  useEffect(() => {
+    // Replace current entry so the initial load has state
+    const initialPath = getPathFromUrl();
+    const url = initialPath
+      ? `/files?path=${encodeURIComponent(initialPath)}`
+      : "/files";
+    window.history.replaceState({ path: initialPath }, "", url);
+
+    function onPopState() {
+      // Browser handled the history entry — just sync React state
+      setCurrentPath(getPathFromUrl());
+    }
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
   useEffect(() => {
     fetchFiles(currentPath);
     fetchViewProviders(currentPath).then((providers) => {
@@ -76,9 +99,12 @@ export default function FilesPage() {
     });
   }, [currentPath, fetchFiles, fetchViewProviders]);
 
-  function handleNavigate(path: string) {
+  const handleNavigate = useCallback((path: string) => {
+    // Push to browser history so back/forward works
+    const url = path ? `/files?path=${encodeURIComponent(path)}` : "/files";
+    window.history.pushState({ path }, "", url);
     setCurrentPath(path);
-  }
+  }, []);
 
   function handleRefresh() {
     fetchFiles(currentPath);
