@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Save, Check } from "lucide-react";
+import { Save, Check, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -107,43 +107,60 @@ export function SettingsForm({
     return onAction(key);
   }
 
-  return (
-    <Card className="overflow-hidden border-border/50">
-      <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 bg-card">
-        <CardTitle className="font-heading text-sm uppercase tracking-wider">
-          {title}
-        </CardTitle>
-        <div className="flex items-center gap-2">
-          {saved && (
-            <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-heading animate-vault-fade">
-              <Check className="size-3" />
-              Saved
-            </span>
-          )}
-          {error && (
-            <span className="text-xs text-destructive">{error}</span>
-          )}
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            size="sm"
-            className={cn(
-              "gap-1.5 font-heading text-xs uppercase tracking-wider",
-              saved && "bg-emerald-600 hover:bg-emerald-700"
-            )}
-          >
-            <Save className="size-3" />
-            {saving ? "Saving..." : "Save"}
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4 p-5">
-        {(() => {
-          const visible = settings.filter((s) => !s.hidden);
-          const hasSections = visible.some((s) => s.section);
+  const visible = settings.filter((s) => !s.hidden);
+  const hasSections = visible.some((s) => s.section);
 
-          if (!hasSections) {
-            return visible.map((s) => (
+  // Group settings by section, preserving order
+  const sections: Array<{ name: string; items: typeof visible }> = [];
+  if (hasSections) {
+    const seen = new Set<string>();
+    for (const s of visible) {
+      const name = s.section || "";
+      if (!seen.has(name)) {
+        seen.add(name);
+        sections.push({ name, items: [] });
+      }
+      sections.find((sec) => sec.name === name)!.items.push(s);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      {/* Save header */}
+      <Card className="overflow-hidden border-border/50">
+        <CardHeader className="flex flex-row items-center justify-between border-b border-border/50 bg-card">
+          <CardTitle className="font-heading text-sm uppercase tracking-wider">
+            {title}
+          </CardTitle>
+          <div className="flex items-center gap-2">
+            {saved && (
+              <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-heading animate-vault-fade">
+                <Check className="size-3" />
+                Saved
+              </span>
+            )}
+            {error && (
+              <span className="text-xs text-destructive">{error}</span>
+            )}
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              size="sm"
+              className={cn(
+                "gap-1.5 font-heading text-xs uppercase tracking-wider",
+                saved && "bg-emerald-600 hover:bg-emerald-700"
+              )}
+            >
+              <Save className="size-3" />
+              {saving ? "Saving..." : "Save"}
+            </Button>
+          </div>
+        </CardHeader>
+
+        {/* Non-sectioned: render all settings in one card */}
+        {!hasSections && (
+          <CardContent className="flex flex-col gap-4 p-5">
+            {visible.map((s) => (
               <SettingField
                 key={s.key}
                 settingKey={s.key}
@@ -155,49 +172,84 @@ export function SettingsForm({
                 onChange={handleChange}
                 onAction={handleAction}
               />
-            ));
-          }
+            ))}
+          </CardContent>
+        )}
+      </Card>
 
-          // Group settings by section, preserving order
-          const sections: Array<{ name: string; items: typeof visible }> = [];
-          const seen = new Set<string>();
-          for (const s of visible) {
-            const name = s.section || "";
-            if (!seen.has(name)) {
-              seen.add(name);
-              sections.push({ name, items: [] });
-            }
-            sections.find((sec) => sec.name === name)!.items.push(s);
-          }
+      {/* Sectioned: each section gets its own collapsible card */}
+      {hasSections &&
+        sections.map((section) => (
+          <SettingsSection
+            key={section.name || "__default"}
+            name={section.name}
+            count={section.items.length}
+            defaultOpen={section === sections[0]}
+          >
+            {section.items.map((s) => (
+              <SettingField
+                key={s.key}
+                settingKey={s.key}
+                type={s.type}
+                label={s.label}
+                description={s.description}
+                value={values[s.key] as string | number | boolean | null}
+                validation={s.validation}
+                onChange={handleChange}
+                onAction={handleAction}
+              />
+            ))}
+          </SettingsSection>
+        ))}
+    </div>
+  );
+}
 
-          return sections.map((section, idx) => (
-            <div key={section.name || "__default"} className={cn(idx > 0 && "mt-2")}>
-              {section.name && (
-                <div className="mb-3 mt-1">
-                  <h3 className="text-xs font-heading font-semibold uppercase tracking-wider text-muted-foreground border-b border-border/50 pb-2">
-                    {section.name}
-                  </h3>
-                </div>
-              )}
-              <div className="flex flex-col gap-4">
-                {section.items.map((s) => (
-                  <SettingField
-                    key={s.key}
-                    settingKey={s.key}
-                    type={s.type}
-                    label={s.label}
-                    description={s.description}
-                    value={values[s.key] as string | number | boolean | null}
-                    validation={s.validation}
-                    onChange={handleChange}
-                    onAction={handleAction}
-                  />
-                ))}
-              </div>
-            </div>
-          ));
-        })()}
-      </CardContent>
+/** Collapsible section card for grouped settings */
+function SettingsSection({
+  name,
+  count,
+  defaultOpen,
+  children,
+}: {
+  name: string;
+  count: number;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen ?? false);
+
+  return (
+    <Card className="overflow-hidden border-border/50">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "flex w-full items-center justify-between px-5 py-3.5 text-left transition-colors",
+          "hover:bg-muted/50",
+          open && "border-b border-border/50"
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <h3 className="font-heading text-sm font-semibold uppercase tracking-wider text-foreground">
+            {name || "General"}
+          </h3>
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-mono font-medium text-muted-foreground">
+            {count}
+          </span>
+        </div>
+        <ChevronDown
+          className={cn(
+            "size-4 text-muted-foreground transition-transform duration-200",
+            open && "rotate-180"
+          )}
+        />
+      </button>
+      {open && (
+        <CardContent className="flex flex-col gap-4 p-5">
+          {children}
+        </CardContent>
+      )}
     </Card>
   );
 }

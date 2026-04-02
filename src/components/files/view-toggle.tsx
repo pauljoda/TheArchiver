@@ -9,6 +9,7 @@ export interface ViewProviderInfo {
   viewId: string;
   label: string;
   icon?: string;
+  trackedDirectory: string;
 }
 
 interface ViewToggleProps {

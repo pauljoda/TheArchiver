@@ -1,7 +1,7 @@
 export type PreviewType = "image" | "video" | "audio" | "text" | "pdf" | "generic";
 
 const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico", "avif", "tiff"]);
-const VIDEO_EXTS = new Set(["mp4", "mkv", "avi", "mov", "webm", "flv", "wmv"]);
+const VIDEO_EXTS = new Set(["mp4", "m4v", "mkv", "avi", "mov", "webm", "flv", "wmv"]);
 const AUDIO_EXTS = new Set(["mp3", "flac", "wav", "ogg", "aac", "wma", "m4a"]);
 const TEXT_EXTS = new Set([
   "txt", "md", "json", "xml", "html", "css", "js", "ts", "jsx", "tsx",
@@ -10,7 +10,7 @@ const TEXT_EXTS = new Set([
 ]);
 
 /** Browser-native video formats that <video> can play. */
-export const NATIVE_VIDEO_EXTS = new Set(["mp4", "webm", "mov", "ogg"]);
+export const NATIVE_VIDEO_EXTS = new Set(["mp4", "m4v", "webm", "mov", "ogg"]);
 
 /** Determine the preview renderer type for a filename. */
 export function getPreviewType(filename: string): PreviewType {

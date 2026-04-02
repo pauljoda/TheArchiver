@@ -159,6 +159,37 @@ export default function FilesPage() {
     [currentPath]
   );
 
+  const handlePluginFileOpen = useCallback(
+    async (filePath: string) => {
+      let match = files.find((f) => f.path === filePath && !f.isDirectory);
+
+      if (!match) {
+        const parentPath = filePath.split("/").slice(0, -1).join("/");
+        try {
+          const res = await fetch(
+            `/api/files?path=${encodeURIComponent(parentPath)}`
+          );
+          if (res.ok) {
+            const data: FileEntry[] = await res.json();
+            if (parentPath === currentPath) {
+              setFiles(data);
+            }
+            match = data.find((f) => f.path === filePath && !f.isDirectory);
+          }
+        } catch {
+          match = undefined;
+        }
+      }
+
+      if (!match) return;
+
+      setPreviewFile(match);
+      const url = buildUrl(currentPath, match.path);
+      window.history.pushState({ path: currentPath, file: match.path }, "", url);
+    },
+    [files, currentPath]
+  );
+
   const handleFileChange = useCallback(
     (file: FileEntry) => {
       setPreviewFile(file);
@@ -236,8 +267,9 @@ export default function FilesPage() {
             pluginId={activeProvider.pluginId}
             viewId={activeProvider.viewId}
             currentPath={currentPath}
-            trackedDirectory={currentPath.split("/")[0] || currentPath}
+            trackedDirectory={activeProvider.trackedDirectory}
             onNavigate={handleNavigate}
+            onOpenFile={handlePluginFileOpen}
           />
         </div>
       ) : (

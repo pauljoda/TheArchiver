@@ -90,6 +90,14 @@ interface RegisteredPlugin {
   fileTypes?: string[];
 }
 
+const DIRECT_FILE_URL_EXTS = new Set([
+  ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".ico", ".avif", ".tiff",
+  ".mp4", ".m4v", ".webm", ".mov", ".mkv", ".avi", ".flv", ".wmv",
+  ".mp3", ".flac", ".wav", ".ogg", ".aac", ".wma", ".m4a",
+  ".pdf", ".zip", ".tar", ".gz", ".bz2", ".7z", ".rar", ".xz",
+  ".txt", ".md", ".json", ".xml", ".csv",
+]);
+
 export interface ViewProviderRegistration {
   pluginId: string;
   viewId: string;
@@ -105,6 +113,19 @@ export interface ViewProviderInfo {
   viewId: string;
   label: string;
   icon?: string;
+  trackedDirectory: string;
+}
+
+function getTrackedDirectoryValue(primaryKey: string): string {
+  const primary = getSetting<string>(primaryKey);
+  if (primary) return primary;
+
+  const legacyKey = primaryKey.replace(/\.save_directory$/, ".library_folder");
+  if (legacyKey !== primaryKey) {
+    return getSetting<string>(legacyKey) || "";
+  }
+
+  return "";
 }
 
 // Use globalThis to ensure a single shared instance across all Next.js
@@ -509,8 +530,9 @@ export function getPluginForUrl(
       }
     }
 
-    // Ultimate fallback: built-in Files plugin
-    if (g.__fallbackPlugin) {
+    // Built-in Files fallback only makes sense for URLs that look like
+    // direct file downloads, not arbitrary page URLs after a plugin removal.
+    if (g.__fallbackPlugin && ext && DIRECT_FILE_URL_EXTS.has(ext)) {
       return {
         plugin: g.__fallbackPlugin.plugin,
         pluginId: g.__fallbackPlugin.pluginId,
@@ -654,7 +676,7 @@ export function getViewProvidersForPath(relativePath: string): ViewProviderInfo[
   for (const reg of viewProviders.values()) {
     let trackedDir: string;
     try {
-      trackedDir = getSetting<string>(reg.directorySettingKey);
+      trackedDir = getTrackedDirectoryValue(reg.directorySettingKey);
     } catch {
       // Settings not initialized or key not found — skip
       continue;
@@ -675,6 +697,7 @@ export function getViewProvidersForPath(relativePath: string): ViewProviderInfo[
         viewId: reg.viewId,
         label: reg.label,
         icon: reg.icon,
+        trackedDirectory: normalizedTracked,
       });
     }
   }

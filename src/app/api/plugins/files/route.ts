@@ -127,15 +127,17 @@ export async function POST(request: NextRequest) {
 
     // Read file content
     const buffer = Buffer.from(await file.arrayBuffer());
-    const content = buffer.toString("utf-8");
 
-    // Validate cookies format
-    const formatCheck = validateCookiesFile(content);
-    if (!formatCheck.valid) {
-      return NextResponse.json(
-        { error: formatCheck.error },
-        { status: 400 }
-      );
+    // Only cookie uploads should go through Netscape cookies.txt validation.
+    if (settingKey === "cookies_file") {
+      const content = buffer.toString("utf-8");
+      const formatCheck = validateCookiesFile(content);
+      if (!formatCheck.valid) {
+        return NextResponse.json(
+          { error: formatCheck.error },
+          { status: 400 }
+        );
+      }
     }
 
     // Sanitize filename

@@ -131,6 +131,7 @@ export function getMimeType(filename: string): string {
     ".tiff": "image/tiff",
     // Video
     ".mp4": "video/mp4",
+    ".m4v": "video/mp4",
     ".webm": "video/webm",
     ".mov": "video/quicktime",
     ".mkv": "video/x-matroska",
@@ -179,7 +180,7 @@ export function getFileCategory(
   const ext = path.extname(filename).toLowerCase();
   if ([".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".ico"].includes(ext))
     return "image";
-  if ([".mp4", ".mkv", ".avi", ".mov", ".webm", ".flv", ".wmv"].includes(ext))
+  if ([".mp4", ".m4v", ".mkv", ".avi", ".mov", ".webm", ".flv", ".wmv"].includes(ext))
     return "video";
   if ([".mp3", ".flac", ".wav", ".ogg", ".aac", ".wma", ".m4a"].includes(ext))
     return "audio";

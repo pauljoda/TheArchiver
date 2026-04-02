@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useCallback, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   X,
   Download,
@@ -55,6 +56,7 @@ export function FileDetailView({
   onFileChange,
   onRefresh,
 }: FileDetailViewProps) {
+  const [isMounted, setIsMounted] = useState(false);
   const [renameTarget, setRenameTarget] = useState<FileEntry | null>(null);
   const [moveCopyAction, setMoveCopyAction] = useState<{
     paths: string[];
@@ -143,7 +145,15 @@ export function FileDetailView({
   const previewType = getPreviewType(file.name);
   const ext = file.name.split(".").pop()?.toUpperCase() || "FILE";
 
-  return (
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return null;
+  }
+
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-sm animate-vault-enter"
       tabIndex={-1}
@@ -376,6 +386,7 @@ export function FileDetailView({
           }}
         />
       )}
-    </div>
+    </div>,
+    document.body
   );
 }

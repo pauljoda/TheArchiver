@@ -17,6 +17,7 @@ interface PluginViewHostProps {
   currentPath: string;
   trackedDirectory: string;
   onNavigate: (path: string) => void;
+  onOpenFile: (path: string) => void;
 }
 
 interface PluginViewRegistration {
@@ -29,6 +30,7 @@ interface PluginViewAPI {
   currentPath: string;
   trackedDirectory: string;
   navigate: (path: string) => void;
+  openFile: (path: string) => void;
   fetchFiles: (path: string) => Promise<FileEntry[]>;
   fetchFile: (path: string) => Promise<Response>;
   theme: {
@@ -81,6 +83,7 @@ export function PluginViewHost({
   currentPath,
   trackedDirectory,
   onNavigate,
+  onOpenFile,
 }: PluginViewHostProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const registrationRef = useRef<PluginViewRegistration | null>(null);
@@ -95,6 +98,7 @@ export function PluginViewHost({
       currentPath: path,
       trackedDirectory,
       navigate: onNavigate,
+      openFile: onOpenFile,
       fetchFiles: async (filePath: string) => {
         const res = await fetch(
           `/api/files?path=${encodeURIComponent(filePath)}`
@@ -109,7 +113,7 @@ export function PluginViewHost({
         colors: getThemeColors(),
       },
     }),
-    [trackedDirectory, onNavigate]
+    [trackedDirectory, onNavigate, onOpenFile]
   );
 
   // Load plugin script and render
