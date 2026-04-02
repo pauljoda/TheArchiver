@@ -16,7 +16,7 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 RUN apk add --no-cache ffmpeg zip python3 py3-pip \
-    && pip3 install --break-system-packages yt-dlp
+    && pip3 install --break-system-packages yt-dlp gallery-dl
 
 ENV NODE_ENV=production
 

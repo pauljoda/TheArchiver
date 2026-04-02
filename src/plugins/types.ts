@@ -11,6 +11,7 @@ export interface PluginSettingDefinition {
   defaultValue?: string | number | boolean;
   required?: boolean;
   hidden?: boolean;
+  section?: string;
   validation?: {
     min?: number;
     max?: number;

@@ -8,6 +8,7 @@ export interface SettingDefinition {
   label: string;
   description?: string;
   defaultValue?: string | number | boolean;
+  section?: string;
   validation?: {
     required?: boolean;
     min?: number;
@@ -230,6 +231,7 @@ export function getAllSettingsGrouped(): Record<string, SettingWithValue[]> {
       defaultValue: row.defaultValue
         ? deserialize(row.defaultValue, type)
         : undefined,
+      section: def?.section,
       validation: row.validation ? JSON.parse(row.validation) : undefined,
       sortOrder: row.sortOrder,
       value: deserialize(row.value, type) as string | number | boolean | null,

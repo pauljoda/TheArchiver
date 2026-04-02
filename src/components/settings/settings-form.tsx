@@ -17,6 +17,7 @@ interface SettingData {
   type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map" | "extension-directory-map" | "file";
   label: string;
   description?: string;
+  section?: string;
   value: string | number | boolean | null;
   hidden?: boolean;
   validation?: {
@@ -137,21 +138,65 @@ export function SettingsForm({
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 p-5">
-        {settings
-          .filter((s) => !s.hidden)
-          .map((s) => (
-            <SettingField
-              key={s.key}
-              settingKey={s.key}
-              type={s.type}
-              label={s.label}
-              description={s.description}
-              value={values[s.key] as string | number | boolean | null}
-              validation={s.validation}
-              onChange={handleChange}
-              onAction={handleAction}
-            />
-          ))}
+        {(() => {
+          const visible = settings.filter((s) => !s.hidden);
+          const hasSections = visible.some((s) => s.section);
+
+          if (!hasSections) {
+            return visible.map((s) => (
+              <SettingField
+                key={s.key}
+                settingKey={s.key}
+                type={s.type}
+                label={s.label}
+                description={s.description}
+                value={values[s.key] as string | number | boolean | null}
+                validation={s.validation}
+                onChange={handleChange}
+                onAction={handleAction}
+              />
+            ));
+          }
+
+          // Group settings by section, preserving order
+          const sections: Array<{ name: string; items: typeof visible }> = [];
+          const seen = new Set<string>();
+          for (const s of visible) {
+            const name = s.section || "";
+            if (!seen.has(name)) {
+              seen.add(name);
+              sections.push({ name, items: [] });
+            }
+            sections.find((sec) => sec.name === name)!.items.push(s);
+          }
+
+          return sections.map((section, idx) => (
+            <div key={section.name || "__default"} className={cn(idx > 0 && "mt-2")}>
+              {section.name && (
+                <div className="mb-3 mt-1">
+                  <h3 className="text-xs font-heading font-semibold uppercase tracking-wider text-muted-foreground border-b border-border/50 pb-2">
+                    {section.name}
+                  </h3>
+                </div>
+              )}
+              <div className="flex flex-col gap-4">
+                {section.items.map((s) => (
+                  <SettingField
+                    key={s.key}
+                    settingKey={s.key}
+                    type={s.type}
+                    label={s.label}
+                    description={s.description}
+                    value={values[s.key] as string | number | boolean | null}
+                    validation={s.validation}
+                    onChange={handleChange}
+                    onAction={handleAction}
+                  />
+                ))}
+              </div>
+            </div>
+          ));
+        })()}
       </CardContent>
     </Card>
   );

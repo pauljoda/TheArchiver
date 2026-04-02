@@ -159,6 +159,7 @@ function pluginSettingsToDefinitions(
     label: d.label,
     description: d.description,
     defaultValue: d.defaultValue,
+    section: d.section,
     validation: d.required ? { required: true, ...d.validation } : d.validation,
     sortOrder: d.sortOrder ?? i,
     sensitive: d.type === "password",
