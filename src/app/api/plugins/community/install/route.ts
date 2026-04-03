@@ -125,19 +125,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate plugin ID
-    const pluginId = slugify(manifest.name);
+    // Find existing plugin by slugified name or by matching display name
+    const slugId = slugify(manifest.name);
     const db = getDb();
 
-    const existing = db
+    let existing = db
       .select()
       .from(schema.installedPlugins)
-      .where(eq(schema.installedPlugins.id, pluginId))
+      .where(eq(schema.installedPlugins.id, slugId))
       .get();
 
-    const isUpdate = !!existing;
+    // Also search by display name in case the plugin was installed under a
+    // different ID (e.g. directory-based ID from deploy scripts)
+    if (!existing) {
+      existing = db
+        .select()
+        .from(schema.installedPlugins)
+        .where(eq(schema.installedPlugins.name, manifest.name))
+        .get();
+    }
 
-    // Copy to plugins directory
+    const isUpdate = !!existing;
+    // Use the existing ID if updating, otherwise use the slugified name
+    const pluginId = existing?.id ?? slugId;
+
+    // Copy to plugins directory (remove old files on update)
     const pluginsDir =
       process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
     const destDir = path.join(pluginsDir, pluginId);
