@@ -1,0 +1,66 @@
+import { NextResponse } from "next/server";
+import { getDb, schema } from "@/db";
+
+const COMMUNITY_REPO_URL =
+  process.env.COMMUNITY_PLUGINS_URL ||
+  "https://raw.githubusercontent.com/TheArchiver-App/CommunityPlugins/main/plugins.json";
+
+interface CommunityPlugin {
+  id: string;
+  name: string;
+  version: string;
+  description: string;
+  author: string;
+  downloadFile: string;
+  path: string;
+}
+
+interface CommunityManifest {
+  version: number;
+  baseUrl: string;
+  plugins: CommunityPlugin[];
+}
+
+export async function GET() {
+  try {
+    const res = await fetch(COMMUNITY_REPO_URL, {
+      next: { revalidate: 300 },
+    });
+
+    if (!res.ok) {
+      return NextResponse.json(
+        { error: "Failed to fetch community plugins" },
+        { status: 502 }
+      );
+    }
+
+    const manifest: CommunityManifest = await res.json();
+
+    // Get installed plugins to determine status
+    const db = getDb();
+    const installed = db.select().from(schema.installedPlugins).all();
+    const installedMap = new Map(installed.map((p) => [p.id, p]));
+
+    const plugins = manifest.plugins.map((p) => {
+      const existing = installedMap.get(p.id);
+      return {
+        ...p,
+        installed: !!existing,
+        installedVersion: existing?.version || null,
+        updateAvailable: !!existing && existing.version !== p.version,
+      };
+    });
+
+    return NextResponse.json({
+      version: manifest.version,
+      baseUrl: manifest.baseUrl,
+      plugins,
+    });
+  } catch (err) {
+    console.error("Error fetching community plugins:", err);
+    return NextResponse.json(
+      { error: "Failed to fetch community plugins" },
+      { status: 500 }
+    );
+  }
+}

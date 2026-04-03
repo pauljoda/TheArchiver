@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { PluginImportDialog } from "./plugin-import-dialog";
+import { CommunityBrowser } from "./community-browser";
 import { cn } from "@/lib/utils";
 
 interface PluginInfo {
@@ -176,6 +177,7 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
             </TooltipTrigger>
             <TooltipContent>Reload plugins</TooltipContent>
           </Tooltip>
+          <CommunityBrowser onInstalled={() => onRefresh?.()} />
           <PluginImportDialog onImported={() => onRefresh?.()} />
         </div>
       </CardHeader>
