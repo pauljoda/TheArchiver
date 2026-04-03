@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import pkg from "../../package.json";
@@ -46,13 +47,7 @@ export default function RootLayout({
               <main className="flex-1">
                 {children}
               </main>
-              <footer className="border-t border-border/50 py-4">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                  <p className="text-center text-xs font-mono text-muted-foreground/50 tracking-wider uppercase">
-                    v{pkg.version} &middot; Archive Engine Online
-                  </p>
-                </div>
-              </footer>
+              <Footer version={pkg.version} />
             </div>
           </TooltipProvider>
           <Toaster />
