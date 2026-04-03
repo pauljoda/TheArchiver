@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
   - Folder preview collages now include video files alongside images
 - **Changelog Viewer** — Clicking the version number in the footer opens a dialog showing the full changelog with styled markdown rendering
 
+### Fixed
+- Changelog viewer now works in Docker — `CHANGELOG.md` is copied into the container image
+- Changelog dialog properly sized (wide on desktop, near-fullscreen on mobile) with no text overflow
+
 ### Changed
 - Simplified Files and Settings page headers — removed icon boxes and subtitles that visually competed with the main navbar
 - Files page no longer shows a redundant "FILES" heading above the file browser card
