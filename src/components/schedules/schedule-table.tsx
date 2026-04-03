@@ -22,6 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ScheduleDialog } from "./schedule-dialog";
+import { PRESET_CRONS } from "@/lib/cron";
 import { cn } from "@/lib/utils";
 
 interface ScheduleItem {
@@ -63,13 +64,7 @@ function formatRelativeTime(dateValue: string | number | null): string {
 }
 
 function cronToLabel(cron: string): string {
-  const map: Record<string, string> = {
-    "0 */6 * * *": "Every 6h",
-    "0 */12 * * *": "Every 12h",
-    "0 0 * * *": "Daily",
-    "0 0 * * 0": "Weekly",
-  };
-  return map[cron] ?? cron;
+  return PRESET_CRONS.find((p) => p.cron === cron)?.label ?? cron;
 }
 
 export function ScheduleTable({ items, onRefresh }: ScheduleTableProps) {
@@ -236,6 +231,7 @@ export function ScheduleTable({ items, onRefresh }: ScheduleTableProps) {
                         variant="ghost"
                         size="icon"
                         className="size-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                        title="Edit"
                       >
                         <Pencil className="size-3.5" />
                       </Button>

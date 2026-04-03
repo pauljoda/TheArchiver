@@ -1,5 +1,5 @@
 import { getDb, schema } from "@/db";
-import { and, eq, lte, isNotNull } from "drizzle-orm";
+import { and, eq, lte, isNotNull, isNull } from "drizzle-orm";
 import { getPluginForUrl } from "@/plugins/registry";
 import { emitSSEEvent } from "@/lib/events";
 import { getNextRunDate } from "@/lib/cron";
@@ -88,11 +88,10 @@ export async function startScheduler(): Promise<void> {
     .where(
       and(
         eq(schema.scheduledUrls.enabled, true),
-        // nextRunAt is null — needs recompute
+        isNull(schema.scheduledUrls.nextRunAt)
       )
     )
-    .all()
-    .filter((s) => s.nextRunAt === null);
+    .all();
 
   for (const schedule of broken) {
     const nextRun = getNextRunDate(schedule.cronExpression);

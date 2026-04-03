@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +13,11 @@ interface CronPickerProps {
 }
 
 export function CronPicker({ value, onChange }: CronPickerProps) {
-  const [advanced, setAdvanced] = useState(
-    () => !PRESET_CRONS.some((p) => p.cron === value) && value !== ""
-  );
+  const [advanced, setAdvanced] = useState(false);
+
+  useEffect(() => {
+    setAdvanced(!!value && !PRESET_CRONS.some((p) => p.cron === value));
+  }, [value]);
 
   const selectedPreset = PRESET_CRONS.find((p) => p.cron === value);
   const validation = value ? validateCron(value) : null;
