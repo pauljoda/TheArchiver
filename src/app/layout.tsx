@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import pkg from "../../package.json";
 import "./globals.css";
 
@@ -54,6 +55,7 @@ export default function RootLayout({
               </footer>
             </div>
           </TooltipProvider>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

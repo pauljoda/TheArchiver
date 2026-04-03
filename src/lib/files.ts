@@ -25,7 +25,7 @@ export function resolveSafePath(relativePath: string): {
 } {
   // Get the download root directory
   const root = path.resolve(
-    getSetting<string>("core.share_location") || "./downloads"
+    getSetting<string>("core.download_location") || "./downloads"
   );
 
   // Reject null bytes
@@ -74,7 +74,7 @@ export function resolveSafeNewPath(relativePath: string): {
   parentAbsolute: string;
 } {
   const root = path.resolve(
-    getSetting<string>("core.share_location") || "./downloads"
+    getSetting<string>("core.download_location") || "./downloads"
   );
 
   if (relativePath.includes("\0")) {

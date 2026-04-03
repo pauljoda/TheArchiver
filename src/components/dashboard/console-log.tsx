@@ -28,6 +28,7 @@ export function ConsoleLog() {
 
   useEffect(() => {
     const controller = new AbortController();
+    let interval: ReturnType<typeof setInterval> | null = null;
 
     async function fetchLogs() {
       try {
@@ -39,11 +40,33 @@ export function ConsoleLog() {
       }
     }
 
-    fetchLogs();
-    const interval = setInterval(fetchLogs, POLL_INTERVAL);
+    function startPolling() {
+      fetchLogs();
+      interval = setInterval(fetchLogs, POLL_INTERVAL);
+    }
+
+    function stopPolling() {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    }
+
+    function handleVisibility() {
+      if (document.hidden) {
+        stopPolling();
+      } else {
+        startPolling();
+      }
+    }
+
+    startPolling();
+    document.addEventListener("visibilitychange", handleVisibility);
+
     return () => {
       controller.abort();
-      clearInterval(interval);
+      stopPolling();
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
 

@@ -11,23 +11,7 @@ import {
 } from "@/components/ui/card";
 import { SettingField } from "./setting-field";
 import { cn } from "@/lib/utils";
-
-interface SettingData {
-  key: string;
-  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map" | "extension-directory-map" | "file";
-  label: string;
-  description?: string;
-  section?: string;
-  value: string | number | boolean | null;
-  hidden?: boolean;
-  validation?: {
-    required?: boolean;
-    min?: number;
-    max?: number;
-    pattern?: string;
-    options?: Array<{ label: string; value: string }>;
-  };
-}
+import type { SettingData } from "@/lib/types";
 
 interface SettingsFormProps {
   title: string;
@@ -134,7 +118,7 @@ export function SettingsForm({
           </CardTitle>
           <div className="flex items-center gap-2">
             {saved && (
-              <span className="flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-heading animate-vault-fade">
+              <span className="flex items-center gap-1 text-xs text-success font-heading animate-vault-fade">
                 <Check className="size-3" />
                 Saved
               </span>
@@ -148,7 +132,7 @@ export function SettingsForm({
               size="sm"
               className={cn(
                 "gap-1.5 font-heading text-xs uppercase tracking-wider",
-                saved && "bg-emerald-600 hover:bg-emerald-700"
+                saved && "bg-success hover:bg-success/90"
               )}
             >
               <Save className="size-3" />

@@ -7,22 +7,7 @@ import { SettingsForm } from "@/components/settings/settings-form";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-
-interface SettingData {
-  key: string;
-  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map" | "extension-directory-map" | "file";
-  label: string;
-  description?: string;
-  section?: string;
-  value: string | number | boolean | null;
-  validation?: {
-    required?: boolean;
-    min?: number;
-    max?: number;
-    pattern?: string;
-    options?: Array<{ label: string; value: string }>;
-  };
-}
+import type { SettingData } from "@/lib/types";
 
 const GROUP_LABELS: Record<string, string> = {
   core: "Core",

@@ -2,14 +2,7 @@
 
 import { useRef, useEffect, useState, useCallback } from "react";
 import { Loader2, AlertTriangle } from "lucide-react";
-
-interface FileEntry {
-  name: string;
-  path: string;
-  isDirectory: boolean;
-  size: number;
-  modifiedAt: string;
-}
+import type { FileEntry } from "@/lib/types";
 
 interface PluginViewHostProps {
   pluginId: string;
@@ -168,7 +161,8 @@ export function PluginViewHost({
         registrationRef.current.destroy();
       }
       registrationRef.current = null;
-      // Clean up script tag
+      // Clean up pending view registration and script tag
+      window.__archiver_pending_views?.delete(viewId);
       if (script.parentNode) {
         script.parentNode.removeChild(script);
       }

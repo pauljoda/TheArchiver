@@ -191,9 +191,10 @@ All settings can be configured from the Settings page in the UI, or via environm
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `DATABASE_URL` | `file:./data/archiver.db` | SQLite database path |
-| `SHARE_LOCATION` | `./downloads` | Root download directory |
+| `DOWNLOAD_LOCATION` | `./downloads` | Root download directory |
 | `MAX_CONCURRENT_DOWNLOADS` | `10` | Parallel download limit |
 | `NTFY_URL` | — | [ntfy](https://ntfy.sh) notification endpoint |
+| `COMMUNITY_PLUGINS_URL` | — | Override the default community plugin manifest URL |
 
 Plugin-specific settings (authentication tokens, output preferences, etc.) are managed through the Settings UI under each plugin's group.
 
@@ -305,7 +306,7 @@ services:
       - ./plugins:/plugins
     environment:
       - DATABASE_URL=file:/data/archiver.db
-      - SHARE_LOCATION=/downloads
+      - DOWNLOAD_LOCATION=/downloads
       - MAX_CONCURRENT_DOWNLOADS=10
     restart: unless-stopped
 ```

@@ -7,10 +7,26 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+  const numId = parseInt(id, 10);
+
+  if (isNaN(numId)) {
+    return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
+  }
+
   const db = getDb();
 
+  const existing = db
+    .select({ id: schema.downloadQueue.id })
+    .from(schema.downloadQueue)
+    .where(eq(schema.downloadQueue.id, numId))
+    .get();
+
+  if (!existing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   db.delete(schema.downloadQueue)
-    .where(eq(schema.downloadQueue.id, parseInt(id, 10)))
+    .where(eq(schema.downloadQueue.id, numId))
     .run();
 
   return NextResponse.json({ success: true });

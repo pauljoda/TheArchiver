@@ -26,6 +26,8 @@
   --accent-foreground: oklch(0.15 0.01 260);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.99 0 0);
+  --success: oklch(0.6 0.17 145);
+  --success-foreground: oklch(0.99 0 0);
   --border: oklch(0.88 0.015 80);
   --input: oklch(0.88 0.015 80);
   --ring: oklch(0.65 0.16 55);
@@ -68,6 +70,8 @@
   --accent-foreground: oklch(0.13 0.012 260);
   --destructive: oklch(0.65 0.22 25);
   --destructive-foreground: oklch(0.99 0 0);
+  --success: oklch(0.7 0.17 145);
+  --success-foreground: oklch(0.99 0 0);
   --border: oklch(0.25 0.015 260);
   --input: oklch(0.25 0.015 260);
   --ring: oklch(0.78 0.14 70);
@@ -113,6 +117,8 @@
   --color-border: var(--border);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -254,8 +260,8 @@
   box-shadow: 0 0 6px oklch(0.65 0.22 25 / 30%);
 }
 .status-dot-success {
-  background: oklch(0.7 0.17 145);
-  box-shadow: 0 0 6px oklch(0.7 0.17 145 / 30%);
+  background: var(--success);
+  box-shadow: 0 0 6px oklch(from var(--success) l c h / 30%);
 }
 
 /* ── Custom scrollbar ── */

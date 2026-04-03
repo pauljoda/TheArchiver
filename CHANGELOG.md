@@ -4,7 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [2.2.0]
+
+### Changed
+- Renamed `SHARE_LOCATION` env var to `DOWNLOAD_LOCATION` for clarity (setting key: `core.download_location`)
+- Dev script no longer attempts to start a Redis container
+
+### Removed
+- Kavita integration (`src/lib/kavita.ts`) — settings were never registered, integration was always a no-op
+- FFmpeg helper wrapper (`src/lib/ffmpeg.ts`) — never imported (ffmpeg binary remains in Docker image for plugin use)
+- Zod env validation module (`src/lib/env.ts`) — never imported
+- `REDIS_URL` from `.env.example` — Redis is not used
+- All `KAVITA_*` env vars from `.env.example` and `docker-compose.yml`
+- Unused shadcn/ui components: `avatar`, `sheet`, `progress`, `skeleton`
+- Unused exports: `getSettingsByGroup`, `isInitialized` from settings, `useRefreshOnEvent` from SSE hook
+
+### Fixed
+- Toast notifications now actually display — `<Toaster />` was missing from the root layout
 
 ### Added
 - **Scheduled URL Archiving** — Cron-like system to automatically re-queue URLs on a repeating schedule
@@ -48,12 +64,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
   - Full post detail view with image gallery (lightbox, prev/next navigation, thumbnails), parsed metadata, and threaded comment tree
   - Reddit-inspired styling with nested comment indentation, upvote badges, author highlighting, and flair tags
   - Vanilla JS bundle (zero dependencies) with CSS custom property theme integration
+- **Plugin Helper Libraries** — Shared utilities extracted from community plugins into core helpers
+  - `helpers.process.execAsync` — Promise-wrapped exec with enriched errors (stdout/stderr on thrown errors)
+  - `helpers.string.shellEscape`, `xmlEscape`, `truncateTitle`, `filenameFromUrl`, `getMimeExtension`
+  - `helpers.io.downloadFile` enhanced with `headers` and `redirect` options for custom auth schemes
+  - `helpers.url.resolveOutputDir` — site-directory-map resolution logic for per-site download folders
+- **Extensible Folder Thumbnails** — Card grid now shows richer previews for folders
+  - Multi-image collage (2-4 images from child content)
+  - Sub-directory name pills when no images found
+  - Text snippet preview for text-only posts
+  - Item count display for folders without Post.nfo metadata
+  - Single `useFolderCardData` hook replaces separate thumbnail + metadata hooks (one API call per folder instead of two)
+  - Plugins can register optional `thumbnailProvider` in manifest for custom thumbnail rendering
+- **Extensible File Preview** — Plugins can register `filePreviewProvider` in manifest to handle file types the core doesn't natively support
+  - `PluginPreview` component loads plugin bundles and renders in the detail view
+  - Falls back to generic preview when no plugin handles the extension
+  - New API: `GET /api/plugins/preview-provider?ext=` — Resolve extension to plugin
 - New API endpoints:
   - `GET /api/files/view-providers?path=` — Query which plugin views can render a directory
-  - `GET /api/plugins/view?pluginId=` — Serve plugin view JS bundles
+  - `GET /api/plugins/view?pluginId=` — Serve plugin view JS bundles (extended to also serve preview bundles via `type=preview`)
+  - `GET /api/plugins/preview-provider?ext=` — Find which plugin can preview a file extension
+  - `GET /api/files/metadata` — Extended to return folder preview data (images, names, text) alongside Post.nfo metadata
 
 ### Changed
 - Layout container (`max-w-7xl`) moved from root layout to individual pages, allowing the files page to go full-width when a plugin view is active
+- `/api/files/metadata` now always returns JSON for directories (with preview + itemCount), replacing the previous 204-on-no-nfo behavior
 
 ### Added
 - Built-in "Files" plugin — universal fallback that downloads any file type when no other plugin matches a URL

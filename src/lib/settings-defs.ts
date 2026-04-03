@@ -2,13 +2,13 @@ import type { SettingDefinition } from "./settings";
 
 export const CORE_SETTINGS: SettingDefinition[] = [
   {
-    key: "core.share_location",
+    key: "core.download_location",
     group: "core",
     type: "string",
     label: "Download Location",
     description: "Root directory where downloaded files are saved",
     defaultValue: "./downloads",
-    envVar: "SHARE_LOCATION",
+    envVar: "DOWNLOAD_LOCATION",
     validation: { required: true },
     sortOrder: 0,
   },

@@ -16,7 +16,10 @@ FROM node:20-alpine AS runner
 WORKDIR /app
 
 RUN apk add --no-cache ffmpeg zip python3 py3-pip \
-    && pip3 install --break-system-packages yt-dlp gallery-dl
+    && python3 -m venv /opt/venv \
+    && /opt/venv/bin/pip install --no-cache-dir yt-dlp gallery-dl
+
+ENV PATH="/opt/venv/bin:$PATH"
 
 ENV NODE_ENV=production
 
@@ -34,7 +37,7 @@ RUN mkdir -p /data /downloads /plugins
 VOLUME ["/data", "/downloads", "/plugins"]
 
 ENV DATABASE_URL=file:/data/archiver.db
-ENV SHARE_LOCATION=/downloads
+ENV DOWNLOAD_LOCATION=/downloads
 ENV PLUGINS_DIR=/plugins
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3000

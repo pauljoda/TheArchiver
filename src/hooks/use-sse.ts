@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 
 interface SSEEvent {
   type: string;
@@ -33,12 +33,4 @@ export function useSSE(onEvent: (event: SSEEvent) => void) {
       es.close();
     };
   }, []);
-}
-
-export function useRefreshOnEvent(refreshFn: () => void) {
-  const refresh = useCallback(refreshFn, [refreshFn]);
-
-  useSSE(() => {
-    refresh();
-  });
 }

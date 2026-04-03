@@ -175,7 +175,7 @@ export function CommunityBrowser({ onInstalled }: CommunityBrowserProps) {
                     className={cn(
                       "flex size-9 shrink-0 items-center justify-center rounded-lg",
                       plugin.installed
-                        ? "bg-emerald-500/10 text-emerald-500"
+                        ? "bg-success/10 text-success"
                         : "bg-primary/10 text-primary"
                     )}
                   >
@@ -192,7 +192,7 @@ export function CommunityBrowser({ onInstalled }: CommunityBrowserProps) {
                       {plugin.installed && (
                         <Badge
                           variant="secondary"
-                          className="text-[10px] font-heading uppercase tracking-wider text-emerald-600 dark:text-emerald-400"
+                          className="text-[10px] font-heading uppercase tracking-wider text-success"
                         >
                           <Check className="size-2.5 mr-0.5" />
                           Installed
@@ -233,7 +233,7 @@ export function CommunityBrowser({ onInstalled }: CommunityBrowserProps) {
                         variant="ghost"
                         size="sm"
                         disabled
-                        className="gap-1.5 text-xs text-emerald-600 dark:text-emerald-400"
+                        className="gap-1.5 text-xs text-success"
                       >
                         <Check className="size-3" />
                         Installed

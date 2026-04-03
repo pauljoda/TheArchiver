@@ -42,9 +42,9 @@ const stats = [
     label: "Archived",
     sub: "Total downloads",
     icon: CheckCircle2,
-    color: "text-emerald-500 dark:text-emerald-400",
-    bgColor: "bg-emerald-500/10",
-    borderColor: "border-emerald-500/20",
+    color: "text-success",
+    bgColor: "bg-success/10",
+    borderColor: "border-success/20",
     glowClass:
       "group-hover:shadow-[0_0_20px_oklch(0.7_0.17_145/15%)]",
   },

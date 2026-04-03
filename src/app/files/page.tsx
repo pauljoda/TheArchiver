@@ -11,14 +11,7 @@ import {
 } from "@/components/files/view-toggle";
 import { FileBreadcrumb } from "@/components/files/file-breadcrumb";
 import { Separator } from "@/components/ui/separator";
-
-interface FileEntry {
-  name: string;
-  path: string;
-  isDirectory: boolean;
-  size: number;
-  modifiedAt: string;
-}
+import type { FileEntry } from "@/lib/types";
 
 function getPathFromUrl(): string {
   if (typeof window === "undefined") return "";

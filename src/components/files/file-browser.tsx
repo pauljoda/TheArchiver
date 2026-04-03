@@ -4,11 +4,6 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Folder,
   File,
-  FileText,
-  FileImage,
-  FileVideo,
-  FileAudio,
-  FileArchive,
   Download,
   Trash2,
   RefreshCw,
@@ -50,14 +45,8 @@ import { MoveCopyDialog } from "./move-copy-dialog";
 import { cn, formatFileSize, formatRelativeDate } from "@/lib/utils";
 import { toast } from "sonner";
 import { FileGridView } from "./file-grid-view";
-
-interface FileEntry {
-  name: string;
-  path: string;
-  isDirectory: boolean;
-  size: number;
-  modifiedAt: string;
-}
+import { FILE_ICONS, getFileIconType } from "@/lib/file-icons";
+import type { FileEntry } from "@/lib/types";
 
 interface FileBrowserProps {
   files: FileEntry[];
@@ -66,30 +55,6 @@ interface FileBrowserProps {
   onNavigate: (path: string) => void;
   onRefresh: () => void;
   onFileOpen?: (file: FileEntry) => void;
-}
-
-const FILE_ICONS: Record<string, typeof File> = {
-  image: FileImage,
-  video: FileVideo,
-  audio: FileAudio,
-  archive: FileArchive,
-  document: FileText,
-  file: File,
-};
-
-function getFileIconType(name: string): string {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  if (["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext))
-    return "image";
-  if (["mp4", "mkv", "avi", "mov", "webm", "flv", "wmv"].includes(ext))
-    return "video";
-  if (["mp3", "flac", "wav", "ogg", "aac", "wma", "m4a"].includes(ext))
-    return "audio";
-  if (["zip", "tar", "gz", "bz2", "7z", "rar", "xz"].includes(ext))
-    return "archive";
-  if (["pdf", "doc", "docx", "txt", "md", "epub", "cbz", "cbr"].includes(ext))
-    return "document";
-  return "file";
 }
 
 export function FileBrowser({
@@ -336,7 +301,7 @@ export function FileBrowser({
         )}
 
         <CardContent className="p-0">
-          {files.length === 0 && !currentPath ? (
+          {files.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <div className="flex size-12 items-center justify-center rounded-full bg-muted">
                 <FolderOpen className="size-5 text-muted-foreground" />

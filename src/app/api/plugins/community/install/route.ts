@@ -52,6 +52,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate download URL against the trusted community registry base URL
+    const communityUrl =
+      process.env.COMMUNITY_PLUGINS_URL ||
+      "https://raw.githubusercontent.com/pauljoda/TheArchiver-CommunityPlugins/main/plugins.json";
+    try {
+      const manifestRes = await fetch(communityUrl, { cache: "no-store" });
+      if (manifestRes.ok) {
+        const manifest = await manifestRes.json();
+        if (manifest.baseUrl && !downloadUrl.startsWith(manifest.baseUrl)) {
+          return NextResponse.json(
+            { error: "downloadUrl must originate from the community registry" },
+            { status: 400 }
+          );
+        }
+      }
+    } catch {
+      // If we can't verify, reject the request
+      return NextResponse.json(
+        { error: "Unable to verify download URL against community registry" },
+        { status: 502 }
+      );
+    }
+
     // Download the ZIP from the community repo
     const zipRes = await fetch(downloadUrl);
     if (!zipRes.ok) {

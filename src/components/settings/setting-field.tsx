@@ -93,7 +93,7 @@ export function SettingField({
               className={cn(
                 "text-xs font-medium animate-vault-fade",
                 actionResult.success
-                  ? "text-emerald-600 dark:text-emerald-400"
+                  ? "text-success"
                   : "text-destructive"
               )}
             >

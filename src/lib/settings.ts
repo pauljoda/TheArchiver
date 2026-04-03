@@ -257,14 +257,12 @@ export function getAllSettingsGrouped(): Record<string, SettingWithValue[]> {
   return grouped;
 }
 
-export function getSettingsByGroup(group: string): SettingWithValue[] {
-  return getAllSettingsGrouped()[group] ?? [];
-}
-
 export async function deleteSettingsByPrefix(prefix: string): Promise<void> {
   const db = getDb();
+  // Escape SQL LIKE metacharacters in the prefix
+  const escaped = prefix.replace(/[%_]/g, "\\$&");
   db.delete(schema.settings)
-    .where(like(schema.settings.key, `${prefix}%`))
+    .where(like(schema.settings.key, `${escaped}%`))
     .run();
 
   // Clear cache entries
@@ -280,11 +278,11 @@ function validate(value: unknown, def: SettingDefinition): void {
   const v = def.validation;
   if (!v) return;
 
-  const str = String(value);
-
-  if (v.required && (str === "" || str === "undefined")) {
+  if (v.required && (value == null || value === "")) {
     throw new Error(`Setting "${def.key}" is required`);
   }
+
+  const str = String(value);
 
   if (def.type === "number") {
     const num = parseFloat(str);
@@ -302,10 +300,6 @@ function validate(value: unknown, def: SettingDefinition): void {
   if (def.type === "select" && v.options && !v.options.some((o) => o.value === str)) {
     throw new Error(`Setting "${def.key}" must be one of the allowed values`);
   }
-}
-
-export function isInitialized(): boolean {
-  return g.__settingsInitialized ?? false;
 }
 
 export function isDefinitionRegistered(key: string): boolean {

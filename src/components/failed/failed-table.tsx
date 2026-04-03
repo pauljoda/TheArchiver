@@ -63,8 +63,8 @@ export function FailedTable({ items, onRefresh }: FailedTableProps) {
       <CardContent className="p-0">
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
-            <div className="flex size-12 items-center justify-center rounded-full bg-emerald-500/10">
-              <AlertCircle className="size-5 text-emerald-500" />
+            <div className="flex size-12 items-center justify-center rounded-full bg-success/10">
+              <AlertCircle className="size-5 text-success" />
             </div>
             <p className="text-sm font-medium text-muted-foreground">
               No failed downloads

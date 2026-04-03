@@ -174,9 +174,9 @@ export function FileUploadField({
       )}
 
       {state === "success" && filename && (
-        <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4">
+        <div className="flex items-center justify-between rounded-lg border border-success/30 bg-success/5 p-4">
           <div className="flex items-center gap-2.5">
-            <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
+            <CheckCircle2 className="size-4 text-success shrink-0" />
             <span className="text-sm font-mono">{filename}</span>
           </div>
           <Button

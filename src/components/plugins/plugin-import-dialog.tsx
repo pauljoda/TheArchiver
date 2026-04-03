@@ -13,24 +13,10 @@ import {
 } from "@/components/ui/dialog";
 import { SettingsForm } from "@/components/settings/settings-form";
 
+import type { SettingData } from "@/lib/types";
+
 interface PluginImportDialogProps {
   onImported: () => void;
-}
-
-interface SettingData {
-  key: string;
-  type: "string" | "number" | "boolean" | "password" | "select";
-  label: string;
-  description?: string;
-  value: string | number | boolean | null;
-  defaultValue?: string | number | boolean;
-  validation?: {
-    required?: boolean;
-    min?: number;
-    max?: number;
-    pattern?: string;
-    options?: Array<{ label: string; value: string }>;
-  };
 }
 
 export function PluginImportDialog({ onImported }: PluginImportDialogProps) {
@@ -224,7 +210,7 @@ export function PluginImportDialog({ onImported }: PluginImportDialogProps) {
 
           {success && !pendingSettings && (
             <div className="flex flex-col gap-3 animate-vault-fade">
-              <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400">
+              <div className="flex items-center gap-2 text-sm text-success">
                 <Check className="size-4" />
                 {success}
               </div>
@@ -242,7 +228,7 @@ export function PluginImportDialog({ onImported }: PluginImportDialogProps) {
 
           {pendingSettings && (
             <div className="flex flex-col gap-3 animate-vault-fade">
-              <p className="text-sm text-emerald-600 dark:text-emerald-400">
+              <p className="text-sm text-success">
                 {success}
               </p>
               <SettingsForm

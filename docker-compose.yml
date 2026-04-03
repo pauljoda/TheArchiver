@@ -9,11 +9,9 @@ services:
       - ./plugins:/plugins
     environment:
       - DATABASE_URL=file:/data/archiver.db
-      - SHARE_LOCATION=/downloads
+      - DOWNLOAD_LOCATION=/downloads
       - MAX_CONCURRENT_DOWNLOADS=10
+      - PLUGINS_DIR=/plugins
       # Uncomment and configure as needed:
       # - NTFY_URL=https://ntfy.example.com/archiver
-      # - KAVITA_BASE_URL=https://kavita.example.com
-      # - KAVITA_API_KEY=your-api-key
-      # - KAVITA_LIBRARY_ID=5
     restart: unless-stopped

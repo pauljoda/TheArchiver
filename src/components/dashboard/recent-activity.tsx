@@ -106,7 +106,7 @@ export function RecentActivity({ items, onRefresh }: RecentActivityProps) {
                       className={cn(
                         "text-[10px] uppercase tracking-wider font-heading",
                         item.status === "completed" &&
-                          "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          "bg-success/10 text-success"
                       )}
                     >
                       {item.status === "completed" ? (

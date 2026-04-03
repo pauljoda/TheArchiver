@@ -105,16 +105,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate index.js exists
-    const indexFile = ["index.js", "index.mjs"].find(async (f) => {
-      try {
-        await fs.access(path.join(rootDir, f));
-        return true;
-      } catch {
-        return false;
-      }
-    });
-
-    // Synchronous check since find with async doesn't work
     let hasIndex = false;
     for (const f of ["index.js", "index.mjs"]) {
       try {

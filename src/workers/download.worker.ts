@@ -2,7 +2,6 @@ import { getDb, schema } from "@/db";
 import { eq } from "drizzle-orm";
 import { getPluginForUrl, initPlugins, helpers } from "@/plugins/registry";
 import { sendNotification } from "@/lib/notifications";
-import { triggerLibraryScan } from "@/lib/kavita";
 import { getSetting, setSetting } from "@/lib/settings";
 import { emitSSEEvent } from "@/lib/events";
 import type { PluginLogger, PluginSettingsAccessor } from "@/plugins/types";
@@ -62,7 +61,7 @@ async function processDownload(item: QueueItem): Promise<void> {
   try {
     const result = await plugin.download({
       url,
-      rootDirectory: getSetting<string>("core.share_location"),
+      rootDirectory: getSetting<string>("core.download_location"),
       maxDownloadThreads: getSetting<number>("core.max_concurrent_downloads"),
       helpers,
       logger,
@@ -88,13 +87,12 @@ async function processDownload(item: QueueItem): Promise<void> {
       logger.info(`Completed: ${result.message}`);
       emitSSEEvent({ type: "job:completed", data: { id: queueItemId } });
 
-      // Non-blocking: notification and library scan
+      // Non-blocking notification
       sendNotification(
         "Download Complete",
         `${plugin.name}: ${result.message}`,
         "white_check_mark"
       ).catch(() => {});
-      triggerLibraryScan().catch(() => {});
     } else {
       await markFailed(db, queueItemId, url, result.message, plugin.name);
       emitSSEEvent({ type: "job:failed", data: { id: queueItemId } });
