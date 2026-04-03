@@ -11,24 +11,8 @@ import {
   RefreshCw,
   Upload,
   ChevronDown,
-  GripVertical,
+  ChevronUp,
 } from "lucide-react";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
 import {
   Card,
   CardContent,
@@ -60,254 +44,6 @@ interface PluginListProps {
 
 const URL_PATTERN_LIMIT = 3;
 
-/* ── Sortable plugin row ── */
-
-interface SortablePluginRowProps {
-  plugin: PluginInfo;
-  index: number;
-  expandedUrls: Set<string>;
-  onToggleUrls: (id: string) => void;
-  togglingId: string | null;
-  onToggle: (id: string, enabled: boolean) => void;
-  updatingId: string | null;
-  onStartUpdate: (id: string) => void;
-  confirmRemove: string | null;
-  onConfirmRemove: (id: string | null) => void;
-  removingId: string | null;
-  onRemove: (id: string, deleteSettings: boolean) => void;
-}
-
-function SortablePluginRow({
-  plugin,
-  index,
-  expandedUrls,
-  onToggleUrls,
-  togglingId,
-  onToggle,
-  updatingId,
-  onStartUpdate,
-  confirmRemove,
-  onConfirmRemove,
-  removingId,
-  onRemove,
-}: SortablePluginRowProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: plugin.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    animationDelay: isDragging ? undefined : `${index * 40}ms`,
-    zIndex: isDragging ? 50 : undefined,
-    position: (isDragging ? "relative" : undefined) as "relative" | undefined,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "group flex items-start gap-3 px-5 py-4 animate-vault-enter",
-        !plugin.enabled && !isDragging && "opacity-50",
-        isDragging
-          ? "bg-card rounded-lg shadow-xl shadow-primary/10 border border-primary/30 ring-1 ring-primary/20 cursor-grabbing"
-          : "transition-colors hover:bg-muted/30"
-      )}
-    >
-      {/* Drag handle */}
-      <button
-        type="button"
-        className={cn(
-          "flex shrink-0 items-center justify-center mt-1.5 touch-none",
-          isDragging
-            ? "cursor-grabbing text-primary"
-            : "cursor-grab text-muted-foreground/40 hover:text-muted-foreground active:cursor-grabbing"
-        )}
-        {...attributes}
-        {...listeners}
-      >
-        <GripVertical className="size-4" />
-      </button>
-
-      {/* Plugin icon */}
-      <div
-        className={cn(
-          "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors",
-          plugin.enabled
-            ? "bg-primary/10 text-primary"
-            : "bg-muted text-muted-foreground"
-        )}
-      >
-        <Puzzle className="size-4" />
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{plugin.name}</span>
-          {plugin.version && (
-            <Badge variant="outline" className="text-[10px] font-mono">
-              v{plugin.version}
-            </Badge>
-          )}
-          {!plugin.enabled && (
-            <Badge
-              variant="secondary"
-              className="text-[10px] font-heading uppercase tracking-wider"
-            >
-              <Power className="size-2.5 mr-0.5" />
-              Off
-            </Badge>
-          )}
-        </div>
-        {plugin.description && (
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {plugin.description}
-          </p>
-        )}
-        {plugin.author && (
-          <p className="flex items-center gap-1 text-[11px] text-muted-foreground/60 mt-0.5">
-            <User className="size-2.5" />
-            {plugin.author}
-          </p>
-        )}
-        {plugin.urlPatterns.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1 mt-2">
-            {(expandedUrls.has(plugin.id)
-              ? plugin.urlPatterns
-              : plugin.urlPatterns.slice(0, URL_PATTERN_LIMIT)
-            ).map((pattern) => (
-              <Badge
-                key={pattern}
-                variant="secondary"
-                className="text-[10px] font-mono"
-              >
-                {pattern}
-              </Badge>
-            ))}
-            {plugin.urlPatterns.length > URL_PATTERN_LIMIT && (
-              <button
-                type="button"
-                className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded-md hover:bg-muted"
-                onClick={() => onToggleUrls(plugin.id)}
-              >
-                <span>
-                  {expandedUrls.has(plugin.id)
-                    ? "less"
-                    : `+${plugin.urlPatterns.length - URL_PATTERN_LIMIT} more`}
-                </span>
-                <ChevronDown
-                  className={cn(
-                    "size-3 transition-transform",
-                    expandedUrls.has(plugin.id) && "rotate-180"
-                  )}
-                />
-              </button>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-1.5 shrink-0">
-        <Switch
-          checked={plugin.enabled}
-          disabled={togglingId === plugin.id}
-          onCheckedChange={(checked) => onToggle(plugin.id, checked)}
-        />
-        {plugin.hasSettings && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 text-muted-foreground hover:text-foreground"
-                asChild
-              >
-                <Link href={`/settings?group=plugin:${plugin.name}`}>
-                  <Settings className="size-3.5" />
-                </Link>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Settings</TooltipContent>
-          </Tooltip>
-        )}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
-              disabled={updatingId !== null}
-              onClick={() => onStartUpdate(plugin.id)}
-            >
-              <Upload
-                className={cn(
-                  "size-3.5",
-                  updatingId === plugin.id && "animate-pulse"
-                )}
-              />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Update</TooltipContent>
-        </Tooltip>
-        {confirmRemove === plugin.id ? (
-          <div className="flex items-center gap-1 animate-slide-in">
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-7 text-[10px] font-heading uppercase tracking-wider"
-              disabled={removingId === plugin.id}
-              onClick={() => onRemove(plugin.id, false)}
-            >
-              {removingId === plugin.id ? "..." : "Remove"}
-            </Button>
-            <Button
-              variant="destructive"
-              size="sm"
-              className="h-7 text-[10px] font-heading uppercase tracking-wider bg-destructive/80"
-              disabled={removingId === plugin.id}
-              onClick={() => onRemove(plugin.id, true)}
-            >
-              {removingId === plugin.id ? "..." : "Purge Settings"}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 text-[10px]"
-              onClick={() => onConfirmRemove(null)}
-            >
-              Cancel
-            </Button>
-          </div>
-        ) : (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                onClick={() => onConfirmRemove(plugin.id)}
-              >
-                <Trash2 className="size-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Remove</TooltipContent>
-          </Tooltip>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ── Plugin list ── */
-
 export function PluginList({ plugins, onRefresh }: PluginListProps) {
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
@@ -316,13 +52,6 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
   const [reloading, setReloading] = useState(false);
   const [expandedUrls, setExpandedUrls] = useState<Set<string>>(new Set());
   const updateFileRef = useRef<HTMLInputElement>(null);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
 
   const handleToggleUrls = useCallback((id: string) => {
     setExpandedUrls((prev) => {
@@ -400,20 +129,13 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
     }
   }
 
-  async function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
+  async function handleMove(index: number, direction: -1 | 1) {
+    const newIndex = index + direction;
+    if (newIndex < 0 || newIndex >= plugins.length) return;
 
-    const oldIndex = plugins.findIndex((p) => p.id === active.id);
-    const newIndex = plugins.findIndex((p) => p.id === over.id);
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    // Build new ordered ID list
     const ids = plugins.map((p) => p.id);
-    ids.splice(oldIndex, 1);
-    ids.splice(newIndex, 0, active.id as string);
+    [ids[index], ids[newIndex]] = [ids[newIndex], ids[index]];
 
-    // Persist to server, then refresh to get updated order
     try {
       await fetch("/api/plugins/reorder", {
         method: "PATCH",
@@ -473,39 +195,213 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
             </div>
           </div>
         ) : (
-          <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragEnd={handleDragEnd}
-          >
-            <SortableContext
-              items={plugins.map((p) => p.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="divide-y divide-border/50">
-                {plugins.map((plugin, i) => (
-                  <SortablePluginRow
-                    key={plugin.id}
-                    plugin={plugin}
-                    index={i}
-                    expandedUrls={expandedUrls}
-                    onToggleUrls={handleToggleUrls}
-                    togglingId={togglingId}
-                    onToggle={handleToggle}
-                    updatingId={updatingId}
-                    onStartUpdate={(id) => {
-                      setUpdatingId(id);
-                      updateFileRef.current?.click();
-                    }}
-                    confirmRemove={confirmRemove}
-                    onConfirmRemove={setConfirmRemove}
-                    removingId={removingId}
-                    onRemove={handleRemove}
+          <div className="divide-y divide-border/50">
+            {plugins.map((plugin, i) => (
+              <div
+                key={plugin.id}
+                className={cn(
+                  "group flex items-start gap-3 px-5 py-4 transition-colors hover:bg-muted/30 animate-vault-enter",
+                  !plugin.enabled && "opacity-50"
+                )}
+                style={{ animationDelay: `${i * 40}ms` }}
+              >
+                {/* Move up/down */}
+                <div className="flex flex-col shrink-0 mt-0.5">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-6 text-muted-foreground/40 hover:text-foreground"
+                    disabled={i === 0}
+                    onClick={() => handleMove(i, -1)}
+                  >
+                    <ChevronUp className="size-3.5" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-6 text-muted-foreground/40 hover:text-foreground"
+                    disabled={i === plugins.length - 1}
+                    onClick={() => handleMove(i, 1)}
+                  >
+                    <ChevronDown className="size-3.5" />
+                  </Button>
+                </div>
+
+                {/* Plugin icon */}
+                <div
+                  className={cn(
+                    "flex size-9 shrink-0 items-center justify-center rounded-lg transition-colors",
+                    plugin.enabled
+                      ? "bg-primary/10 text-primary"
+                      : "bg-muted text-muted-foreground"
+                  )}
+                >
+                  <Puzzle className="size-4" />
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium">{plugin.name}</span>
+                    {plugin.version && (
+                      <Badge variant="outline" className="text-[10px] font-mono">
+                        v{plugin.version}
+                      </Badge>
+                    )}
+                    {!plugin.enabled && (
+                      <Badge
+                        variant="secondary"
+                        className="text-[10px] font-heading uppercase tracking-wider"
+                      >
+                        <Power className="size-2.5 mr-0.5" />
+                        Off
+                      </Badge>
+                    )}
+                  </div>
+                  {plugin.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {plugin.description}
+                    </p>
+                  )}
+                  {plugin.author && (
+                    <p className="flex items-center gap-1 text-[11px] text-muted-foreground/60 mt-0.5">
+                      <User className="size-2.5" />
+                      {plugin.author}
+                    </p>
+                  )}
+                  {plugin.urlPatterns.length > 0 && (
+                    <div className="flex flex-wrap items-center gap-1 mt-2">
+                      {(expandedUrls.has(plugin.id)
+                        ? plugin.urlPatterns
+                        : plugin.urlPatterns.slice(0, URL_PATTERN_LIMIT)
+                      ).map((pattern) => (
+                        <Badge
+                          key={pattern}
+                          variant="secondary"
+                          className="text-[10px] font-mono"
+                        >
+                          {pattern}
+                        </Badge>
+                      ))}
+                      {plugin.urlPatterns.length > URL_PATTERN_LIMIT && (
+                        <button
+                          type="button"
+                          className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded-md hover:bg-muted"
+                          onClick={() => handleToggleUrls(plugin.id)}
+                        >
+                          <span>
+                            {expandedUrls.has(plugin.id)
+                              ? "less"
+                              : `+${plugin.urlPatterns.length - URL_PATTERN_LIMIT} more`}
+                          </span>
+                          <ChevronDown
+                            className={cn(
+                              "size-3 transition-transform",
+                              expandedUrls.has(plugin.id) && "rotate-180"
+                            )}
+                          />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Switch
+                    checked={plugin.enabled}
+                    disabled={togglingId === plugin.id}
+                    onCheckedChange={(checked) =>
+                      handleToggle(plugin.id, checked)
+                    }
                   />
-                ))}
+                  {plugin.hasSettings && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-muted-foreground hover:text-foreground"
+                          asChild
+                        >
+                          <Link href={`/settings?group=plugin:${plugin.name}`}>
+                            <Settings className="size-3.5" />
+                          </Link>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Settings</TooltipContent>
+                    </Tooltip>
+                  )}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
+                        disabled={updatingId !== null}
+                        onClick={() => {
+                          setUpdatingId(plugin.id);
+                          updateFileRef.current?.click();
+                        }}
+                      >
+                        <Upload
+                          className={cn(
+                            "size-3.5",
+                            updatingId === plugin.id && "animate-pulse"
+                          )}
+                        />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Update</TooltipContent>
+                  </Tooltip>
+                  {confirmRemove === plugin.id ? (
+                    <div className="flex items-center gap-1 animate-slide-in">
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="h-7 text-[10px] font-heading uppercase tracking-wider"
+                        disabled={removingId === plugin.id}
+                        onClick={() => handleRemove(plugin.id, false)}
+                      >
+                        {removingId === plugin.id ? "..." : "Remove"}
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="h-7 text-[10px] font-heading uppercase tracking-wider bg-destructive/80"
+                        disabled={removingId === plugin.id}
+                        onClick={() => handleRemove(plugin.id, true)}
+                      >
+                        {removingId === plugin.id ? "..." : "Purge Settings"}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-[10px]"
+                        onClick={() => setConfirmRemove(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => setConfirmRemove(plugin.id)}
+                        >
+                          <Trash2 className="size-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Remove</TooltipContent>
+                    </Tooltip>
+                  )}
+                </div>
               </div>
-            </SortableContext>
-          </DndContext>
+            ))}
+          </div>
         )}
       </CardContent>
       <input
