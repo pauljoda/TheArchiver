@@ -12,6 +12,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
   - Thumbnails cached in `.thumbs` directories and regenerated only when the source video changes
   - Graceful fallback to the generic video icon when ffmpeg is unavailable or extraction fails
   - Folder preview collages now include video files alongside images
+- **Changelog Viewer** — Clicking the version number in the footer opens a dialog showing the full changelog with styled markdown rendering
+
+### Changed
+- Simplified Files and Settings page headers — removed icon boxes and subtitles that visually competed with the main navbar
+- Files page no longer shows a redundant "FILES" heading above the file browser card
 
 ## [2.2.0]
 
