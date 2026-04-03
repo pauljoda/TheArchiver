@@ -18,6 +18,8 @@ import {
   Pencil,
   FolderInput,
   Copy,
+  List,
+  LayoutGrid,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +49,7 @@ import { RenameDialog } from "./rename-dialog";
 import { MoveCopyDialog } from "./move-copy-dialog";
 import { cn, formatFileSize, formatRelativeDate } from "@/lib/utils";
 import { toast } from "sonner";
+import { FileGridView } from "./file-grid-view";
 
 interface FileEntry {
   name: string;
@@ -97,6 +100,15 @@ export function FileBrowser({
   onRefresh,
   onFileOpen,
 }: FileBrowserProps) {
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+
+  // Hydration-safe: read persisted view mode from cookie after mount
+  useEffect(() => {
+    const match = document.cookie.match(/(?:^|;\s*)archiver-view-mode=(list|grid)/);
+    if (match?.[1] && match[1] !== "list") {
+      setViewMode(match[1] as "list" | "grid");
+    }
+  }, []);
   const [selectedPaths, setSelectedPaths] = useState<Set<string>>(new Set());
   const [lastClickedIndex, setLastClickedIndex] = useState<number | null>(null);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
@@ -108,6 +120,11 @@ export function FileBrowser({
   const [batchDeleting, setBatchDeleting] = useState(false);
 
   const hasSelection = selectedPaths.size > 0;
+
+  // Persist view mode to cookie (365 day expiry, same-site)
+  useEffect(() => {
+    document.cookie = `archiver-view-mode=${viewMode};path=/;max-age=${365 * 24 * 60 * 60};samesite=lax`;
+  }, [viewMode]);
 
   // Clear selection on path change
   useEffect(() => {
@@ -221,6 +238,46 @@ export function FileBrowser({
             </Badge>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
+            {/* View mode toggle */}
+            <div className="flex items-center rounded-md border border-border/50 p-0.5 gap-0.5">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "size-7",
+                      viewMode === "list"
+                        ? "bg-muted text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                    onClick={() => setViewMode("list")}
+                  >
+                    <List className="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>List View</TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "size-7",
+                      viewMode === "grid"
+                        ? "bg-muted text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                    onClick={() => setViewMode("grid")}
+                  >
+                    <LayoutGrid className="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Grid View</TooltipContent>
+              </Tooltip>
+            </div>
+
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -295,6 +352,19 @@ export function FileBrowser({
                 </p>
               </div>
             </div>
+          ) : viewMode === "grid" ? (
+            <FileGridView
+              files={files}
+              currentPath={currentPath}
+              selectedPaths={selectedPaths}
+              hasSelection={hasSelection}
+              onToggleSelect={toggleSelect}
+              onNavigate={onNavigate}
+              onFileOpen={onFileOpen}
+              onRename={(file) => setRenameTarget(file)}
+              onMoveCopy={(paths, action) => setMoveCopyAction({ paths, action })}
+              onDelete={(path) => handleDelete(path)}
+            />
           ) : (
             <div className="divide-y divide-border/50">
               {/* Column header */}

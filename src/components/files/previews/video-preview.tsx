@@ -44,6 +44,9 @@ export function VideoPreview({ filePath, fileName }: VideoPreviewProps) {
       <video
         src={previewUrl(filePath)}
         controls
+        autoPlay
+        muted
+        playsInline
         className="max-h-full max-w-full"
         onError={() => setError(true)}
       />

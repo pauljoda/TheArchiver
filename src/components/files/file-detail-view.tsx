@@ -290,19 +290,19 @@ export function FileDetailView({
         {/* Preview */}
         <div className="flex-1 min-w-0 p-4">
           {previewType === "image" && (
-            <ImagePreview filePath={file.path} />
+            <ImagePreview key={file.path} filePath={file.path} />
           )}
           {previewType === "video" && (
-            <VideoPreview filePath={file.path} fileName={file.name} />
+            <VideoPreview key={file.path} filePath={file.path} fileName={file.name} />
           )}
           {previewType === "audio" && (
-            <AudioPreview filePath={file.path} fileName={file.name} />
+            <AudioPreview key={file.path} filePath={file.path} fileName={file.name} />
           )}
           {previewType === "text" && (
-            <TextPreview filePath={file.path} fileName={file.name} fileSize={file.size} />
+            <TextPreview key={file.path} filePath={file.path} fileName={file.name} fileSize={file.size} />
           )}
           {previewType === "pdf" && (
-            <PdfPreview filePath={file.path} />
+            <PdfPreview key={file.path} filePath={file.path} />
           )}
           {previewType === "generic" && (
             <GenericPreview

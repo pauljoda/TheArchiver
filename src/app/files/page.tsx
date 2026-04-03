@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { FolderOpen } from "lucide-react";
 import { FileBrowser } from "@/components/files/file-browser";
 import { FileDetailView } from "@/components/files/file-detail-view";
@@ -38,10 +38,11 @@ export default function FilesPage() {
   const [loading, setLoading] = useState(true);
   const [viewProviders, setViewProviders] = useState<ViewProviderInfo[]>([]);
   const [activeViewId, setActiveViewId] = useState<string | null>(null);
+  const [activeViewRestored, setActiveViewRestored] = useState(false);
+  const [userExplicitlySelectedFiles, setUserExplicitlySelectedFiles] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileEntry | null>(null);
   const [mounted, setMounted] = useState(false);
-  // Track whether user explicitly chose "Files" view so we don't auto-switch
-  const userExplicitlyChoseFiles = useRef(false);
+
 
   const fetchFiles = useCallback(async (filePath: string) => {
     setLoading(true);
@@ -108,18 +109,52 @@ export default function FilesPage() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
+  // Restore active view preference from cookie on mount
   useEffect(() => {
     if (!mounted) return;
-    fetchFiles(currentPath);
+    const match = document.cookie.match(/(?:^|;\s*)archiver-active-view=([^;]+)/);
+    if (match?.[1]) {
+      const stored = decodeURIComponent(match[1]);
+      if (stored === "files") {
+        setUserExplicitlySelectedFiles(true);
+      } else {
+        // Will be applied once view providers load
+        setActiveViewId(stored);
+      }
+    }
+    setActiveViewRestored(true);
+  }, [mounted]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    fetchFiles(currentPath).then(() => {
+      // After files load, check if this is a post directory (contains Post.nfo)
+      // If so, auto-activate plugin view for the detail renderer
+    });
     fetchViewProviders(currentPath).then((providers) => {
-      if (providers.length > 0 && !userExplicitlyChoseFiles.current) {
-        setActiveViewId(providers[0].viewId);
-      } else if (providers.length === 0) {
+      if (providers.length === 0) {
         setActiveViewId(null);
-        userExplicitlyChoseFiles.current = false;
+      } else if (!userExplicitlySelectedFiles) {
+        // Restore stored view preference if available, otherwise use first provider
+        const match = document.cookie.match(/(?:^|;\s*)archiver-active-view=([^;]+)/);
+        const stored = match?.[1] ? decodeURIComponent(match[1]) : null;
+        if (stored && stored !== "files" && providers.some((p) => p.viewId === stored)) {
+          setActiveViewId(stored);
+        } else if (stored !== "files") {
+          setActiveViewId(providers[0].viewId);
+        }
       }
     });
-  }, [mounted, currentPath, fetchFiles, fetchViewProviders]);
+  }, [mounted, currentPath, fetchFiles, fetchViewProviders, userExplicitlySelectedFiles]);
+
+  // Auto-activate plugin view when entering a post directory (has Post.nfo)
+  useEffect(() => {
+    if (!mounted || !activeViewRestored || files.length === 0) return;
+    const hasPostNfo = files.some((f) => !f.isDirectory && f.name === "Post.nfo");
+    if (hasPostNfo && viewProviders.length > 0 && activeViewId === null && !userExplicitlySelectedFiles) {
+      setActiveViewId(viewProviders[0].viewId);
+    }
+  }, [mounted, activeViewRestored, files, viewProviders, activeViewId, userExplicitlySelectedFiles]);
 
   const handleNavigate = useCallback((path: string) => {
     // Push to browser history so back/forward works
@@ -207,11 +242,11 @@ export default function FilesPage() {
 
   function handleViewSelect(viewId: string | null) {
     setActiveViewId(viewId);
-    if (viewId === null) {
-      userExplicitlyChoseFiles.current = true;
-    } else {
-      userExplicitlyChoseFiles.current = false;
-    }
+    // Track when user explicitly selects Files view to prevent auto-reactivation
+    setUserExplicitlySelectedFiles(viewId === null);
+    // Persist preference globally
+    const value = viewId ?? "files";
+    document.cookie = `archiver-active-view=${encodeURIComponent(value)};path=/;max-age=${365 * 24 * 60 * 60};samesite=lax`;
   }
 
   const isPluginView = activeViewId !== null;
