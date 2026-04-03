@@ -19,7 +19,7 @@ import {
   getSetting,
 } from "@/lib/settings";
 import { getDb, schema } from "@/db";
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import * as htmlHelpers from "./helpers/html";
 import * as ioHelpers from "./helpers/io";
 import * as urlHelpers from "./helpers/url";
@@ -284,8 +284,12 @@ export async function initPlugins(pluginsDir?: string): Promise<void> {
     }
   }
 
-  // Load plugins tracked in DB
-  const dbPlugins = db.select().from(schema.installedPlugins).all();
+  // Load plugins tracked in DB (ordered by sort_order for matching priority)
+  const dbPlugins = db
+    .select()
+    .from(schema.installedPlugins)
+    .orderBy(asc(schema.installedPlugins.sortOrder))
+    .all();
   const trackedIds = new Set(dbPlugins.map((p) => p.id));
 
   for (const dbPlugin of dbPlugins) {

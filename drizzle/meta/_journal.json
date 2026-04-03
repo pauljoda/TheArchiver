@@ -22,6 +22,13 @@
       "when": 1774937484972,
       "tag": "0002_clear_zemo",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1775179145797,
+      "tag": "0003_slimy_multiple_man",
+      "breakpoints": true
     }
   ]
 }

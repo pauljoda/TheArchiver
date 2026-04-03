@@ -1,0 +1,1 @@
+ALTER TABLE `installed_plugins` ADD `sort_order` integer DEFAULT 0 NOT NULL;

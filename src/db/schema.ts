@@ -29,6 +29,7 @@ export const installedPlugins = sqliteTable("installed_plugins", {
   hasSettings: integer("has_settings", { mode: "boolean" })
     .notNull()
     .default(false),
+  sortOrder: integer("sort_order").notNull().default(0),
   installedAt: integer("installed_at", { mode: "timestamp" })
     .notNull()
     .$defaultFn(() => new Date()),

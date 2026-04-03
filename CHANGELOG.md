@@ -6,12 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
-### Changed
-- Plugin list is now sorted alphabetically by name
-- Long URL pattern lists in plugin cards collapse after 3 entries with an expand/collapse toggle
-
 ### Added
+- **Plugin priority reordering** — Drag-and-drop to reorder plugins; order determines URL matching priority (first match wins)
+- New API endpoint: `PATCH /api/plugins/reorder` — Persist plugin sort order
 - PWA support for Mobile Safari "Add to Home Screen" — web manifest, apple-touch-icon, and meta tags
+
+### Changed
+- Long URL pattern lists in plugin cards collapse after 3 entries with an expand/collapse toggle
 
 ### Added
 - **File Detail/Preview View** — Click any file in the browser to open a full-viewport preview overlay
