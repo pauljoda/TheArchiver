@@ -6,6 +6,7 @@ data
 downloads
 plugins
 *.md
+!CHANGELOG.md
 .env*
 .DS_Store
 .claude
