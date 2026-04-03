@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/), and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Video Thumbnails** — Video files (mkv, mp4, avi, etc.) now display an extracted frame as their thumbnail in the file browser grid instead of a generic icon
+  - Uses ffmpeg to extract a frame at ~1 second into the video
+  - Thumbnails cached in `.thumbs` directories and regenerated only when the source video changes
+  - Graceful fallback to the generic video icon when ffmpeg is unavailable or extraction fails
+  - Folder preview collages now include video files alongside images
+
 ## [2.2.0]
 
 ### Changed
