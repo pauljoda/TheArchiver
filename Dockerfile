@@ -31,6 +31,9 @@ COPY --from=builder /app/public ./public
 # Copy drizzle migrations (needed at runtime for DB setup)
 COPY --from=builder /app/drizzle ./drizzle
 
+# Copy changelog (served via API for the in-app changelog viewer)
+COPY --from=builder /app/CHANGELOG.md ./CHANGELOG.md
+
 # Create persistent data directories
 RUN mkdir -p /data /downloads /plugins
 

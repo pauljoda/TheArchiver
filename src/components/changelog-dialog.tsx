@@ -25,10 +25,10 @@ function parseChangelog(raw: string): string {
     // Links
     .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank" rel="noopener" class="text-primary hover:underline">$1</a>')
     // List items
-    .replace(/^- (.+)$/gm, '<li class="text-xs text-muted-foreground leading-relaxed pl-1">$1</li>')
-    .replace(/^  - (.+)$/gm, '<li class="text-xs text-muted-foreground/70 leading-relaxed pl-5">$1</li>')
+    .replace(/^- (.+)$/gm, '<li class="text-xs text-muted-foreground leading-relaxed pl-1 break-words">$1</li>')
+    .replace(/^  - (.+)$/gm, '<li class="text-xs text-muted-foreground/70 leading-relaxed pl-5 break-words">$1</li>')
     // Inline code
-    .replace(/`([^`]+)`/g, '<code class="text-[10px] font-mono bg-muted/50 px-1 py-0.5 rounded">$1</code>')
+    .replace(/`([^`]+)`/g, '<code class="text-[10px] font-mono bg-muted/50 px-1 py-0.5 rounded break-all">$1</code>')
     // Wrap adjacent li elements in ul
     .replace(/((?:<li[^>]*>.*<\/li>\n?)+)/g, '<ul class="list-disc list-outside ml-4 space-y-1 mb-2">$1</ul>')
     // Empty lines
@@ -59,23 +59,25 @@ export function ChangelogDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+      <DialogContent className="sm:max-w-3xl h-[85vh] sm:h-[80vh] flex flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="font-heading text-sm uppercase tracking-wider">
             Changelog &middot; v{version}
           </DialogTitle>
         </DialogHeader>
-        <ScrollArea className="flex-1 -mx-6 px-6">
-          {loading ? (
-            <p className="text-xs text-muted-foreground animate-pulse">
-              Loading changelog...
-            </p>
-          ) : content ? (
-            <div
-              className="prose-changelog pb-4"
-              dangerouslySetInnerHTML={{ __html: parseChangelog(content) }}
-            />
-          ) : null}
+        <ScrollArea className="flex-1 min-h-0">
+          <div className="pr-4">
+            {loading ? (
+              <p className="text-xs text-muted-foreground animate-pulse">
+                Loading changelog...
+              </p>
+            ) : content ? (
+              <div
+                className="prose-changelog pb-4 overflow-hidden break-words"
+                dangerouslySetInnerHTML={{ __html: parseChangelog(content) }}
+              />
+            ) : null}
+          </div>
         </ScrollArea>
       </DialogContent>
     </Dialog>
