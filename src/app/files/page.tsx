@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { FolderOpen } from "lucide-react";
 import { FileBrowser } from "@/components/files/file-browser";
 import { FileDetailView } from "@/components/files/file-detail-view";
 import { PluginViewHost } from "@/components/files/plugin-view-host";
@@ -10,7 +9,6 @@ import {
   type ViewProviderInfo,
 } from "@/components/files/view-toggle";
 import { FileBreadcrumb } from "@/components/files/file-breadcrumb";
-import { Separator } from "@/components/ui/separator";
 import type { FileEntry } from "@/lib/types";
 
 function getPathFromUrl(): string {
@@ -249,48 +247,34 @@ export default function FilesPage() {
 
   return (
     <div className="flex flex-col animate-vault-enter">
-      {/* Top bar: page header + view toggle */}
-      <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-8 pb-6">
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
-                <FolderOpen className="size-4 text-primary" />
-              </div>
-              <div>
-                <h2 className="text-lg font-heading font-bold uppercase tracking-wider">
-                  Files
-                </h2>
-                <p className="text-xs text-muted-foreground">
-                  Browse your archive
-                </p>
-              </div>
-            </div>
-
+      {/* Top bar: view toggle + breadcrumb (when plugin views available) */}
+      {(viewProviders.length > 0 || isPluginView) && (
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-4">
+          <div className="flex flex-col gap-4">
             {viewProviders.length > 0 && (
-              <ViewToggle
-                providers={viewProviders}
-                activeViewId={activeViewId}
-                onSelect={handleViewSelect}
+              <div className="flex items-center justify-end">
+                <ViewToggle
+                  providers={viewProviders}
+                  activeViewId={activeViewId}
+                  onSelect={handleViewSelect}
+                />
+              </div>
+            )}
+
+            {/* Breadcrumb shown for plugin views */}
+            {isPluginView && (
+              <FileBreadcrumb
+                currentPath={currentPath}
+                onNavigate={handleNavigate}
               />
             )}
           </div>
-
-          <Separator className="bg-border/50" />
-
-          {/* Breadcrumb shown for plugin views */}
-          {isPluginView && (
-            <FileBreadcrumb
-              currentPath={currentPath}
-              onNavigate={handleNavigate}
-            />
-          )}
         </div>
-      </div>
+      )}
 
       {/* Content area */}
       {isPluginView && activeProvider ? (
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pb-8">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pb-8 pt-2">
           <PluginViewHost
             pluginId={activeProvider.pluginId}
             viewId={activeProvider.viewId}
@@ -301,7 +285,7 @@ export default function FilesPage() {
           />
         </div>
       ) : (
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pb-8">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-8">
           <FileBrowser
             files={files}
             currentPath={currentPath}

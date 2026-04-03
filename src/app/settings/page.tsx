@@ -2,10 +2,9 @@
 
 import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { Settings, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { SettingsForm } from "@/components/settings/settings-form";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import type { SettingData } from "@/lib/types";
 
@@ -124,21 +123,9 @@ function SettingsContent() {
   return (
     <div className="flex flex-col gap-6 animate-vault-enter">
       {/* Page header */}
-      <div className="flex items-center gap-3">
-        <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10 ring-1 ring-primary/20">
-          <Settings className="size-4 text-primary" />
-        </div>
-        <div>
-          <h2 className="text-lg font-heading font-bold uppercase tracking-wider">
-            Settings
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            Configure your archive engine
-          </p>
-        </div>
-      </div>
-
-      <Separator className="bg-border/50" />
+      <h2 className="text-sm font-heading font-bold uppercase tracking-widest text-muted-foreground">
+        Settings
+      </h2>
 
       {groupKeys.length === 0 ? (
         <p className="text-sm text-muted-foreground">
