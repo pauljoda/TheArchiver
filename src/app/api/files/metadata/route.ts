@@ -6,6 +6,8 @@ import { resolveSafePath, getRelativePath, FileError } from "@/lib/files";
 export const dynamic = "force-dynamic";
 
 const IMAGE_RE = /\.(jpe?g|png|gif|webp|avif)$/i;
+const VIDEO_RE = /\.(mp4|m4v|mkv|avi|mov|webm|flv|wmv)$/i;
+const MEDIA_RE = /\.(jpe?g|png|gif|webp|avif|mp4|m4v|mkv|avi|mov|webm|flv|wmv)$/i;
 const MAX_PREVIEW_IMAGES = 4;
 const MAX_PEEK_DIRS = 5;
 const MAX_NAME_ITEMS = 8;
@@ -89,26 +91,32 @@ function parseNfo(xml: string): PostCardMetadata | null {
   return null;
 }
 
-/** Find up to N image files in a directory (non-recursive, skips hidden). */
-async function findImages(
+/** Build the preview URL for a media file (image → download, video → thumbnail). */
+function mediaUrl(filePath: string, root: string): string {
+  const rel = getRelativePath(filePath, root);
+  if (VIDEO_RE.test(filePath)) {
+    return `/api/files/thumbnail?path=${encodeURIComponent(rel)}`;
+  }
+  return `/api/files/download?path=${encodeURIComponent(rel)}`;
+}
+
+/** Find up to N media files (images + videos) in a directory (non-recursive, skips hidden). */
+async function findMedia(
   dirPath: string,
   root: string,
   max: number
 ): Promise<string[]> {
   try {
     const entries: import("fs").Dirent[] = await fs.readdir(dirPath, { withFileTypes: true });
-    const images: string[] = [];
+    const urls: string[] = [];
     for (const entry of entries) {
       if (entry.name.startsWith(".")) continue;
-      if (!entry.isDirectory() && IMAGE_RE.test(entry.name)) {
-        const rel = getRelativePath(path.join(dirPath, entry.name), root);
-        images.push(
-          `/api/files/download?path=${encodeURIComponent(rel)}`
-        );
-        if (images.length >= max) break;
+      if (!entry.isDirectory() && MEDIA_RE.test(entry.name)) {
+        urls.push(mediaUrl(path.join(dirPath, entry.name), root));
+        if (urls.length >= max) break;
       }
     }
-    return images;
+    return urls;
   } catch {
     return [];
   }
@@ -132,36 +140,33 @@ async function buildPreview(
   const files = visible.filter((e) => !e.isDirectory());
   const itemCount = visible.length;
 
-  // Check for direct images in this folder
-  const directImages = files
-    .filter((f) => IMAGE_RE.test(f.name))
+  // Check for direct media (images + videos) in this folder
+  const directMedia = files
+    .filter((f) => MEDIA_RE.test(f.name))
     .slice(0, MAX_PREVIEW_IMAGES)
-    .map((f) => {
-      const rel = getRelativePath(path.join(absolute, f.name), root);
-      return `/api/files/download?path=${encodeURIComponent(rel)}`;
-    });
+    .map((f) => mediaUrl(path.join(absolute, f.name), root));
 
-  if (directImages.length > 0) {
-    return { preview: { type: "images", urls: directImages }, itemCount };
+  if (directMedia.length > 0) {
+    return { preview: { type: "images", urls: directMedia }, itemCount };
   }
 
-  // If children are directories, peek into first few for images
+  // If children are directories, peek into first few for media
   if (dirs.length > 0) {
-    const collageImages: string[] = [];
+    const collageMedia: string[] = [];
     for (const dir of dirs.slice(0, MAX_PEEK_DIRS)) {
       const childPath = path.join(absolute, dir.name);
-      const found = await findImages(
+      const found = await findMedia(
         childPath,
         root,
-        MAX_PREVIEW_IMAGES - collageImages.length
+        MAX_PREVIEW_IMAGES - collageMedia.length
       );
-      collageImages.push(...found);
-      if (collageImages.length >= MAX_PREVIEW_IMAGES) break;
+      collageMedia.push(...found);
+      if (collageMedia.length >= MAX_PREVIEW_IMAGES) break;
     }
 
-    if (collageImages.length > 0) {
+    if (collageMedia.length > 0) {
       return {
-        preview: { type: "images", urls: collageImages.slice(0, MAX_PREVIEW_IMAGES) },
+        preview: { type: "images", urls: collageMedia.slice(0, MAX_PREVIEW_IMAGES) },
         itemCount,
       };
     }
