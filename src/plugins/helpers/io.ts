@@ -14,7 +14,12 @@ const DEFAULT_USER_AGENT =
 export async function downloadFile(
   url: string,
   outputPath: string,
-  options?: { userAgent?: string; cookies?: string }
+  options?: {
+    userAgent?: string;
+    cookies?: string;
+    headers?: Record<string, string>;
+    redirect?: RequestRedirect;
+  }
 ): Promise<void> {
   const dir = path.dirname(outputPath);
   await fsp.mkdir(dir, { recursive: true });
@@ -25,8 +30,16 @@ export async function downloadFile(
   if (options?.cookies) {
     headers["Cookie"] = options.cookies;
   }
+  if (options?.headers) {
+    Object.assign(headers, options.headers);
+  }
 
-  const res = await fetch(url, { headers });
+  const fetchOptions: RequestInit = { headers };
+  if (options?.redirect) {
+    fetchOptions.redirect = options.redirect;
+  }
+
+  const res = await fetch(url, fetchOptions);
   if (!res.ok || !res.body) {
     throw new Error(
       `Failed to download ${url}: ${res.status} ${res.statusText}`

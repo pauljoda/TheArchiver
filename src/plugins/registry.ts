@@ -24,6 +24,7 @@ import * as htmlHelpers from "./helpers/html";
 import * as ioHelpers from "./helpers/io";
 import * as urlHelpers from "./helpers/url";
 import * as stringHelpers from "./helpers/string";
+import * as processHelpers from "./helpers/process";
 import filesPlugin from "./builtins/files";
 
 /**
@@ -133,6 +134,7 @@ function getTrackedDirectoryValue(primaryKey: string): string {
 interface PluginRegistryGlobal {
   __pluginRegistry?: Map<string, RegisteredPlugin>;
   __pluginRegistryInitialized?: boolean;
+  __pluginRegistryInitPromise?: Promise<void>;
   __fileTypePlugins?: RegisteredPlugin[];
   __fallbackPlugin?: RegisteredPlugin;
   __viewProviderRegistry?: Map<string, ViewProviderRegistration>;
@@ -159,6 +161,7 @@ export const helpers: PluginHelpers = {
   io: ioHelpers,
   url: urlHelpers,
   string: stringHelpers,
+  process: processHelpers,
 };
 
 function slugify(name: string): string {
@@ -230,7 +233,17 @@ const BUILTIN_FILES_ID = "builtin-files";
 
 export async function initPlugins(pluginsDir?: string): Promise<void> {
   if (getInitialized()) return;
+  // Prevent concurrent initialization — return existing promise if in progress
+  if (g.__pluginRegistryInitPromise) return g.__pluginRegistryInitPromise;
+  g.__pluginRegistryInitPromise = doInitPlugins(pluginsDir);
+  try {
+    await g.__pluginRegistryInitPromise;
+  } finally {
+    g.__pluginRegistryInitPromise = undefined;
+  }
+}
 
+async function doInitPlugins(pluginsDir?: string): Promise<void> {
   const dir = pluginsDir || process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
   const db = getDb();
 

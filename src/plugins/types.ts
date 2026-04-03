@@ -64,6 +64,7 @@ export interface PluginHelpers {
   io: typeof import("./helpers/io");
   url: typeof import("./helpers/url");
   string: typeof import("./helpers/string");
+  process: typeof import("./helpers/process");
 }
 
 export interface PluginLogger {
