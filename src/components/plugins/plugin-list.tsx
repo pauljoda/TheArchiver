@@ -15,14 +15,12 @@ import {
 } from "lucide-react";
 import {
   DndContext,
-  DragOverlay,
   closestCenter,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
-  type DragStartEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
@@ -62,26 +60,26 @@ interface PluginListProps {
 
 const URL_PATTERN_LIMIT = 3;
 
-/* ── Plugin row content (shared by sortable row + drag overlay) ── */
+/* ── Sortable plugin row ── */
 
-interface PluginRowContentProps {
+interface SortablePluginRowProps {
   plugin: PluginInfo;
+  index: number;
   expandedUrls: Set<string>;
-  onToggleUrls?: (id: string) => void;
+  onToggleUrls: (id: string) => void;
   togglingId: string | null;
-  onToggle?: (id: string, enabled: boolean) => void;
+  onToggle: (id: string, enabled: boolean) => void;
   updatingId: string | null;
-  onStartUpdate?: (id: string) => void;
+  onStartUpdate: (id: string) => void;
   confirmRemove: string | null;
-  onConfirmRemove?: (id: string | null) => void;
+  onConfirmRemove: (id: string | null) => void;
   removingId: string | null;
-  onRemove?: (id: string, deleteSettings: boolean) => void;
-  dragHandleProps?: Record<string, unknown>;
-  isOverlay?: boolean;
+  onRemove: (id: string, deleteSettings: boolean) => void;
 }
 
-function PluginRowContent({
+function SortablePluginRow({
   plugin,
+  index,
   expandedUrls,
   onToggleUrls,
   togglingId,
@@ -92,21 +90,47 @@ function PluginRowContent({
   onConfirmRemove,
   removingId,
   onRemove,
-  dragHandleProps,
-  isOverlay,
-}: PluginRowContentProps) {
+}: SortablePluginRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: plugin.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    animationDelay: isDragging ? undefined : `${index * 40}ms`,
+    zIndex: isDragging ? 50 : undefined,
+    position: (isDragging ? "relative" : undefined) as "relative" | undefined,
+  };
+
   return (
-    <>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "group flex items-start gap-3 px-5 py-4 animate-vault-enter",
+        !plugin.enabled && !isDragging && "opacity-50",
+        isDragging
+          ? "bg-card rounded-lg shadow-xl shadow-primary/10 border border-primary/30 ring-1 ring-primary/20 cursor-grabbing"
+          : "transition-colors hover:bg-muted/30"
+      )}
+    >
       {/* Drag handle */}
       <button
         type="button"
         className={cn(
           "flex shrink-0 items-center justify-center mt-1.5 touch-none",
-          isOverlay
+          isDragging
             ? "cursor-grabbing text-primary"
             : "cursor-grab text-muted-foreground/40 hover:text-muted-foreground active:cursor-grabbing"
         )}
-        {...dragHandleProps}
+        {...attributes}
+        {...listeners}
       >
         <GripVertical className="size-4" />
       </button>
@@ -171,7 +195,7 @@ function PluginRowContent({
               <button
                 type="button"
                 className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded-md hover:bg-muted"
-                onClick={() => onToggleUrls?.(plugin.id)}
+                onClick={() => onToggleUrls(plugin.id)}
               >
                 <span>
                   {expandedUrls.has(plugin.id)
@@ -194,8 +218,8 @@ function PluginRowContent({
       <div className="flex items-center gap-1.5 shrink-0">
         <Switch
           checked={plugin.enabled}
-          disabled={togglingId === plugin.id || isOverlay}
-          onCheckedChange={(checked) => onToggle?.(plugin.id, checked)}
+          disabled={togglingId === plugin.id}
+          onCheckedChange={(checked) => onToggle(plugin.id, checked)}
         />
         {plugin.hasSettings && (
           <Tooltip>
@@ -220,8 +244,8 @@ function PluginRowContent({
               variant="ghost"
               size="icon"
               className="size-8 text-muted-foreground hover:text-primary hover:bg-primary/10"
-              disabled={updatingId !== null || isOverlay}
-              onClick={() => onStartUpdate?.(plugin.id)}
+              disabled={updatingId !== null}
+              onClick={() => onStartUpdate(plugin.id)}
             >
               <Upload
                 className={cn(
@@ -240,7 +264,7 @@ function PluginRowContent({
               size="sm"
               className="h-7 text-[10px] font-heading uppercase tracking-wider"
               disabled={removingId === plugin.id}
-              onClick={() => onRemove?.(plugin.id, false)}
+              onClick={() => onRemove(plugin.id, false)}
             >
               {removingId === plugin.id ? "..." : "Remove"}
             </Button>
@@ -249,7 +273,7 @@ function PluginRowContent({
               size="sm"
               className="h-7 text-[10px] font-heading uppercase tracking-wider bg-destructive/80"
               disabled={removingId === plugin.id}
-              onClick={() => onRemove?.(plugin.id, true)}
+              onClick={() => onRemove(plugin.id, true)}
             >
               {removingId === plugin.id ? "..." : "Purge Settings"}
             </Button>
@@ -257,7 +281,7 @@ function PluginRowContent({
               variant="ghost"
               size="sm"
               className="h-7 text-[10px]"
-              onClick={() => onConfirmRemove?.(null)}
+              onClick={() => onConfirmRemove(null)}
             >
               Cancel
             </Button>
@@ -269,7 +293,7 @@ function PluginRowContent({
                 variant="ghost"
                 size="icon"
                 className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                onClick={() => onConfirmRemove?.(plugin.id)}
+                onClick={() => onConfirmRemove(plugin.id)}
               >
                 <Trash2 className="size-3.5" />
               </Button>
@@ -278,85 +302,6 @@ function PluginRowContent({
           </Tooltip>
         )}
       </div>
-    </>
-  );
-}
-
-/* ── Sortable plugin row ── */
-
-interface SortablePluginRowProps {
-  plugin: PluginInfo;
-  index: number;
-  isDragActive: boolean;
-  expandedUrls: Set<string>;
-  onToggleUrls: (id: string) => void;
-  togglingId: string | null;
-  onToggle: (id: string, enabled: boolean) => void;
-  updatingId: string | null;
-  onStartUpdate: (id: string) => void;
-  confirmRemove: string | null;
-  onConfirmRemove: (id: string | null) => void;
-  removingId: string | null;
-  onRemove: (id: string, deleteSettings: boolean) => void;
-}
-
-function SortablePluginRow({
-  plugin,
-  index,
-  isDragActive,
-  expandedUrls,
-  onToggleUrls,
-  togglingId,
-  onToggle,
-  updatingId,
-  onStartUpdate,
-  confirmRemove,
-  onConfirmRemove,
-  removingId,
-  onRemove,
-}: SortablePluginRowProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: plugin.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    animationDelay: `${index * 40}ms`,
-  };
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(
-        "group flex items-start gap-3 px-5 py-4 transition-colors animate-vault-enter",
-        !plugin.enabled && "opacity-50",
-        isDragging
-          ? "relative z-10 bg-primary/5 border border-dashed border-primary/30 rounded-lg opacity-40"
-          : "hover:bg-muted/30",
-        isDragActive && !isDragging && "transition-transform duration-200"
-      )}
-    >
-      <PluginRowContent
-        plugin={plugin}
-        expandedUrls={expandedUrls}
-        onToggleUrls={onToggleUrls}
-        togglingId={togglingId}
-        onToggle={onToggle}
-        updatingId={updatingId}
-        onStartUpdate={onStartUpdate}
-        confirmRemove={confirmRemove}
-        onConfirmRemove={onConfirmRemove}
-        removingId={removingId}
-        onRemove={onRemove}
-        dragHandleProps={{ ...attributes, ...listeners }}
-      />
     </div>
   );
 }
@@ -370,10 +315,7 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [reloading, setReloading] = useState(false);
   const [expandedUrls, setExpandedUrls] = useState<Set<string>>(new Set());
-  const [activeId, setActiveId] = useState<string | null>(null);
   const updateFileRef = useRef<HTMLInputElement>(null);
-
-  const activePlugin = activeId ? plugins.find((p) => p.id === activeId) : null;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -458,10 +400,6 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
     }
   }
 
-  function handleDragStart(event: DragStartEvent) {
-    setActiveId(event.active.id as string);
-  }
-
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -485,8 +423,6 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
       onRefresh?.();
     } catch (err) {
       console.error("Failed to reorder plugins:", err);
-    } finally {
-      setActiveId(null);
     }
   }
 
@@ -540,9 +476,7 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
-            onDragCancel={() => setActiveId(null)}
           >
             <SortableContext
               items={plugins.map((p) => p.id)}
@@ -554,7 +488,6 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
                     key={plugin.id}
                     plugin={plugin}
                     index={i}
-                    isDragActive={activeId !== null}
                     expandedUrls={expandedUrls}
                     onToggleUrls={handleToggleUrls}
                     togglingId={togglingId}
@@ -572,24 +505,6 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
                 ))}
               </div>
             </SortableContext>
-            <DragOverlay dropAnimation={{
-              duration: 200,
-              easing: "cubic-bezier(0.2, 0, 0, 1)",
-            }}>
-              {activePlugin ? (
-                <div className="flex items-start gap-3 px-5 py-4 bg-card border border-primary/30 rounded-lg shadow-xl shadow-primary/10 ring-1 ring-primary/20">
-                  <PluginRowContent
-                    plugin={activePlugin}
-                    expandedUrls={expandedUrls}
-                    togglingId={togglingId}
-                    updatingId={updatingId}
-                    confirmRemove={confirmRemove}
-                    removingId={removingId}
-                    isOverlay
-                  />
-                </div>
-              ) : null}
-            </DragOverlay>
           </DndContext>
         )}
       </CardContent>
