@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Changed
+- Plugin list is now sorted alphabetically by name
+- Long URL pattern lists in plugin cards collapse after 3 entries with an expand/collapse toggle
+
+### Added
+- PWA support for Mobile Safari "Add to Home Screen" — web manifest, apple-touch-icon, and meta tags
+
 ### Added
 - **File Detail/Preview View** — Click any file in the browser to open a full-viewport preview overlay
   - **Image preview** for jpg, png, gif, webp, svg, bmp, ico, avif, tiff with click-to-zoom

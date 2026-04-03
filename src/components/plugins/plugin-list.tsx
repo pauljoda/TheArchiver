@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import Link from "next/link";
-import { Puzzle, Settings, Trash2, Power, User, RefreshCw, Upload } from "lucide-react";
+import { Puzzle, Settings, Trash2, Power, User, RefreshCw, Upload, ChevronDown } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -38,7 +38,10 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [reloading, setReloading] = useState(false);
+  const [expandedUrls, setExpandedUrls] = useState<Set<string>>(new Set());
   const updateFileRef = useRef<HTMLInputElement>(null);
+
+  const URL_PATTERN_LIMIT = 3;
 
   async function handleReload() {
     setReloading(true);
@@ -205,8 +208,11 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
                     </p>
                   )}
                   {plugin.urlPatterns.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {plugin.urlPatterns.map((pattern) => (
+                    <div className="flex flex-wrap items-center gap-1 mt-2">
+                      {(expandedUrls.has(plugin.id)
+                        ? plugin.urlPatterns
+                        : plugin.urlPatterns.slice(0, URL_PATTERN_LIMIT)
+                      ).map((pattern) => (
                         <Badge
                           key={pattern}
                           variant="secondary"
@@ -215,6 +221,32 @@ export function PluginList({ plugins, onRefresh }: PluginListProps) {
                           {pattern}
                         </Badge>
                       ))}
+                      {plugin.urlPatterns.length > URL_PATTERN_LIMIT && (
+                        <button
+                          type="button"
+                          className="flex items-center gap-0.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded-md hover:bg-muted"
+                          onClick={() =>
+                            setExpandedUrls((prev) => {
+                              const next = new Set(prev);
+                              if (next.has(plugin.id)) next.delete(plugin.id);
+                              else next.add(plugin.id);
+                              return next;
+                            })
+                          }
+                        >
+                          <span>
+                            {expandedUrls.has(plugin.id)
+                              ? "less"
+                              : `+${plugin.urlPatterns.length - URL_PATTERN_LIMIT} more`}
+                          </span>
+                          <ChevronDown
+                            className={cn(
+                              "size-3 transition-transform",
+                              expandedUrls.has(plugin.id) && "rotate-180"
+                            )}
+                          />
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
