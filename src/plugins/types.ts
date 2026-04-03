@@ -34,6 +34,11 @@ export interface PluginViewDeclaration {
   entryPoint: string;
 }
 
+export interface PluginThumbnailDeclaration {
+  /** Relative path to the compiled JS bundle that registers a thumbnail renderer */
+  entryPoint: string;
+}
+
 export interface PluginManifest {
   name: string;
   version?: string;
@@ -43,6 +48,7 @@ export interface PluginManifest {
   fileTypes?: string[];
   settings?: PluginSettingDefinition[];
   viewProvider?: PluginViewDeclaration;
+  thumbnailProvider?: PluginThumbnailDeclaration;
 }
 
 export interface PluginSettingsAccessor {

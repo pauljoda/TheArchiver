@@ -10,6 +10,7 @@ import type {
   PluginManifest,
   PluginSettingDefinition,
   PluginViewDeclaration,
+  PluginThumbnailDeclaration,
 } from "./types";
 import type { SettingDefinition } from "@/lib/settings";
 import {
@@ -117,6 +118,13 @@ export interface ViewProviderInfo {
   trackedDirectory: string;
 }
 
+export interface ThumbnailProviderRegistration {
+  pluginId: string;
+  entryPoint: string;
+  /** Setting key to resolve the tracked directory */
+  directorySettingKey: string;
+}
+
 function getTrackedDirectoryValue(primaryKey: string): string {
   const primary = getSetting<string>(primaryKey);
   if (primary) return primary;
@@ -138,16 +146,19 @@ interface PluginRegistryGlobal {
   __fileTypePlugins?: RegisteredPlugin[];
   __fallbackPlugin?: RegisteredPlugin;
   __viewProviderRegistry?: Map<string, ViewProviderRegistration>;
+  __thumbnailProviderRegistry?: Map<string, ThumbnailProviderRegistration>;
 }
 
 const g = globalThis as unknown as PluginRegistryGlobal;
 if (!g.__pluginRegistry) g.__pluginRegistry = new Map();
 if (!g.__fileTypePlugins) g.__fileTypePlugins = [];
 if (!g.__viewProviderRegistry) g.__viewProviderRegistry = new Map();
+if (!g.__thumbnailProviderRegistry) g.__thumbnailProviderRegistry = new Map();
 
 const plugins = g.__pluginRegistry;
 const fileTypePlugins = g.__fileTypePlugins;
 const viewProviders = g.__viewProviderRegistry!;
+const thumbnailProviders = g.__thumbnailProviderRegistry!;
 
 function getInitialized() {
   return g.__pluginRegistryInitialized ?? false;
@@ -202,6 +213,18 @@ function registerViewProvider(
     label: view.label,
     icon: view.icon,
     entryPoint: view.entryPoint,
+    directorySettingKey,
+  });
+}
+
+function registerThumbnailProvider(
+  pluginId: string,
+  thumb: PluginThumbnailDeclaration,
+  directorySettingKey: string
+): void {
+  thumbnailProviders.set(pluginId, {
+    pluginId,
+    entryPoint: thumb.entryPoint,
     directorySettingKey,
   });
 }
@@ -363,6 +386,16 @@ async function doInitPlugins(pluginsDir?: string): Promise<void> {
         );
       }
 
+      // Register thumbnail provider if manifest declares one
+      const thumbDecl = manifest?.thumbnailProvider;
+      if (thumbDecl) {
+        registerThumbnailProvider(
+          dbPlugin.id,
+          thumbDecl,
+          `plugin.${dbPlugin.id}.save_directory`
+        );
+      }
+
       const patternInfo = plugin.urlPatterns.length
         ? plugin.urlPatterns.join(", ")
         : `file types: ${plugin.fileTypes?.join(", ") || "none"}`;
@@ -448,6 +481,16 @@ async function doInitPlugins(pluginsDir?: string): Promise<void> {
           registerViewProvider(
             pluginId,
             viewDecl,
+            `plugin.${pluginId}.save_directory`
+          );
+        }
+
+        // Register thumbnail provider if declared
+        const thumbDecl2 = manifest?.thumbnailProvider;
+        if (thumbDecl2) {
+          registerThumbnailProvider(
+            pluginId,
+            thumbDecl2,
             `plugin.${pluginId}.save_directory`
           );
         }
@@ -653,6 +696,10 @@ export async function loadSinglePlugin(
     if (viewDecl) {
       registerViewProvider(pluginId, viewDecl, `plugin.${pluginId}.save_directory`);
     }
+    const thumbDecl3 = manifest.thumbnailProvider;
+    if (thumbDecl3) {
+      registerThumbnailProvider(pluginId, thumbDecl3, `plugin.${pluginId}.save_directory`);
+    }
   }
 }
 
@@ -661,6 +708,7 @@ export async function reloadPlugins(pluginsDir?: string): Promise<void> {
   plugins.clear();
   fileTypePlugins.length = 0;
   viewProviders.clear();
+  thumbnailProviders.clear();
   g.__fallbackPlugin = undefined;
   setInitialized(false);
   await initPlugins(pluginsDir);
@@ -685,6 +733,40 @@ export function unloadPlugin(pluginId: string): void {
   }
 
   viewProviders.delete(pluginId);
+  thumbnailProviders.delete(pluginId);
+}
+
+export function getThumbnailProviderForPath(relativePath: string): ThumbnailProviderRegistration | null {
+  for (const reg of thumbnailProviders.values()) {
+    let trackedDir: string;
+    try {
+      trackedDir = getTrackedDirectoryValue(reg.directorySettingKey);
+    } catch {
+      continue;
+    }
+    if (!trackedDir) continue;
+
+    const normalizedTracked = trackedDir.replace(/^\/+|\/+$/g, "");
+    const normalizedPath = relativePath.replace(/^\/+|\/+$/g, "");
+
+    if (
+      normalizedPath === normalizedTracked ||
+      normalizedPath.startsWith(normalizedTracked + "/")
+    ) {
+      return reg;
+    }
+  }
+  return null;
+}
+
+export function getThumbnailProviderEntry(pluginId: string): { entryPoint: string; pluginsDir: string } | null {
+  const reg = thumbnailProviders.get(pluginId);
+  if (!reg) return null;
+  const dir = process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
+  return {
+    entryPoint: path.join(dir, pluginId, reg.entryPoint),
+    pluginsDir: dir,
+  };
 }
 
 export function getViewProvidersForPath(relativePath: string): ViewProviderInfo[] {

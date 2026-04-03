@@ -11,20 +11,36 @@ export interface PostCardMetadata {
   commentCount?: number;
 }
 
-const cache = new Map<string, PostCardMetadata | null>();
+export type FolderPreview =
+  | { type: "images"; urls: string[] }
+  | { type: "text"; snippet: string }
+  | { type: "names"; items: string[] }
+  | { type: "empty" };
+
+export interface FolderCardMetadata {
+  post?: PostCardMetadata;
+  preview: FolderPreview;
+  itemCount: number;
+}
+
+const cache = new Map<string, FolderCardMetadata | null>();
 
 /**
- * Fetches Post.nfo metadata for a folder if it exists.
- * Returns null if the folder has no Post.nfo or hasn't loaded yet.
+ * Fetches folder card metadata including Post.nfo data and preview images.
+ * Replaces both useFolderThumbnail and the old useFolderMetadata with a single call.
  */
-export function useFolderMetadata(folderPath: string): PostCardMetadata | null {
-  const [meta, setMeta] = useState<PostCardMetadata | null>(
+export function useFolderCardData(
+  folderPath: string
+): FolderCardMetadata | null {
+  const [data, setData] = useState<FolderCardMetadata | null>(
     cache.get(folderPath) ?? null
   );
 
   useEffect(() => {
+    if (!folderPath) return;
+
     if (cache.has(folderPath)) {
-      setMeta(cache.get(folderPath)!);
+      setData(cache.get(folderPath)!);
       return;
     }
 
@@ -34,15 +50,15 @@ export function useFolderMetadata(folderPath: string): PostCardMetadata | null {
       signal: controller.signal,
     })
       .then((res) => {
-        if (res.status === 204 || !res.ok) {
+        if (!res.ok) {
           cache.set(folderPath, null);
           return null;
         }
         return res.json();
       })
-      .then((data: PostCardMetadata | null) => {
-        cache.set(folderPath, data);
-        setMeta(data);
+      .then((result: FolderCardMetadata | null) => {
+        cache.set(folderPath, result);
+        setData(result);
       })
       .catch(() => {
         // Don't cache errors — allow retry
@@ -51,5 +67,15 @@ export function useFolderMetadata(folderPath: string): PostCardMetadata | null {
     return () => controller.abort();
   }, [folderPath]);
 
-  return meta;
+  return data;
+}
+
+/**
+ * @deprecated Use useFolderCardData instead. This wrapper exists for backward compatibility.
+ */
+export function useFolderMetadata(
+  folderPath: string
+): PostCardMetadata | null {
+  const data = useFolderCardData(folderPath);
+  return data?.post ?? null;
 }

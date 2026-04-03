@@ -3,11 +3,7 @@
 import {
   Folder,
   File,
-  FileText,
-  FileImage,
   FileVideo,
-  FileAudio,
-  FileArchive,
   Download,
   Trash2,
   Pencil,
@@ -17,6 +13,7 @@ import {
   Heart,
   MessageCircle,
   ArrowUp,
+  FileText,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
@@ -28,19 +25,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn, formatFileSize, formatRelativeDate } from "@/lib/utils";
-import { useFolderThumbnail } from "@/hooks/use-folder-thumbnail";
 import {
-  useFolderMetadata,
+  useFolderCardData,
   type PostCardMetadata,
+  type FolderCardMetadata,
+  type FolderPreview,
 } from "@/hooks/use-folder-metadata";
-
-interface FileEntry {
-  name: string;
-  path: string;
-  isDirectory: boolean;
-  size: number;
-  modifiedAt: string;
-}
+import { FILE_ICONS, getFileIconType } from "@/lib/file-icons";
+import type { FileEntry } from "@/lib/types";
 
 interface FileGridViewProps {
   files: FileEntry[];
@@ -55,46 +47,83 @@ interface FileGridViewProps {
   onDelete: (path: string) => void;
 }
 
-const FILE_ICONS: Record<string, typeof File> = {
-  image: FileImage,
-  video: FileVideo,
-  audio: FileAudio,
-  archive: FileArchive,
-  document: FileText,
-  file: File,
-};
-
-function getFileIconType(name: string): string {
-  const ext = name.split(".").pop()?.toLowerCase() || "";
-  if (["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext))
-    return "image";
-  if (["mp4", "mkv", "avi", "mov", "webm", "flv", "wmv"].includes(ext))
-    return "video";
-  if (["mp3", "flac", "wav", "ogg", "aac", "wma", "m4a"].includes(ext))
-    return "audio";
-  if (["zip", "tar", "gz", "bz2", "7z", "rar", "xz"].includes(ext))
-    return "archive";
-  if (["pdf", "doc", "docx", "txt", "md", "epub", "cbz", "cbr"].includes(ext))
-    return "document";
-  return "file";
-}
-
 function isImageFile(name: string): boolean {
   return /\.(jpe?g|png|gif|webp|avif|svg|bmp|ico)$/i.test(name);
 }
 
-function FolderThumbnail({ folderPath }: { folderPath: string }) {
-  const thumbnailUrl = useFolderThumbnail(folderPath);
-
-  if (thumbnailUrl) {
+function FolderThumbnail({ preview }: { preview?: FolderPreview }) {
+  if (!preview || preview.type === "empty") {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={thumbnailUrl}
-        alt=""
-        className="size-full object-cover"
-        loading="lazy"
-      />
+      <div className="flex items-center justify-center size-full">
+        <Folder className="size-10 text-primary/40" />
+      </div>
+    );
+  }
+
+  if (preview.type === "images") {
+    const { urls } = preview;
+    if (urls.length === 1) {
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={urls[0]}
+          alt=""
+          className="size-full object-cover"
+          loading="lazy"
+        />
+      );
+    }
+    // Multi-image collage
+    const gridClass =
+      urls.length === 2
+        ? "grid-cols-2"
+        : urls.length === 3
+          ? "grid-cols-2 grid-rows-2"
+          : "grid-cols-2 grid-rows-2";
+    return (
+      <div className={cn("grid size-full gap-0.5", gridClass)}>
+        {urls.slice(0, 4).map((url, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={i}
+            src={url}
+            alt=""
+            className={cn(
+              "object-cover w-full h-full",
+              urls.length === 3 && i === 0 && "row-span-2"
+            )}
+            loading="lazy"
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (preview.type === "names") {
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-1.5 size-full p-3">
+        {preview.items.map((name) => (
+          <span
+            key={name}
+            className="inline-block px-2 py-0.5 text-[10px] font-mono rounded-md bg-muted text-muted-foreground truncate max-w-[120px]"
+          >
+            {name}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  if (preview.type === "text") {
+    return (
+      <div className="flex items-center justify-center size-full p-4">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <FileText className="size-6 text-muted-foreground/30" />
+          <p className="text-xs text-muted-foreground/50 line-clamp-3 leading-relaxed">
+            {preview.snippet}
+          </p>
+        </div>
+      </div>
     );
   }
 
@@ -157,7 +186,10 @@ function SocialMeta({ meta }: { meta: PostCardMetadata }) {
   return (
     <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground/60 mt-1 flex-wrap">
       <span className="text-primary/60">{platformLabel}</span>
-      <span>{authorPrefix}{meta.author}</span>
+      <span>
+        {authorPrefix}
+        {meta.author}
+      </span>
       {meta.score !== undefined && (
         <span className="flex items-center gap-0.5">
           {meta.platform === "reddit" ? (
@@ -199,8 +231,9 @@ function FileCard({
   onMoveCopy: (paths: string[], action: "move" | "copy") => void;
   onDelete: (path: string) => void;
 }) {
-  const meta = useFolderMetadata(file.isDirectory ? file.path : "");
-  const displayName = meta ? meta.title : file.name;
+  const cardData = useFolderCardData(file.isDirectory ? file.path : "");
+  const post = cardData?.post;
+  const displayName = post ? post.title : file.name;
 
   return (
     <div
@@ -216,7 +249,7 @@ function FileCard({
       {/* Thumbnail */}
       <div className="aspect-[16/10] bg-muted relative overflow-hidden">
         {file.isDirectory ? (
-          <FolderThumbnail folderPath={file.path} />
+          <FolderThumbnail preview={cardData?.preview} />
         ) : (
           <FileThumbnail file={file} />
         )}
@@ -321,11 +354,17 @@ function FileCard({
         >
           {displayName}
         </p>
-        {meta ? (
-          <SocialMeta meta={meta} />
+        {post ? (
+          <SocialMeta meta={post} />
         ) : (
           <div className="flex items-center gap-2 text-[11px] font-mono text-muted-foreground/60 mt-1">
-            <span>{file.isDirectory ? "Folder" : formatFileSize(file.size)}</span>
+            <span>
+              {file.isDirectory
+                ? cardData
+                  ? `${cardData.itemCount} item${cardData.itemCount !== 1 ? "s" : ""}`
+                  : "Folder"
+                : formatFileSize(file.size)}
+            </span>
             <span>{formatRelativeDate(file.modifiedAt)}</span>
           </div>
         )}
