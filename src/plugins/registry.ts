@@ -11,6 +11,7 @@ import type {
   PluginSettingDefinition,
   PluginViewDeclaration,
   PluginThumbnailDeclaration,
+  PluginFilePreviewDeclaration,
 } from "./types";
 import type { SettingDefinition } from "@/lib/settings";
 import {
@@ -125,6 +126,12 @@ export interface ThumbnailProviderRegistration {
   directorySettingKey: string;
 }
 
+export interface FilePreviewProviderRegistration {
+  pluginId: string;
+  extensions: string[];
+  entryPoint: string;
+}
+
 function getTrackedDirectoryValue(primaryKey: string): string {
   const primary = getSetting<string>(primaryKey);
   if (primary) return primary;
@@ -147,6 +154,7 @@ interface PluginRegistryGlobal {
   __fallbackPlugin?: RegisteredPlugin;
   __viewProviderRegistry?: Map<string, ViewProviderRegistration>;
   __thumbnailProviderRegistry?: Map<string, ThumbnailProviderRegistration>;
+  __filePreviewProviderRegistry?: Map<string, FilePreviewProviderRegistration>;
 }
 
 const g = globalThis as unknown as PluginRegistryGlobal;
@@ -154,11 +162,13 @@ if (!g.__pluginRegistry) g.__pluginRegistry = new Map();
 if (!g.__fileTypePlugins) g.__fileTypePlugins = [];
 if (!g.__viewProviderRegistry) g.__viewProviderRegistry = new Map();
 if (!g.__thumbnailProviderRegistry) g.__thumbnailProviderRegistry = new Map();
+if (!g.__filePreviewProviderRegistry) g.__filePreviewProviderRegistry = new Map();
 
 const plugins = g.__pluginRegistry;
 const fileTypePlugins = g.__fileTypePlugins;
 const viewProviders = g.__viewProviderRegistry!;
 const thumbnailProviders = g.__thumbnailProviderRegistry!;
+const filePreviewProviders = g.__filePreviewProviderRegistry!;
 
 function getInitialized() {
   return g.__pluginRegistryInitialized ?? false;
@@ -226,6 +236,17 @@ function registerThumbnailProvider(
     pluginId,
     entryPoint: thumb.entryPoint,
     directorySettingKey,
+  });
+}
+
+function registerFilePreviewProvider(
+  pluginId: string,
+  preview: PluginFilePreviewDeclaration
+): void {
+  filePreviewProviders.set(pluginId, {
+    pluginId,
+    extensions: preview.extensions.map((e) => e.toLowerCase()),
+    entryPoint: preview.entryPoint,
   });
 }
 
@@ -396,6 +417,12 @@ async function doInitPlugins(pluginsDir?: string): Promise<void> {
         );
       }
 
+      // Register file preview provider if manifest declares one
+      const previewDecl = manifest?.filePreviewProvider;
+      if (previewDecl) {
+        registerFilePreviewProvider(dbPlugin.id, previewDecl);
+      }
+
       const patternInfo = plugin.urlPatterns.length
         ? plugin.urlPatterns.join(", ")
         : `file types: ${plugin.fileTypes?.join(", ") || "none"}`;
@@ -493,6 +520,11 @@ async function doInitPlugins(pluginsDir?: string): Promise<void> {
             thumbDecl2,
             `plugin.${pluginId}.save_directory`
           );
+        }
+
+        const previewDecl2 = manifest?.filePreviewProvider;
+        if (previewDecl2) {
+          registerFilePreviewProvider(pluginId, previewDecl2);
         }
 
         const autoPatternInfo = plugin.urlPatterns.length
@@ -700,6 +732,10 @@ export async function loadSinglePlugin(
     if (thumbDecl3) {
       registerThumbnailProvider(pluginId, thumbDecl3, `plugin.${pluginId}.save_directory`);
     }
+    const previewDecl3 = manifest.filePreviewProvider;
+    if (previewDecl3) {
+      registerFilePreviewProvider(pluginId, previewDecl3);
+    }
   }
 }
 
@@ -709,6 +745,7 @@ export async function reloadPlugins(pluginsDir?: string): Promise<void> {
   fileTypePlugins.length = 0;
   viewProviders.clear();
   thumbnailProviders.clear();
+  filePreviewProviders.clear();
   g.__fallbackPlugin = undefined;
   setInitialized(false);
   await initPlugins(pluginsDir);
@@ -734,6 +771,7 @@ export function unloadPlugin(pluginId: string): void {
 
   viewProviders.delete(pluginId);
   thumbnailProviders.delete(pluginId);
+  filePreviewProviders.delete(pluginId);
 }
 
 export function getThumbnailProviderForPath(relativePath: string): ThumbnailProviderRegistration | null {
@@ -767,6 +805,39 @@ export function getThumbnailProviderEntry(pluginId: string): { entryPoint: strin
     entryPoint: path.join(dir, pluginId, reg.entryPoint),
     pluginsDir: dir,
   };
+}
+
+export function getFilePreviewProviderForExtension(ext: string): { pluginId: string; entryPoint: string } | null {
+  const normalizedExt = ext.toLowerCase();
+  for (const reg of filePreviewProviders.values()) {
+    if (reg.extensions.includes(normalizedExt)) {
+      const dir = process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
+      return {
+        pluginId: reg.pluginId,
+        entryPoint: path.join(dir, reg.pluginId, reg.entryPoint),
+      };
+    }
+  }
+  return null;
+}
+
+export function getFilePreviewProviderEntry(pluginId: string): { entryPoint: string; pluginsDir: string } | null {
+  const reg = filePreviewProviders.get(pluginId);
+  if (!reg) return null;
+  const dir = process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
+  return {
+    entryPoint: path.join(dir, pluginId, reg.entryPoint),
+    pluginsDir: dir,
+  };
+}
+
+/** Returns all file extensions handled by registered preview providers. */
+export function getPluginPreviewExtensions(): string[] {
+  const exts: string[] = [];
+  for (const reg of filePreviewProviders.values()) {
+    exts.push(...reg.extensions);
+  }
+  return exts;
 }
 
 export function getViewProvidersForPath(relativePath: string): ViewProviderInfo[] {

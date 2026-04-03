@@ -39,6 +39,13 @@ export interface PluginThumbnailDeclaration {
   entryPoint: string;
 }
 
+export interface PluginFilePreviewDeclaration {
+  /** File extensions this plugin can preview (e.g., ["cbz", "cbr", "epub"]) */
+  extensions: string[];
+  /** Relative path to the compiled JS bundle that registers the preview renderer */
+  entryPoint: string;
+}
+
 export interface PluginManifest {
   name: string;
   version?: string;
@@ -49,6 +56,7 @@ export interface PluginManifest {
   settings?: PluginSettingDefinition[];
   viewProvider?: PluginViewDeclaration;
   thumbnailProvider?: PluginThumbnailDeclaration;
+  filePreviewProvider?: PluginFilePreviewDeclaration;
 }
 
 export interface PluginSettingsAccessor {

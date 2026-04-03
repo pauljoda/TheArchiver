@@ -25,6 +25,7 @@ import { MoveCopyDialog } from "./move-copy-dialog";
 import { getPreviewType } from "@/lib/file-preview";
 import { formatFileSize, formatRelativeDate } from "@/lib/utils";
 import { toast } from "sonner";
+import type { FileEntry } from "@/lib/types";
 
 import { ImagePreview } from "./previews/image-preview";
 import { VideoPreview } from "./previews/video-preview";
@@ -32,14 +33,7 @@ import { AudioPreview } from "./previews/audio-preview";
 import { TextPreview } from "./previews/text-preview";
 import { PdfPreview } from "./previews/pdf-preview";
 import { GenericPreview } from "./previews/generic-preview";
-
-interface FileEntry {
-  name: string;
-  path: string;
-  isDirectory: boolean;
-  size: number;
-  modifiedAt: string;
-}
+import { PluginPreview } from "./previews/plugin-preview";
 
 interface FileDetailViewProps {
   file: FileEntry;
@@ -144,6 +138,21 @@ export function FileDetailView({
 
   const previewType = getPreviewType(file.name);
   const ext = file.name.split(".").pop()?.toUpperCase() || "FILE";
+
+  // For "generic" files, check if a plugin can handle the extension
+  const [pluginPreviewId, setPluginPreviewId] = useState<string | null>(null);
+  useEffect(() => {
+    if (previewType !== "generic") {
+      setPluginPreviewId(null);
+      return;
+    }
+    const fileExt = file.name.split(".").pop()?.toLowerCase() || "";
+    if (!fileExt) return;
+    fetch(`/api/plugins/preview-provider?ext=${encodeURIComponent(fileExt)}`)
+      .then((res) => (res.ok && res.status !== 204 ? res.json() : null))
+      .then((data) => setPluginPreviewId(data?.pluginId ?? null))
+      .catch(() => setPluginPreviewId(null));
+  }, [previewType, file.name]);
 
   useEffect(() => {
     setIsMounted(true);
@@ -280,6 +289,7 @@ export function FileDetailView({
         {/* Prev button */}
         {hasPrev && (
           <button
+            aria-label="Previous file"
             className="absolute left-2 top-1/2 -translate-y-1/2 z-10 flex size-10 items-center justify-center rounded-full bg-card/80 border border-border/50 text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
             onClick={goPrev}
           >
@@ -304,7 +314,14 @@ export function FileDetailView({
           {previewType === "pdf" && (
             <PdfPreview key={file.path} filePath={file.path} />
           )}
-          {previewType === "generic" && (
+          {previewType === "generic" && pluginPreviewId && (
+            <PluginPreview
+              key={file.path}
+              pluginId={pluginPreviewId}
+              file={file}
+            />
+          )}
+          {previewType === "generic" && !pluginPreviewId && (
             <GenericPreview
               filePath={file.path}
               fileName={file.name}
@@ -317,6 +334,7 @@ export function FileDetailView({
         {/* Next button */}
         {hasNext && (
           <button
+            aria-label="Next file"
             className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex size-10 items-center justify-center rounded-full bg-card/80 border border-border/50 text-muted-foreground hover:text-foreground hover:bg-card transition-colors"
             onClick={goNext}
           >
