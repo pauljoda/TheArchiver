@@ -24,7 +24,7 @@ interface CommunityManifest {
 export async function GET() {
   try {
     const res = await fetch(COMMUNITY_REPO_URL, {
-      next: { revalidate: 300 },
+      cache: "no-store",
     });
 
     if (!res.ok) {
@@ -41,8 +41,18 @@ export async function GET() {
     const installed = db.select().from(schema.installedPlugins).all();
     const installedMap = new Map(installed.map((p) => [p.id, p]));
 
+    // Also build a map by slugified name for matching plugins installed via
+    // different methods (ZIP upload slugifies the manifest name, deploy scripts
+    // use the directory name)
+    const slugify = (name: string) =>
+      name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+    const installedBySlug = new Map(
+      installed.map((p) => [slugify(p.name), p])
+    );
+
     const plugins = manifest.plugins.map((p) => {
-      const existing = installedMap.get(p.id);
+      const existing =
+        installedMap.get(p.id) ?? installedBySlug.get(slugify(p.name));
       return {
         ...p,
         installed: !!existing,
