@@ -29,6 +29,13 @@
       "when": 1775179145797,
       "tag": "0003_slimy_multiple_man",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1775188174443,
+      "tag": "0004_square_kitty_pryde",
+      "breakpoints": true
     }
   ]
 }

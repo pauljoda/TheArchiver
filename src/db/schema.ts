@@ -65,3 +65,19 @@ export const downloadHistory = sqliteTable("download_history", {
     .notNull()
     .$defaultFn(() => new Date()),
 });
+
+export const scheduledUrls = sqliteTable("scheduled_urls", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  label: text("label").notNull(),
+  url: text("url").notNull(),
+  cronExpression: text("cron_expression").notNull(),
+  enabled: integer("enabled", { mode: "boolean" }).notNull().default(true),
+  lastRunAt: integer("last_run_at", { mode: "timestamp" }),
+  nextRunAt: integer("next_run_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+  updatedAt: integer("updated_at", { mode: "timestamp" })
+    .notNull()
+    .$defaultFn(() => new Date()),
+});

@@ -7,6 +7,7 @@ import {
   Clock,
   Puzzle,
   Terminal,
+  CalendarClock,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatsCards } from "@/components/dashboard/stats-cards";
@@ -15,6 +16,7 @@ import { QueueTable } from "@/components/queue/queue-table";
 import { FailedTable } from "@/components/failed/failed-table";
 import { PluginList } from "@/components/plugins/plugin-list";
 import { ConsoleLog } from "@/components/dashboard/console-log";
+import { ScheduleTable } from "@/components/schedules/schedule-table";
 import { useFetch } from "@/hooks/use-fetch";
 import { useSSE } from "@/hooks/use-sse";
 
@@ -23,12 +25,14 @@ export default function Home() {
   const failed = useFetch("/api/failed", []);
   const history = useFetch("/api/history", []);
   const plugins = useFetch("/api/plugins", []);
+  const schedules = useFetch("/api/schedules", []);
 
   const refreshAll = useCallback(() => {
     queue.refresh();
     failed.refresh();
     history.refresh();
-  }, [queue.refresh, failed.refresh, history.refresh]);
+    schedules.refresh();
+  }, [queue.refresh, failed.refresh, history.refresh, schedules.refresh]);
 
   useSSE(refreshAll);
 
@@ -88,6 +92,18 @@ export default function Home() {
               <span className="hidden sm:inline">Plugins</span>
             </TabsTrigger>
             <TabsTrigger
+              value="schedules"
+              className="gap-2 rounded-md px-2 py-2 text-xs font-heading font-medium uppercase tracking-wider sm:px-4 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
+            >
+              <CalendarClock className="size-4 sm:size-3.5" />
+              <span className="hidden sm:inline">Schedules</span>
+              {schedules.data.length > 0 && (
+                <span className="ml-1 hidden size-5 items-center justify-center rounded-full bg-primary/15 text-[10px] font-bold text-primary sm:flex">
+                  {schedules.data.length}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger
               value="logs"
               className="gap-2 rounded-md px-2 py-2 text-xs font-heading font-medium uppercase tracking-wider sm:px-4 data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm"
             >
@@ -110,6 +126,10 @@ export default function Home() {
 
           <TabsContent value="plugins" className="animate-vault-fade">
             <PluginList plugins={plugins.data} onRefresh={plugins.refresh} />
+          </TabsContent>
+
+          <TabsContent value="schedules" className="animate-vault-fade">
+            <ScheduleTable items={schedules.data} onRefresh={refreshAll} />
           </TabsContent>
 
           <TabsContent value="logs" className="animate-vault-fade">

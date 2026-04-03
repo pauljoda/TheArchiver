@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Added
+- **Scheduled URL Archiving** — Cron-like system to automatically re-queue URLs on a repeating schedule
+  - New "Schedules" tab on the dashboard with create, edit, delete, enable/disable, and "Run Now" actions
+  - Simple interval picker (every 6h, 12h, daily, weekly) with advanced custom cron expression support
+  - Schedule worker polls every 60 seconds and queues due URLs into the standard download queue
+  - Each schedule tracks last run time and next scheduled run
+- New DB table: `scheduled_urls` with cron expression, enabled toggle, and run timestamps
+- New API endpoints: `GET/POST /api/schedules`, `PATCH/DELETE /api/schedules/[id]`, `POST /api/schedules/[id]/run-now`
+- New SSE event type: `schedule:changed` for real-time UI updates
 - **Plugin priority reordering** — Drag-and-drop to reorder plugins; order determines URL matching priority (first match wins)
 - New API endpoint: `PATCH /api/plugins/reorder` — Persist plugin sort order
 - PWA support for Mobile Safari "Add to Home Screen" — web manifest, apple-touch-icon, and meta tags

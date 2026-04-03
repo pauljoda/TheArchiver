@@ -69,5 +69,10 @@ export async function register() {
     const { startWorker } = await import("@/workers/download.worker");
     await startWorker();
     console.log("Archiver worker initialized.");
+
+    // Start the schedule worker (polls for due scheduled URLs)
+    const { startScheduler } = await import("@/workers/schedule.worker");
+    await startScheduler();
+    console.log("Schedule worker initialized.");
   }
 }

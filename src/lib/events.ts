@@ -9,7 +9,8 @@ export interface SSEEvent {
     | "job:log"
     | "queue:cleared"
     | "failed:cleared"
-    | "history:cleared";
+    | "history:cleared"
+    | "schedule:changed";
   data: Record<string, unknown>;
 }
 
