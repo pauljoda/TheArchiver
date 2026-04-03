@@ -3,7 +3,7 @@ import { getDb, schema } from "@/db";
 
 const COMMUNITY_REPO_URL =
   process.env.COMMUNITY_PLUGINS_URL ||
-  "https://raw.githubusercontent.com/TheArchiver-App/CommunityPlugins/main/plugins.json";
+  "https://raw.githubusercontent.com/pauljoda/TheArchiver-CommunityPlugins/main/plugins.json";
 
 interface CommunityPlugin {
   id: string;
