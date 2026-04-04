@@ -1,12 +1,13 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { FolderInput, Copy, Trash2, X } from "lucide-react";
+import { FolderInput, Copy, Download, Trash2, X } from "lucide-react";
 
 interface FileSelectionToolbarProps {
   selectedCount: number;
   onMove: () => void;
   onCopy: () => void;
+  onDownloadZip: () => void;
   onDelete: () => void;
   onClear: () => void;
 }
@@ -15,6 +16,7 @@ export function FileSelectionToolbar({
   selectedCount,
   onMove,
   onCopy,
+  onDownloadZip,
   onDelete,
   onClear,
 }: FileSelectionToolbarProps) {
@@ -41,6 +43,15 @@ export function FileSelectionToolbar({
         >
           <Copy className="size-3.5" />
           Copy
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 gap-1.5 text-xs"
+          onClick={onDownloadZip}
+        >
+          <Download className="size-3.5" />
+          Download Zip
         </Button>
         <Button
           variant="ghost"

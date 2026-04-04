@@ -5,6 +5,7 @@ import {
   Folder,
   File,
   Download,
+  FolderArchive,
   Trash2,
   RefreshCw,
   FolderOpen,
@@ -166,6 +167,33 @@ export function FileBrowser({
     }
   }
 
+  const handleDownloadZip = useCallback(async () => {
+    if (selectedPaths.size === 0) return;
+    try {
+      const res = await fetch("/api/files/zip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paths: Array.from(selectedPaths) }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        toast.error(data.error || "Failed to create zip");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "download.zip";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Failed to download zip");
+    }
+  }, [selectedPaths]);
+
   const handleBatchDelete = useCallback(async () => {
     if (selectedPaths.size === 0) return;
     setBatchDeleting(true);
@@ -295,6 +323,7 @@ export function FileBrowser({
                 action: "copy",
               })
             }
+            onDownloadZip={handleDownloadZip}
             onDelete={handleBatchDelete}
             onClear={() => setSelectedPaths(new Set())}
           />
@@ -481,18 +510,29 @@ export function FileBrowser({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
-                          {!file.isDirectory && (
-                            <DropdownMenuItem asChild>
-                              <a
-                                href={`/api/files/download?path=${encodeURIComponent(file.path)}`}
-                                download
-                                className="gap-2"
-                              >
-                                <Download className="size-4" />
-                                Download
-                              </a>
-                            </DropdownMenuItem>
-                          )}
+                          <DropdownMenuItem asChild>
+                            <a
+                              href={
+                                file.isDirectory
+                                  ? `/api/files/zip?path=${encodeURIComponent(file.path)}`
+                                  : `/api/files/download?path=${encodeURIComponent(file.path)}`
+                              }
+                              download
+                              className="gap-2"
+                            >
+                              {file.isDirectory ? (
+                                <>
+                                  <FolderArchive className="size-4" />
+                                  Download Zip
+                                </>
+                              ) : (
+                                <>
+                                  <Download className="size-4" />
+                                  Download
+                                </>
+                              )}
+                            </a>
+                          </DropdownMenuItem>
                           <DropdownMenuItem
                             className="gap-2"
                             onSelect={() => setRenameTarget(file)}

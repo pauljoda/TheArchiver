@@ -7,6 +7,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Added
+- **Directory Zip Download** — Directories can now be downloaded as zip archives from the file browser context menu ("Download Zip")
+  - New `/api/files/zip` endpoint streams zip archives using the `archiver` library
+  - Batch zip download available from the selection toolbar when multiple items are selected
+  - Works in both list and grid view modes
 - **Video Thumbnails** — Video files (mkv, mp4, avi, etc.) now display an extracted frame as their thumbnail in the file browser grid instead of a generic icon
   - Uses ffmpeg to extract a frame at ~1 second into the video
   - Thumbnails cached in `.thumbs` directories and regenerated only when the source video changes

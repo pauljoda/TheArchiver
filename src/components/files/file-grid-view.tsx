@@ -5,6 +5,7 @@ import {
   File,
   FileVideo,
   Download,
+  FolderArchive,
   Trash2,
   Pencil,
   FolderInput,
@@ -319,18 +320,29 @@ function FileCard({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
-              {!file.isDirectory && (
-                <DropdownMenuItem asChild>
-                  <a
-                    href={`/api/files/download?path=${encodeURIComponent(file.path)}`}
-                    download
-                    className="gap-2"
-                  >
-                    <Download className="size-4" />
-                    Download
-                  </a>
-                </DropdownMenuItem>
-              )}
+              <DropdownMenuItem asChild>
+                <a
+                  href={
+                    file.isDirectory
+                      ? `/api/files/zip?path=${encodeURIComponent(file.path)}`
+                      : `/api/files/download?path=${encodeURIComponent(file.path)}`
+                  }
+                  download
+                  className="gap-2"
+                >
+                  {file.isDirectory ? (
+                    <>
+                      <FolderArchive className="size-4" />
+                      Download Zip
+                    </>
+                  ) : (
+                    <>
+                      <Download className="size-4" />
+                      Download
+                    </>
+                  )}
+                </a>
+              </DropdownMenuItem>
               <DropdownMenuItem
                 className="gap-2"
                 onSelect={() => onRename(file)}
