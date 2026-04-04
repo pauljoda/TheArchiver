@@ -144,6 +144,41 @@ function getTrackedDirectoryValue(primaryKey: string): string {
   return "";
 }
 
+/**
+ * Resolve all tracked directories for a plugin — the primary directory plus
+ * any per-site directory overrides from the site_directories setting.
+ * This allows view providers to activate on all configured output folders.
+ */
+function getAllTrackedDirectories(directorySettingKey: string): string[] {
+  const dirs: string[] = [];
+
+  const primary = getTrackedDirectoryValue(directorySettingKey);
+  if (primary) dirs.push(primary);
+
+  // Check for site_directories setting (JSON map of domain → folder)
+  const siteDirectoriesKey = directorySettingKey.replace(
+    /\.(save_directory|library_folder)$/,
+    ".site_directories"
+  );
+  try {
+    const raw = getSetting<string>(siteDirectoriesKey);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (typeof parsed === "object" && parsed !== null) {
+        for (const folder of Object.values(parsed)) {
+          if (typeof folder === "string" && folder && !dirs.includes(folder)) {
+            dirs.push(folder);
+          }
+        }
+      }
+    }
+  } catch {
+    // Invalid JSON or missing setting — ignore
+  }
+
+  return dirs;
+}
+
 // Use globalThis to ensure a single shared instance across all Next.js
 // webpack bundles (API routes, instrumentation, worker, etc.)
 interface PluginRegistryGlobal {
@@ -775,23 +810,27 @@ export function unloadPlugin(pluginId: string): void {
 }
 
 export function getThumbnailProviderForPath(relativePath: string): ThumbnailProviderRegistration | null {
+  const normalizedPath = relativePath.replace(/^\/+|\/+$/g, "");
+
   for (const reg of thumbnailProviders.values()) {
-    let trackedDir: string;
+    let trackedDirs: string[];
     try {
-      trackedDir = getTrackedDirectoryValue(reg.directorySettingKey);
+      trackedDirs = getAllTrackedDirectories(reg.directorySettingKey);
     } catch {
       continue;
     }
-    if (!trackedDir) continue;
 
-    const normalizedTracked = trackedDir.replace(/^\/+|\/+$/g, "");
-    const normalizedPath = relativePath.replace(/^\/+|\/+$/g, "");
+    for (const trackedDir of trackedDirs) {
+      if (!trackedDir) continue;
 
-    if (
-      normalizedPath === normalizedTracked ||
-      normalizedPath.startsWith(normalizedTracked + "/")
-    ) {
-      return reg;
+      const normalizedTracked = trackedDir.replace(/^\/+|\/+$/g, "");
+
+      if (
+        normalizedPath === normalizedTracked ||
+        normalizedPath.startsWith(normalizedTracked + "/")
+      ) {
+        return reg;
+      }
     }
   }
   return null;
@@ -842,33 +881,36 @@ export function getPluginPreviewExtensions(): string[] {
 
 export function getViewProvidersForPath(relativePath: string): ViewProviderInfo[] {
   const results: ViewProviderInfo[] = [];
+  const normalizedPath = relativePath.replace(/^\/+|\/+$/g, "");
 
   for (const reg of viewProviders.values()) {
-    let trackedDir: string;
+    let trackedDirs: string[];
     try {
-      trackedDir = getTrackedDirectoryValue(reg.directorySettingKey);
+      trackedDirs = getAllTrackedDirectories(reg.directorySettingKey);
     } catch {
       // Settings not initialized or key not found — skip
       continue;
     }
 
-    if (!trackedDir) continue;
+    for (const trackedDir of trackedDirs) {
+      if (!trackedDir) continue;
 
-    // Normalize: remove leading/trailing slashes for comparison
-    const normalizedTracked = trackedDir.replace(/^\/+|\/+$/g, "");
-    const normalizedPath = relativePath.replace(/^\/+|\/+$/g, "");
+      // Normalize: remove leading/trailing slashes for comparison
+      const normalizedTracked = trackedDir.replace(/^\/+|\/+$/g, "");
 
-    if (
-      normalizedPath === normalizedTracked ||
-      normalizedPath.startsWith(normalizedTracked + "/")
-    ) {
-      results.push({
-        pluginId: reg.pluginId,
-        viewId: reg.viewId,
-        label: reg.label,
-        icon: reg.icon,
-        trackedDirectory: normalizedTracked,
-      });
+      if (
+        normalizedPath === normalizedTracked ||
+        normalizedPath.startsWith(normalizedTracked + "/")
+      ) {
+        results.push({
+          pluginId: reg.pluginId,
+          viewId: reg.viewId,
+          label: reg.label,
+          icon: reg.icon,
+          trackedDirectory: normalizedTracked,
+        });
+        break; // Found a match for this provider, no need to check other dirs
+      }
     }
   }
 
