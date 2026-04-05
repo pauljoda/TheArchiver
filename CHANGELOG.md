@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - **Website** — Plugin showcase updated with community marketplace, drag-and-drop priority, process helpers, and custom views/previews/thumbnails
 
 ### Added
-- **Umami analytics (optional)** — Loads Umami’s tracker when `NEXT_PUBLIC_UMAMI_WEBSITE_ID` is set; uses `next/script` with `lazyOnload` (Umami Cloud script URL by default, overridable via `NEXT_PUBLIC_UMAMI_SCRIPT_URL`). Docker builder and `docker-compose` accept the same `NEXT_PUBLIC_*` build args; GitHub Actions can pass them via repository secrets for GHCR images
+- **Marketing site (GitHub Pages)** — Umami Cloud analytics script inlined in `website/src/layouts/Layout.astro`
 - **Directory Zip Download** — Directories can now be downloaded as zip archives from the file browser context menu ("Download Zip")
   - New `/api/files/zip` endpoint streams zip archives using the `archiver` library
   - Batch zip download available from the selection toolbar when multiple items are selected

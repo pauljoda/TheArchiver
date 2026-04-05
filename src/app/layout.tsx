@@ -4,7 +4,6 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
-import { UmamiScript } from "@/components/umami-script";
 import pkg from "../../package.json";
 import "./globals.css";
 
@@ -53,7 +52,6 @@ export default function RootLayout({
           </TooltipProvider>
           <Toaster />
         </ThemeProvider>
-        <UmamiScript />
       </body>
     </html>
   );
