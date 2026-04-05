@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 
-export function useFetch<T>(url: string, initialData: T) {
+export function useFetch<T>(url: string, initialData: T, refreshInterval?: number) {
   const [data, setData] = useState<T>(initialData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +31,12 @@ export function useFetch<T>(url: string, initialData: T) {
     fetchData();
     return () => abortRef.current?.abort();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (!refreshInterval) return;
+    const id = setInterval(fetchData, refreshInterval);
+    return () => clearInterval(id);
+  }, [fetchData, refreshInterval]);
 
   return { data, loading, error, refresh: fetchData };
 }

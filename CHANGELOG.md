@@ -21,6 +21,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ### Fixed
 - Changelog viewer now works in Docker — `CHANGELOG.md` is copied into the container image
 - Changelog dialog properly sized (wide on desktop, near-fullscreen on mobile) with no text overflow
+- Dashboard data (queue, failed, history, schedules) now auto-refreshes every 5 seconds via polling — fixes stale views when jobs complete or status changes occur
 
 ### Changed
 - Simplified Files and Settings page headers — removed icon boxes and subtitles that visually competed with the main navbar

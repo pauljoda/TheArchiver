@@ -21,11 +21,11 @@ import { useFetch } from "@/hooks/use-fetch";
 import { useSSE } from "@/hooks/use-sse";
 
 export default function Home() {
-  const queue = useFetch("/api/queue", []);
-  const failed = useFetch("/api/failed", []);
-  const history = useFetch("/api/history", []);
+  const queue = useFetch("/api/queue", [], 5000);
+  const failed = useFetch("/api/failed", [], 5000);
+  const history = useFetch("/api/history", [], 5000);
   const plugins = useFetch("/api/plugins", []);
-  const schedules = useFetch("/api/schedules", []);
+  const schedules = useFetch("/api/schedules", [], 5000);
 
   const refreshAll = useCallback(() => {
     queue.refresh();
