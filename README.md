@@ -102,16 +102,31 @@ Open [http://localhost:3000](http://localhost:3000) to access the dashboard.
 ## Features
 
 ### Dashboard
-At-a-glance stats for queued, failed, and archived downloads with a count of active plugins. The tabbed interface gives you access to the download queue, failed items, history, plugins, and server logs — all in one place.
+At-a-glance stats for queued, failed, and archived downloads with a count of active plugins. The tabbed interface gives you access to the download queue, failed items, history, schedules, plugins, and server logs — all in one place. Dashboard data auto-refreshes every 5 seconds.
 
 ### Download Queue
-Submit any URL via the **Add URL** button or the REST API. A matching plugin picks it up automatically and downloads the content to your configured directory. Monitor progress in real-time via Server-Sent Events.
+Submit any URL via the **Add URL** button or the REST API. A matching plugin picks it up automatically and downloads the content to your configured directory. Monitor progress in real-time via Server-Sent Events. A built-in "Files" plugin acts as a universal fallback — any URL that no other plugin matches will be downloaded directly, with files automatically organized into folders by extension (Images, Videos, Audio, Documents, etc.).
+
+### Scheduled Archiving
+Cron-like system to automatically re-queue URLs on a repeating schedule. Create schedules with simple interval presets (every 6h, 12h, daily, weekly) or advanced custom cron expressions. Each schedule tracks last run time and next scheduled run, with enable/disable and "Run Now" controls.
 
 ### Plugin System
-Drop-in TypeScript plugins matched by URL pattern. Install plugins by uploading a `.zip` file, or place them directly in the `plugins/` directory. Enable, disable, configure, and update plugins from the UI without restarting the server. Plugins can declare their own settings, which appear in the Settings page when enabled.
+Drop-in TypeScript plugins matched by URL pattern. Install plugins by uploading a `.zip` file, place them directly in the `plugins/` directory, or browse and install from the **community plugin marketplace** in the UI. Enable, disable, configure, and update plugins from the UI without restarting the server. Plugins can declare their own settings, custom file browser views, file preview providers, and thumbnail providers. Drag-and-drop reordering controls which plugin matches a URL first.
 
 ### File Browser
-Browse your entire download archive from the browser. Create folders, rename, move, copy, and delete files. Multi-select with shift+click and batch operations. Download files directly from the UI.
+Browse your entire download archive from the browser. Create folders, rename, move, copy, and delete files. Multi-select with shift+click and batch operations. Download individual files or entire directories as zip archives. Video files display extracted frame thumbnails. Folder cards show multi-image collages, sub-directory pills, or text snippet previews.
+
+### File Preview
+Click any file to open a full-viewport preview overlay with keyboard navigation between files:
+- **Images** — jpg, png, gif, webp, svg, avif, tiff with click-to-zoom
+- **Video** — mp4, webm, mov with native controls and HTTP Range seeking; HLS streaming for large files
+- **Audio** — mp3, flac, wav, ogg, aac, wma, m4a
+- **Text/Code** — txt, md, json, xml, html, css, js, ts, py, sh, yaml, csv with line numbers
+- **PDF** — embedded browser viewer
+- **Plugin previews** — plugins can register custom preview handlers for additional file types
+
+### Plugin Views
+Plugins can ship custom file browser views as compiled JS bundles. When browsing a directory managed by a plugin, a view toggle bar lets you switch between the standard file browser and the plugin's custom interface. For example, the Socials plugin provides a Reddit-style browsing experience for archived Reddit content.
 
 ### Settings
 Grouped configuration UI with separate sections for core settings, notifications, and each installed plugin. Plugin settings appear automatically when a plugin is enabled and hide when disabled.
@@ -121,6 +136,9 @@ Live log viewer with a retro terminal aesthetic. Color-coded log levels (info, w
 
 ### Notifications
 Push notifications via [ntfy](https://ntfy.sh) for download completion and failure events. Configure the endpoint from the Settings page or via the `NTFY_URL` environment variable.
+
+### PWA Support
+Add The Archiver to your mobile home screen via Safari's "Add to Home Screen" for an app-like experience with web manifest and apple-touch-icon support.
 
 ### Theme Support
 Dark and light themes with system-aware defaults and a manual toggle. The dark theme uses a "Vault" industrial aesthetic with amber/gold accents.
@@ -193,6 +211,7 @@ All settings can be configured from the Settings page in the UI, or via environm
 | `DATABASE_URL` | `file:./data/archiver.db` | SQLite database path |
 | `DOWNLOAD_LOCATION` | `./downloads` | Root download directory |
 | `MAX_CONCURRENT_DOWNLOADS` | `10` | Parallel download limit |
+| `PLUGINS_DIR` | `./plugins` | Directory for user-installed plugins |
 | `NTFY_URL` | — | [ntfy](https://ntfy.sh) notification endpoint |
 | `COMMUNITY_PLUGINS_URL` | — | Override the default community plugin manifest URL |
 
@@ -202,13 +221,13 @@ Plugin-specific settings (authentication tokens, output preferences, etc.) are m
 
 ## Plugin System
 
-Plugins are TypeScript folders in the `plugins/` directory. Each folder contains an `index.ts` that exports a plugin definition. When a URL is submitted, The Archiver checks each enabled plugin's `urlPatterns` — the first match handles the download.
+Plugins are TypeScript folders in the `plugins/` directory. Each folder contains an `index.ts` that exports a plugin definition. When a URL is submitted, The Archiver checks each enabled plugin's `urlPatterns` in priority order — the first match handles the download. Plugin priority is controlled via drag-and-drop reordering in the UI.
 
 ```
 plugins/
   my-plugin/
     index.ts
-    manifest.json   # optional — declares settings and metadata
+    manifest.json   # optional — declares settings, views, and metadata
 ```
 
 ### Writing a Plugin
@@ -243,26 +262,49 @@ export default definePlugin({
 |--------|---------|
 | `helpers.html` | `fetchPage`, `parse`, `select`, `selectAttr` |
 | `helpers.io` | `downloadFile`, `downloadFiles`, `ensureDir`, `moveFile`, `createZip` |
-| `helpers.url` | `extractBaseUrl`, `extractHostname`, `joinUrl` |
-| `helpers.string` | `sanitizeFilename`, `padNumber`, `slugify` |
+| `helpers.url` | `extractBaseUrl`, `extractHostname`, `joinUrl`, `resolveOutputDir` |
+| `helpers.string` | `sanitizeFilename`, `padNumber`, `slugify`, `shellEscape`, `xmlEscape`, `truncateTitle`, `filenameFromUrl`, `getMimeExtension` |
+| `helpers.process` | `execAsync` |
+
+### Plugin Extensions
+
+Plugins can optionally declare additional capabilities in their `manifest.json`:
+
+- **`viewProvider`** — Ship a custom file browser view as a compiled JS bundle. Declared with `viewId`, `label`, `icon`, and `entryPoint`. Views appear as toggle options when browsing the plugin's managed directory.
+- **`filePreviewProvider`** — Handle file types the core preview doesn't natively support. Register file extensions and a preview bundle.
+- **`thumbnailProvider`** — Custom thumbnail rendering for folder cards in the file browser grid.
 
 ### Installing Plugins
+
+**From the community marketplace:** Go to the Plugins tab and click **Community**. Browse available plugins and install with one click.
 
 **From the UI:** Go to the Plugins tab and click **Import**. Upload a `.zip` file containing the plugin folder.
 
 **Manually:** Place the plugin folder in the `plugins/` directory (or the Docker volume at `/plugins`). Click the reload button in the Plugins tab, or restart the server.
 
-**Updating:** Re-import a plugin `.zip` with the same name to update it in-place. Existing settings are preserved across updates.
+**Updating:** Re-import a plugin `.zip` with the same name to update it in-place. Existing settings are preserved across updates, even if the plugin is removed and re-installed.
 
 ---
 
 ## API Reference
+
+### Core
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/health` | Health check |
 | `POST` | `/api/download` | Add URL to queue (JSON body: `{ "url": "..." }`) |
 | `GET` | `/api/download?url=...` | Add URL to queue (query parameter) |
+| `GET` | `/api/events` | SSE stream for real-time updates |
+| `GET` | `/api/logs` | Server console logs |
+| `GET` | `/api/changelog` | Changelog contents |
+| `GET` | `/api/settings` | Get all settings (grouped) |
+| `PUT` | `/api/settings` | Update settings |
+
+### Queue / Failed / History
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | `GET` | `/api/queue` | List queued items |
 | `DELETE` | `/api/queue/:id` | Remove queue item |
 | `DELETE` | `/api/queue/clear` | Clear all queued items |
@@ -273,12 +315,53 @@ export default definePlugin({
 | `GET` | `/api/history` | Download history |
 | `DELETE` | `/api/history/:id` | Delete history entry |
 | `DELETE` | `/api/history/clear` | Clear all history |
+
+### Schedules
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/schedules` | List all schedules |
+| `POST` | `/api/schedules` | Create a schedule |
+| `PATCH` | `/api/schedules/:id` | Update a schedule |
+| `DELETE` | `/api/schedules/:id` | Delete a schedule |
+| `POST` | `/api/schedules/:id/run-now` | Trigger a schedule immediately |
+
+### Files
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/files?path=...` | List directory contents |
+| `POST` | `/api/files` | Create directory (mkdir) |
+| `PATCH` | `/api/files` | Rename file or folder |
+| `PUT` | `/api/files` | Move or copy file/folder |
+| `DELETE` | `/api/files` | Delete file/folder (supports batch) |
+| `GET` | `/api/files/download?path=...` | Stream file download |
+| `GET` | `/api/files/preview?path=...` | Serve file inline with MIME type and Range support |
+| `GET` | `/api/files/metadata?path=...` | File/folder metadata and preview data |
+| `GET` | `/api/files/thumbnail?path=...` | Video thumbnail (ffmpeg-extracted frame) |
+| `GET` | `/api/files/zip?path=...` | Download directory as zip archive |
+| `POST` | `/api/files/zip` | Download multiple items as zip (batch) |
+| `GET` | `/api/files/stream?path=...` | HLS master playlist for video streaming |
+| `GET` | `/api/files/stream/segment?path=...` | HLS segment serving |
+| `GET` | `/api/files/view-providers?path=...` | Query plugin views for a directory |
+
+### Plugins
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
 | `GET` | `/api/plugins` | List loaded plugins |
 | `POST` | `/api/plugins/reload` | Reload all plugins |
-| `GET` | `/api/settings` | Get all settings (grouped) |
-| `PUT` | `/api/settings` | Update settings |
-| `GET` | `/api/events` | SSE stream for real-time updates |
-| `GET` | `/api/logs` | Server console logs |
+| `POST` | `/api/plugins/install` | Import plugin from zip upload |
+| `PATCH` | `/api/plugins/:id` | Update plugin (enable/disable) |
+| `DELETE` | `/api/plugins/:id` | Remove plugin |
+| `PATCH` | `/api/plugins/reorder` | Update plugin priority order |
+| `POST` | `/api/plugins/actions` | Execute a plugin action |
+| `POST` | `/api/plugins/files` | Upload files to a plugin directory |
+| `DELETE` | `/api/plugins/files` | Delete plugin files |
+| `GET` | `/api/plugins/view?pluginId=...` | Serve plugin view/preview JS bundle |
+| `GET` | `/api/plugins/preview-provider?ext=...` | Find plugin preview handler for extension |
+| `GET` | `/api/plugins/community` | List community plugins |
+| `POST` | `/api/plugins/community/install` | Install a community plugin |
 
 ---
 
@@ -311,7 +394,7 @@ services:
     restart: unless-stopped
 ```
 
-The Docker image is a single Alpine-based container with FFmpeg included. Multi-arch builds (amd64 + arm64) are published to `ghcr.io/pauljoda/the-archiver` on every push to `main`.
+The Docker image is a single Alpine-based container with FFmpeg included. Linux/amd64 builds are published to `ghcr.io/pauljoda/the-archiver` on every push to `main`.
 
 ---
 

@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Changed
+- **README** — Comprehensive update reflecting all features added since 2.0: scheduled archiving, file preview/streaming, plugin views, community marketplace, built-in Files plugin, video thumbnails, zip downloads, PWA support, and plugin priority reordering
+- **README** — API reference expanded from 20 to 50+ endpoints covering files, schedules, plugins, and community routes
+- **README** — Added `PLUGINS_DIR` to configuration table, fixed Docker arch description (amd64 only), documented plugin extensions (views, preview providers, thumbnail providers) and updated helper methods
+- **Website** — Version bumped from 2.1.0 to 2.2.1 in Hero and Footer components
+- **Website** — Features section updated with scheduled archiving, file preview/HLS streaming, plugin views, community marketplace, and PWA support
+- **Website** — Plugin showcase updated with community marketplace, drag-and-drop priority, process helpers, and custom views/previews/thumbnails
+
 ### Added
 - **Directory Zip Download** — Directories can now be downloaded as zip archives from the file browser context menu ("Download Zip")
   - New `/api/files/zip` endpoint streams zip archives using the `archiver` library
