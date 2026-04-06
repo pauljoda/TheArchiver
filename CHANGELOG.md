@@ -28,6 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - **Changelog Viewer** — Clicking the version number in the footer opens a dialog showing the full changelog with styled markdown rendering
 
 ### Fixed
+- SSE event stream no longer spams "Controller is already closed" errors when clients disconnect — the listener now unsubscribes on first failed write
 - Changelog viewer now works in Docker — `CHANGELOG.md` is copied into the container image
 - Changelog dialog properly sized (wide on desktop, near-fullscreen on mobile) with no text overflow
 - Dashboard data (queue, failed, history, schedules) now auto-refreshes every 5 seconds via polling — fixes stale views when jobs complete or status changes occur

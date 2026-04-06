@@ -9,27 +9,37 @@ export async function GET() {
 
   const stream = new ReadableStream({
     start(controller) {
+      let closed = false;
+
+      const cleanup = () => {
+        if (closed) return;
+        closed = true;
+        if (keepalive) clearInterval(keepalive);
+        if (unsubscribe) unsubscribe();
+      };
+
       // Send initial ping
       controller.enqueue(encoder.encode("event: ping\ndata: {}\n\n"));
 
       unsubscribe = addSSEListener((event: SSEEvent) => {
+        if (closed) return;
         try {
           const data = JSON.stringify(event);
           controller.enqueue(
             encoder.encode(`event: message\ndata: ${data}\n\n`)
           );
         } catch {
-          // Stream closed
+          cleanup();
         }
       });
 
       // Send keepalive every 30 seconds
       keepalive = setInterval(() => {
+        if (closed) return;
         try {
           controller.enqueue(encoder.encode("event: ping\ndata: {}\n\n"));
         } catch {
-          if (keepalive) clearInterval(keepalive);
-          if (unsubscribe) unsubscribe();
+          cleanup();
         }
       }, 30000);
     },
