@@ -111,6 +111,8 @@ export interface ViewProviderRegistration {
   entryPoint: string;
   /** Setting key to resolve the tracked directory (e.g., "plugin.plugin-social.save_directory") */
   directorySettingKey: string;
+  /** Fallback directory name when no value is stored in settings (from the setting's defaultValue) */
+  directoryDefaultValue?: string;
 }
 
 export interface ViewProviderInfo {
@@ -126,6 +128,8 @@ export interface ThumbnailProviderRegistration {
   entryPoint: string;
   /** Setting key to resolve the tracked directory */
   directorySettingKey: string;
+  /** Fallback directory name when no value is stored in settings */
+  directoryDefaultValue?: string;
 }
 
 export interface FilePreviewProviderRegistration {
@@ -134,16 +138,17 @@ export interface FilePreviewProviderRegistration {
   entryPoint: string;
 }
 
-function getTrackedDirectoryValue(primaryKey: string): string {
+function getTrackedDirectoryValue(primaryKey: string, defaultValue?: string): string {
   const primary = getSetting<string>(primaryKey);
   if (primary) return primary;
 
   const legacyKey = primaryKey.replace(/\.save_directory$/, ".library_folder");
   if (legacyKey !== primaryKey) {
-    return getSetting<string>(legacyKey) || "";
+    const legacy = getSetting<string>(legacyKey);
+    if (legacy) return legacy;
   }
 
-  return "";
+  return defaultValue || "";
 }
 
 /**
@@ -151,10 +156,10 @@ function getTrackedDirectoryValue(primaryKey: string): string {
  * any per-site directory overrides from the site_directories setting.
  * This allows view providers to activate on all configured output folders.
  */
-function getAllTrackedDirectories(directorySettingKey: string): string[] {
+function getAllTrackedDirectories(directorySettingKey: string, directoryDefaultValue?: string): string[] {
   const dirs: string[] = [];
 
-  const primary = getTrackedDirectoryValue(directorySettingKey);
+  const primary = getTrackedDirectoryValue(directorySettingKey, directoryDefaultValue);
   if (primary) dirs.push(primary);
 
   // Check for site_directories setting (JSON map of domain → folder)
@@ -244,10 +249,18 @@ function pluginSettingsToDefinitions(
   }));
 }
 
+/** Extract the default directory value from a plugin's manifest settings array. */
+function extractDirectoryDefault(settings: Array<{ key: string; defaultValue?: unknown }> | undefined): string {
+  if (!settings) return "";
+  const s = settings.find((s) => s.key === "save_directory" || s.key === "library_folder");
+  return typeof s?.defaultValue === "string" ? s.defaultValue : "";
+}
+
 function registerViewProvider(
   pluginId: string,
   view: PluginViewDeclaration,
-  directorySettingKey: string
+  directorySettingKey: string,
+  directoryDefaultValue?: string
 ): void {
   viewProviders.set(pluginId, {
     pluginId,
@@ -256,18 +269,21 @@ function registerViewProvider(
     icon: view.icon,
     entryPoint: view.entryPoint,
     directorySettingKey,
+    directoryDefaultValue,
   });
 }
 
 function registerThumbnailProvider(
   pluginId: string,
   thumb: PluginThumbnailDeclaration,
-  directorySettingKey: string
+  directorySettingKey: string,
+  directoryDefaultValue?: string
 ): void {
   thumbnailProviders.set(pluginId, {
     pluginId,
     entryPoint: thumb.entryPoint,
     directorySettingKey,
+    directoryDefaultValue,
   });
 }
 
@@ -435,7 +451,8 @@ async function doInitPlugins(pluginsDir?: string): Promise<void> {
         registerViewProvider(
           dbPlugin.id,
           viewDecl,
-          `plugin.${dbPlugin.id}.save_directory`
+          `plugin.${dbPlugin.id}.save_directory`,
+          extractDirectoryDefault(manifest?.settings ?? plugin.settings)
         );
       }
 
@@ -445,7 +462,8 @@ async function doInitPlugins(pluginsDir?: string): Promise<void> {
         registerThumbnailProvider(
           dbPlugin.id,
           thumbDecl,
-          `plugin.${dbPlugin.id}.save_directory`
+          `plugin.${dbPlugin.id}.save_directory`,
+          extractDirectoryDefault(manifest?.settings ?? plugin.settings)
         );
       }
 
@@ -540,7 +558,8 @@ async function doInitPlugins(pluginsDir?: string): Promise<void> {
           registerViewProvider(
             pluginId,
             viewDecl,
-            `plugin.${pluginId}.save_directory`
+            `plugin.${pluginId}.save_directory`,
+            extractDirectoryDefault(manifest?.settings ?? plugin.settings)
           );
         }
 
@@ -550,7 +569,8 @@ async function doInitPlugins(pluginsDir?: string): Promise<void> {
           registerThumbnailProvider(
             pluginId,
             thumbDecl2,
-            `plugin.${pluginId}.save_directory`
+            `plugin.${pluginId}.save_directory`,
+            extractDirectoryDefault(manifest?.settings ?? plugin.settings)
           );
         }
 
@@ -758,11 +778,21 @@ export async function loadSinglePlugin(
     }
     const viewDecl = manifest.viewProvider || plugin.viewProvider;
     if (viewDecl) {
-      registerViewProvider(pluginId, viewDecl, `plugin.${pluginId}.save_directory`);
+      registerViewProvider(
+        pluginId,
+        viewDecl,
+        `plugin.${pluginId}.save_directory`,
+        extractDirectoryDefault(manifest.settings ?? plugin.settings)
+      );
     }
     const thumbDecl3 = manifest.thumbnailProvider;
     if (thumbDecl3) {
-      registerThumbnailProvider(pluginId, thumbDecl3, `plugin.${pluginId}.save_directory`);
+      registerThumbnailProvider(
+        pluginId,
+        thumbDecl3,
+        `plugin.${pluginId}.save_directory`,
+        extractDirectoryDefault(manifest.settings ?? plugin.settings)
+      );
     }
     const previewDecl3 = manifest.filePreviewProvider;
     if (previewDecl3) {
@@ -812,7 +842,7 @@ export function getThumbnailProviderForPath(relativePath: string): ThumbnailProv
   for (const reg of thumbnailProviders.values()) {
     let trackedDirs: string[];
     try {
-      trackedDirs = getAllTrackedDirectories(reg.directorySettingKey);
+      trackedDirs = getAllTrackedDirectories(reg.directorySettingKey, reg.directoryDefaultValue);
     } catch {
       continue;
     }
@@ -883,7 +913,7 @@ export function getViewProvidersForPath(relativePath: string): ViewProviderInfo[
   for (const reg of viewProviders.values()) {
     let trackedDirs: string[];
     try {
-      trackedDirs = getAllTrackedDirectories(reg.directorySettingKey);
+      trackedDirs = getAllTrackedDirectories(reg.directorySettingKey, reg.directoryDefaultValue);
     } catch {
       // Settings not initialized or key not found — skip
       continue;
