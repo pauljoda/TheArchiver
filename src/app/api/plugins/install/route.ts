@@ -12,13 +12,7 @@ import {
 } from "@/lib/settings";
 import type { PluginManifest, PluginSettingDefinition } from "@/plugins/types";
 import type { SettingDefinition } from "@/lib/settings";
-
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
+import { slugify } from "@/plugins/helpers/string";
 
 function pluginSettingsToDefinitions(
   pluginId: string,

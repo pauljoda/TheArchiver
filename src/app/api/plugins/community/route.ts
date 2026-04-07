@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getDb, schema } from "@/db";
+import { slugify } from "@/plugins/helpers/string";
 
 const COMMUNITY_REPO_URL =
   process.env.COMMUNITY_PLUGINS_URL ||
@@ -44,8 +45,6 @@ export async function GET() {
     // Also build a map by slugified name for matching plugins installed via
     // different methods (ZIP upload slugifies the manifest name, deploy scripts
     // use the directory name)
-    const slugify = (name: string) =>
-      name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     const installedBySlug = new Map(
       installed.map((p) => [slugify(p.name), p])
     );

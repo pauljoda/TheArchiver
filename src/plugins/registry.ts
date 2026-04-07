@@ -220,13 +220,6 @@ export const helpers: PluginHelpers = {
   process: processHelpers,
 };
 
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-}
-
 function pluginSettingsToDefinitions(
   pluginId: string,
   pluginName: string,
