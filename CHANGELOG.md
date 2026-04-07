@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - **File grid view** — Extracted `FolderThumbnail`, `FileThumbnail`, `SocialMeta`, and `FileCard` into `components/files/grid/` (444 → 55 lines in main file)
 - **Move/copy dialog** — Extracted `FolderTreeNode` into its own reusable component file
 - **Settings fields** — Extracted `ActionField`, `PasswordField`, `BooleanField`, `SelectField`, and `TextField` into `components/settings/fields/` (261 → 120 lines in dispatcher)
+- **Plugin installation** — Extracted shared ZIP extraction, validation, DB registration, and settings setup into `lib/plugin-install.ts`, used by both install routes
 
 ### Changed
 - **README** — Comprehensive update reflecting all features added since 2.0: scheduled archiving, file preview/streaming, plugin views, community marketplace, built-in Files plugin, video thumbnails, zip downloads, PWA support, and plugin priority reordering
