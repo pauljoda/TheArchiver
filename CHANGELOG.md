@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ### Refactored
 - **File grid view** — Extracted `FolderThumbnail`, `FileThumbnail`, `SocialMeta`, and `FileCard` into `components/files/grid/` (444 → 55 lines in main file)
+- **Move/copy dialog** — Extracted `FolderTreeNode` into its own reusable component file
 
 ### Changed
 - **README** — Comprehensive update reflecting all features added since 2.0: scheduled archiving, file preview/streaming, plugin views, community marketplace, built-in Files plugin, video thumbnails, zip downloads, PWA support, and plugin priority reordering
