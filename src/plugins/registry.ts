@@ -27,6 +27,8 @@ import * as ioHelpers from "./helpers/io";
 import * as urlHelpers from "./helpers/url";
 import * as stringHelpers from "./helpers/string";
 import * as processHelpers from "./helpers/process";
+import * as nfoHelpers from "./helpers/nfo";
+import * as httpHelpers from "./helpers/http";
 import filesPlugin from "./builtins/files";
 
 /**
@@ -218,6 +220,8 @@ export const helpers: PluginHelpers = {
   url: urlHelpers,
   string: stringHelpers,
   process: processHelpers,
+  nfo: nfoHelpers,
+  http: httpHelpers,
 };
 
 function pluginSettingsToDefinitions(

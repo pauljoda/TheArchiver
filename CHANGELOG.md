@@ -26,6 +26,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - **Website** — Plugin showcase updated with community marketplace, drag-and-drop priority, process helpers, and custom views/previews/thumbnails
 
 ### Added
+- **Plugin API: string helpers** — `decodeHtmlEntities()` and `buildFilename()` added to `helpers.string`
+- **Plugin API: NFO helpers** — New `helpers.nfo` module with `buildNfo()` function and `NfoBuilder` class for generating XML/NFO metadata files
+- **Plugin API: HTTP helpers** — New `helpers.http` module with `createRateLimiter()` for rate-limited API requests with configurable intervals and retry logic
 - **Marketing site (GitHub Pages)** — Umami Cloud analytics script inlined in `website/src/layouts/Layout.astro`
 - **Directory Zip Download** — Directories can now be downloaded as zip archives from the file browser context menu ("Download Zip")
   - New `/api/files/zip` endpoint streams zip archives using the `archiver` library

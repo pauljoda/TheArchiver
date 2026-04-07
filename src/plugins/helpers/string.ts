@@ -53,6 +53,26 @@ export function filenameFromUrl(url: string): string | null {
   }
 }
 
+/** Decode common HTML entities back to their character equivalents. */
+export function decodeHtmlEntities(str: string): string {
+  return str
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;/g, "'")
+    .replace(/&#x27;/g, "'");
+}
+
+/** Build a sanitized filename from text, extension, and optional max length. */
+export function buildFilename(
+  text: string,
+  ext: string,
+  maxLen: number = 80
+): string {
+  return `${sanitizeFilename(truncateTitle(text, maxLen))}.${ext}`;
+}
+
 /** Map a MIME type string to a file extension. Defaults to "jpg". */
 export function getMimeExtension(mime: string): string {
   const map: Record<string, string> = {
