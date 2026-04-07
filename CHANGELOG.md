@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Fixed
+- iOS Safari no longer zooms into the page when focusing text inputs, textareas, or selects (set `font-size: max(16px, 1em)` globally)
+
 ### Removed
 - Unused `/api/health` endpoint (not referenced by frontend or Docker)
 - Deprecated `useFolderMetadata()` hook (replaced by `useFolderCardData()`)

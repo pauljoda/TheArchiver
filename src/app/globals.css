@@ -155,6 +155,10 @@
   html {
     @apply font-sans antialiased;
   }
+  /* Prevent iOS Safari from zooming on input focus (requires font-size >= 16px) */
+  input, textarea, select {
+    font-size: max(16px, 1em);
+  }
 }
 
 /* ── Noise texture overlay ── */
