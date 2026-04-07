@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Removed
+- Unused `/api/health` endpoint (not referenced by frontend or Docker)
+- Deprecated `useFolderMetadata()` hook (replaced by `useFolderCardData()`)
+
 ### Changed
 - **README** — Comprehensive update reflecting all features added since 2.0: scheduled archiving, file preview/streaming, plugin views, community marketplace, built-in Files plugin, video thumbnails, zip downloads, PWA support, and plugin priority reordering
 - **README** — API reference expanded from 20 to 50+ endpoints covering files, schedules, plugins, and community routes

@@ -70,12 +70,3 @@ export function useFolderCardData(
   return data;
 }
 
-/**
- * @deprecated Use useFolderCardData instead. This wrapper exists for backward compatibility.
- */
-export function useFolderMetadata(
-  folderPath: string
-): PostCardMetadata | null {
-  const data = useFolderCardData(folderPath);
-  return data?.post ?? null;
-}
