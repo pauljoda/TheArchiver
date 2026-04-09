@@ -126,7 +126,15 @@ export interface PluginFilePreviewDeclaration {
 
 export interface PluginHelpers {
   html: {
-    fetchPage(url: string, options?: { headers?: Record<string, string>; cookies?: string }): Promise<string>;
+    fetchPage(
+      url: string,
+      options?: {
+        userAgent?: string;
+        cookies?: string;
+        /** When set, uses this FlareSolverr base URL instead of the core setting. */
+        flaresolverrUrl?: string;
+      }
+    ): Promise<string>;
     parse(html: string): import("cheerio").CheerioAPI;
     select(html: string, selector: string): string[];
     selectAttr(html: string, selector: string, attr: string): string[];
@@ -187,6 +195,15 @@ export interface PluginHelpers {
       retryDelayMs?: number;
       maxRetries?: number;
     }): (url: string, options?: RequestInit & { logger?: PluginLogger }) => Promise<Response>;
+  };
+  flaresolverr: {
+    fetchPage(url: string, flaresolverrUrl: string, options?: { maxTimeoutMs?: number }): Promise<string>;
+    fetchPageWithCookies(
+      url: string,
+      flaresolverrUrl: string,
+      options?: { maxTimeoutMs?: number }
+    ): Promise<{ html: string; cookies: string; userAgent: string | null }>;
+    isAvailable(flaresolverrUrl: string, options?: { timeoutMs?: number }): Promise<boolean>;
   };
 }
 

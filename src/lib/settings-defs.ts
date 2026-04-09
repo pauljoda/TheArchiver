@@ -24,6 +24,17 @@ export const CORE_SETTINGS: SettingDefinition[] = [
     sortOrder: 1,
   },
   {
+    key: "core.flaresolverr_url",
+    group: "core",
+    type: "string",
+    label: "FlareSolverr URL",
+    description:
+      "URL of a FlareSolverr instance for bypassing Cloudflare (e.g., http://flaresolverr:8191). Leave empty to disable.",
+    defaultValue: "",
+    envVar: "FLARESOLVERR_URL",
+    sortOrder: 2,
+  },
+  {
     key: "notifications.ntfy_url",
     group: "notifications",
     type: "string",

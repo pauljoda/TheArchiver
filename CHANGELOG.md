@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - **Website** — Plugin showcase updated with community marketplace, drag-and-drop priority, process helpers, and custom views/previews/thumbnails
 
 ### Added
+- **FlareSolverr** — Core setting `core.flaresolverr_url` (env `FLARESOLVERR_URL`) routes `helpers.html.fetchPage` through FlareSolverr when set; new `helpers.flaresolverr` module (`fetchPage`, `fetchPageWithCookies`, `isAvailable`) for advanced use (e.g. cookies for `downloadFile`)
 - **Plugin API: string helpers** — `decodeHtmlEntities()` and `buildFilename()` added to `helpers.string`
 - **Plugin API: NFO helpers** — New `helpers.nfo` module with `buildNfo()` function and `NfoBuilder` class for generating XML/NFO metadata files
 - **Plugin API: HTTP helpers** — New `helpers.http` module with `createRateLimiter()` for rate-limited API requests with configurable intervals and retry logic

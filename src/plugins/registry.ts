@@ -29,6 +29,7 @@ import * as stringHelpers from "./helpers/string";
 import * as processHelpers from "./helpers/process";
 import * as nfoHelpers from "./helpers/nfo";
 import * as httpHelpers from "./helpers/http";
+import * as flaresolverrHelpers from "./helpers/flaresolverr";
 import filesPlugin from "./builtins/files";
 
 /**
@@ -220,13 +221,24 @@ function setInitialized(v: boolean) {
 }
 
 export const helpers: PluginHelpers = {
-  html: htmlHelpers,
+  html: {
+    ...htmlHelpers,
+    fetchPage: (url, options) =>
+      htmlHelpers.fetchPage(url, {
+        ...options,
+        flaresolverrUrl:
+          options?.flaresolverrUrl?.trim() ||
+          getSetting<string>("core.flaresolverr_url")?.trim() ||
+          undefined,
+      }),
+  },
   io: ioHelpers,
   url: urlHelpers,
   string: stringHelpers,
   process: processHelpers,
   nfo: nfoHelpers,
   http: httpHelpers,
+  flaresolverr: flaresolverrHelpers,
 };
 
 function pluginSettingsToDefinitions(

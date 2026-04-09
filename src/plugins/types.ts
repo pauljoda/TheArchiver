@@ -81,6 +81,7 @@ export interface PluginHelpers {
   process: typeof import("./helpers/process");
   nfo: typeof import("./helpers/nfo");
   http: typeof import("./helpers/http");
+  flaresolverr: typeof import("./helpers/flaresolverr");
 }
 
 export interface PluginLogger {

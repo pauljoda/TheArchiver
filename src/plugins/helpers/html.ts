@@ -1,12 +1,21 @@
 import * as cheerio from "cheerio";
+import * as flaresolverr from "./flaresolverr";
 
 const DEFAULT_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
 export async function fetchPage(
   url: string,
-  options?: { userAgent?: string; cookies?: string }
+  options?: {
+    userAgent?: string;
+    cookies?: string;
+    flaresolverrUrl?: string;
+  }
 ): Promise<string> {
+  if (options?.flaresolverrUrl?.trim()) {
+    return flaresolverr.fetchPage(url, options.flaresolverrUrl.trim());
+  }
+
   const headers: Record<string, string> = {
     "User-Agent": options?.userAgent || DEFAULT_USER_AGENT,
   };
