@@ -115,8 +115,8 @@ export function FailedTable({ items, onRefresh }: FailedTableProps) {
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Actions — always visible on touch devices; fade-on-hover only on pointer:fine */}
+                <div className="flex gap-1 shrink-0 opacity-100 [@media(pointer:fine)]:opacity-0 [@media(pointer:fine)]:group-hover:opacity-100 transition-opacity">
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button

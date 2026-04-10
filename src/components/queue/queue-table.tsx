@@ -129,11 +129,11 @@ export function QueueTable({ items, onRefresh }: QueueTableProps) {
                   </div>
                 </div>
 
-                {/* Actions */}
+                {/* Actions — always visible on touch devices; fade-on-hover only on pointer:fine */}
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="size-8 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  className="size-8 shrink-0 opacity-100 [@media(pointer:fine)]:opacity-0 [@media(pointer:fine)]:group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                   onClick={() => handleDelete(item.id)}
                 >
                   <Trash2 className="size-3.5" />

@@ -208,7 +208,7 @@ export function ScheduleTable({ items, onRefresh }: ScheduleTableProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="size-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary hover:bg-primary/10"
+                        className="size-8 opacity-100 [@media(pointer:fine)]:opacity-0 [@media(pointer:fine)]:group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-primary hover:bg-primary/10"
                         disabled={runningId === item.id}
                         onClick={() => handleRunNow(item.id)}
                       >
@@ -230,7 +230,7 @@ export function ScheduleTable({ items, onRefresh }: ScheduleTableProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="size-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
+                        className="size-8 opacity-100 [@media(pointer:fine)]:opacity-0 [@media(pointer:fine)]:group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-foreground"
                         title="Edit"
                       >
                         <Pencil className="size-3.5" />
@@ -242,7 +242,7 @@ export function ScheduleTable({ items, onRefresh }: ScheduleTableProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="size-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        className="size-8 opacity-100 [@media(pointer:fine)]:opacity-0 [@media(pointer:fine)]:group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         onClick={() => handleDelete(item.id)}
                       >
                         <Trash2 className="size-3.5" />

@@ -141,7 +141,7 @@ export function RecentActivity({ items, onRefresh }: RecentActivityProps) {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="size-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-100 [@media(pointer:fine)]:opacity-0 [@media(pointer:fine)]:group-hover:opacity-100 transition-opacity"
                         onClick={() => handleDelete(item.id)}
                       >
                         <Trash2 className="size-3.5" />
