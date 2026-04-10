@@ -77,14 +77,20 @@ export function SiteDirectoryMap({
   const [rows, setRows] = useState<FolderRow[]>(() =>
     parseFolderRows(value as string | null, allDomains)
   );
+  const internalChangeRef = useRef(false);
 
-  // Sync when value changes externally
+  // Sync when value changes externally (skip when this component just emitted the update)
   useEffect(() => {
+    if (internalChangeRef.current) {
+      internalChangeRef.current = false;
+      return;
+    }
     setRows(parseFolderRows(value as string | null, allDomains));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
 
   function emitChange(updatedRows: FolderRow[]) {
+    internalChangeRef.current = true;
     setRows(updatedRows);
     onChange(settingKey, serializeRows(updatedRows));
   }

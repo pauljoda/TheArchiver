@@ -1,0 +1,20 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build & Link Plugins",
+      "type": "shell",
+      "command": "npm run dev:build-link",
+      "options": {
+        "cwd": "${workspaceFolder}/../TheArchiver-CommunityPlugins"
+      },
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": [],
+      "detail": "Builds community plugins and links them into TheArchiver. Assumes TheArchiver-CommunityPlugins is a sibling folder."
+    }
+  ]
+}
