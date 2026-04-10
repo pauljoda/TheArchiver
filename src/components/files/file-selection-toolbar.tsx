@@ -21,15 +21,19 @@ export function FileSelectionToolbar({
   onClear,
 }: FileSelectionToolbarProps) {
   return (
-    <div className="flex items-center justify-between border-b border-primary/20 bg-primary/5 px-5 py-2 animate-vault-enter">
-      <span className="text-xs font-heading uppercase tracking-wider text-primary">
+    <div
+      className="relative z-10 flex flex-col gap-2 border-b border-primary/20 bg-primary/5 px-5 py-2 animate-vault-enter touch-manipulation sm:flex-row sm:items-center sm:justify-between sm:gap-0"
+      role="toolbar"
+      aria-label="Selection actions"
+    >
+      <span className="shrink-0 text-xs font-heading uppercase tracking-wider text-primary">
         {selectedCount} selected
       </span>
-      <div className="flex items-center gap-1">
+      <div className="flex w-full flex-wrap items-center justify-end gap-1 sm:w-auto sm:flex-nowrap">
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 gap-1.5 text-xs"
+          className="h-9 gap-1.5 text-xs sm:h-7"
           onClick={onMove}
         >
           <FolderInput className="size-3.5" />
@@ -38,7 +42,7 @@ export function FileSelectionToolbar({
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 gap-1.5 text-xs"
+          className="h-9 gap-1.5 text-xs sm:h-7"
           onClick={onCopy}
         >
           <Copy className="size-3.5" />
@@ -47,7 +51,7 @@ export function FileSelectionToolbar({
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 gap-1.5 text-xs"
+          className="h-9 gap-1.5 text-xs sm:h-7"
           onClick={onDownloadZip}
         >
           <Download className="size-3.5" />
@@ -56,7 +60,7 @@ export function FileSelectionToolbar({
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+          className="h-9 gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10 sm:h-7"
           onClick={onDelete}
         >
           <Trash2 className="size-3.5" />
@@ -65,8 +69,9 @@ export function FileSelectionToolbar({
         <Button
           variant="ghost"
           size="icon"
-          className="size-7 text-muted-foreground"
+          className="size-9 text-muted-foreground sm:size-7"
           onClick={onClear}
+          aria-label="Clear selection"
         >
           <X className="size-3.5" />
         </Button>

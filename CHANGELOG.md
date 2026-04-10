@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Fixed
+- **Files** — Selection toolbar actions stay tappable on narrow viewports (stacked layout, wrapped controls, higher stacking order, larger touch targets) so they are not clipped by the file card or covered by animated rows
 - iOS Safari no longer zooms into the page when focusing text inputs, textareas, or selects (set `font-size: max(16px, 1em)` globally)
 
 ### Removed
