@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-04-11
 ### Changed
 - **Release pipeline** — Split CI into `publish-dev.yml` (builds `dev`/`sha-<short>`/`<version>-<short>` tags on every push to `main`) and `release.yml` (`workflow_dispatch`-only; bumps version, rewrites changelog, tags, pushes `latest`/`X.Y.Z`/`X.Y`/`X`, creates GitHub Release, post-bumps to next `-dev`). `latest` no longer moves on every commit.
 - **Versioning policy** — Commits no longer bump `package.json`; between releases the version carries a `-dev` suffix and all changes accumulate under `## [Unreleased]`. Version only changes via the Release workflow running `scripts/release/cut.mjs`. CLAUDE.md and README updated to match.
