@@ -1,6 +1,6 @@
 {
   "name": "the-archiver",
-  "version": "2.2.1",
+  "version": "2.2.2-dev",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -9,7 +9,9 @@
     "lint": "next lint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "release": "node scripts/release/cut.mjs",
+    "release:check": "node scripts/release/check-version.mjs"
   },
   "dependencies": {
     "@fontsource-variable/dm-sans": "^5.2.8",

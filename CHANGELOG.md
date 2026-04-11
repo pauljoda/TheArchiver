@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Changed
+- **Release pipeline** — Split CI into `publish-dev.yml` (builds `dev`/`sha-<short>`/`<version>-<short>` tags on every push to `main`) and `release.yml` (`workflow_dispatch`-only; bumps version, rewrites changelog, tags, pushes `latest`/`X.Y.Z`/`X.Y`/`X`, creates GitHub Release, post-bumps to next `-dev`). `latest` no longer moves on every commit.
+- **Versioning policy** — Commits no longer bump `package.json`; between releases the version carries a `-dev` suffix and all changes accumulate under `## [Unreleased]`. Version only changes via the Release workflow running `scripts/release/cut.mjs`. CLAUDE.md and README updated to match.
+
 ### Fixed
 - **Files** — Selection toolbar actions stay tappable on narrow viewports (stacked layout, wrapped controls, higher stacking order, larger touch targets) so they are not clipped by the file card or covered by animated rows
 - iOS Safari no longer zooms into the page when focusing text inputs, textareas, or selects (set `font-size: max(16px, 1em)` globally)

@@ -394,7 +394,39 @@ services:
     restart: unless-stopped
 ```
 
-The Docker image is a single Alpine-based container with FFmpeg included. Linux/amd64 builds are published to `ghcr.io/pauljoda/the-archiver` on every push to `main`.
+The Docker image is a single Alpine-based container with FFmpeg included (linux/amd64). Two channels are published to `ghcr.io/pauljoda/the-archiver`:
+
+| Tag | Channel | Updated |
+| --- | --- | --- |
+| `latest` | Stable | Only when a release is cut |
+| `X.Y.Z`, `X.Y`, `X` | Stable (pinned) | On each release |
+| `dev` | Bleeding edge | Every push to `main` |
+| `sha-<short>`, `<version>-<short>` | Dev (pinned) | Every push to `main` |
+
+Stick with `latest` for normal use. Pin `X.Y.Z` to stay on a specific release. Track `dev` only if you want to try unreleased changes — the `latest` tag does **not** move until a real release is published.
+
+---
+
+## Releases
+
+Releases are cut server-side by a GitHub Actions workflow. Between releases, `package.json` carries an `X.Y.Z-dev` version and every change is appended to `## [Unreleased]` in [`CHANGELOG.md`](./CHANGELOG.md) — no per-commit version bumps.
+
+**To cut a release:**
+
+1. Open **Actions → Release → Run workflow** on GitHub
+2. Pick a bump type (`patch` / `minor` / `major`) or supply an explicit `X.Y.Z`
+3. Click **Run**
+
+The [`release.yml`](./.github/workflows/release.yml) workflow will:
+
+1. Run `scripts/release/cut.mjs` to bump `package.json`, rewrite `## [Unreleased]` → `## [X.Y.Z] - YYYY-MM-DD`, and extract release notes to `RELEASE_NOTES.md`
+2. Commit `chore(release): vX.Y.Z` and tag `vX.Y.Z`
+3. Post-bump `package.json` to the next `X.Y.(Z+1)-dev` and commit `chore(release): begin vX.Y.(Z+1)-dev cycle`
+4. Push `main` and the tag
+5. Build and push the Docker image as `latest`, `X.Y.Z`, `X.Y`, `X`
+6. Create a GitHub Release with the extracted notes
+
+Dev builds published via [`publish-dev.yml`](./.github/workflows/publish-dev.yml) run on every push to `main` except release commits. They only touch the `dev`, `sha-<short>`, and `<version>-<short>` tags.
 
 ---
 

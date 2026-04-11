@@ -1,0 +1,128 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump (ignored if 'version' is set)"
+        required: true
+        default: "minor"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      version:
+        description: "Explicit version X.Y.Z (optional; overrides bump)"
+        required: false
+        default: ""
+        type: string
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      packages: write
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Configure git identity
+        run: |
+          git config user.name  "the-archiver-release-bot"
+          git config user.email "the-archiver-release-bot@users.noreply.github.com"
+
+      - name: Cut release (phase=release)
+        id: cut
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            OUT=$(node scripts/release/cut.mjs --phase release --version "${{ inputs.version }}")
+          else
+            OUT=$(node scripts/release/cut.mjs --phase release --bump "${{ inputs.bump }}")
+          fi
+          echo "$OUT"
+          VERSION=$(echo "$OUT" | jq -r .version)
+          NEXT_DEV=$(echo "$OUT" | jq -r .nextDev)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "next_dev=$NEXT_DEV" >> "$GITHUB_OUTPUT"
+
+      - name: Validate changelog + package alignment
+        run: node scripts/release/check-version.mjs --release
+
+      - name: Commit release
+        run: |
+          git add -A
+          git commit -m "chore(release): v${{ steps.cut.outputs.version }}"
+          git tag "v${{ steps.cut.outputs.version }}"
+
+      - name: Cut release (phase=post)
+        run: node scripts/release/cut.mjs --phase post
+
+      - name: Commit post-release dev bump
+        run: |
+          git add -A
+          git commit -m "chore(release): begin v${{ steps.cut.outputs.next_dev }} cycle"
+
+      - name: Push main and tag
+        run: |
+          git push origin main
+          git push origin "v${{ steps.cut.outputs.version }}"
+
+      - name: Checkout release tag for build
+        run: git checkout "v${{ steps.cut.outputs.version }}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/the-archiver
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ steps.cut.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=v${{ steps.cut.outputs.version }}
+            type=semver,pattern={{major}},value=v${{ steps.cut.outputs.version }}
+
+      - name: Build and push release image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v${{ steps.cut.outputs.version }}" \
+            --title "v${{ steps.cut.outputs.version }}" \
+            --notes-file RELEASE_NOTES.md
