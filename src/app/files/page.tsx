@@ -28,7 +28,7 @@ export default function FilesPage() {
   const [files, setFiles] = useState<FileEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewProviders, setViewProviders] = useState<ViewProviderInfo[]>([]);
-  const [activeViewId, setActiveViewId] = useState<string | null>(null);
+  const [activeProviderId, setActiveProviderId] = useState<string | null>(null);
   const [activeViewRestored, setActiveViewRestored] = useState(false);
   const [userExplicitlySelectedFiles, setUserExplicitlySelectedFiles] = useState(false);
   const [previewFile, setPreviewFile] = useState<FileEntry | null>(null);
@@ -110,7 +110,7 @@ export default function FilesPage() {
         setUserExplicitlySelectedFiles(true);
       } else {
         // Will be applied once view providers load
-        setActiveViewId(stored);
+        setActiveProviderId(stored);
       }
     }
     setActiveViewRestored(true);
@@ -124,15 +124,20 @@ export default function FilesPage() {
     });
     fetchViewProviders(currentPath).then((providers) => {
       if (providers.length === 0) {
-        setActiveViewId(null);
+        setActiveProviderId(null);
       } else if (!userExplicitlySelectedFiles) {
-        // Restore stored view preference if available, otherwise use first provider
+        // Restore stored view preference if available, otherwise use first provider.
+        // Accept both the composite id (pluginId:viewId) and the legacy bare viewId.
         const match = document.cookie.match(/(?:^|;\s*)archiver-active-view=([^;]+)/);
         const stored = match?.[1] ? decodeURIComponent(match[1]) : null;
-        if (stored && stored !== "files" && providers.some((p) => p.viewId === stored)) {
-          setActiveViewId(stored);
+        const restored =
+          stored && stored !== "files"
+            ? providers.find((p) => p.id === stored || p.viewId === stored)?.id
+            : null;
+        if (restored) {
+          setActiveProviderId(restored);
         } else if (stored !== "files") {
-          setActiveViewId(providers[0].viewId);
+          setActiveProviderId(providers[0].id);
         }
       }
     });
@@ -142,10 +147,10 @@ export default function FilesPage() {
   useEffect(() => {
     if (!mounted || !activeViewRestored || files.length === 0) return;
     const hasPostNfo = files.some((f) => !f.isDirectory && f.name === "Post.nfo");
-    if (hasPostNfo && viewProviders.length > 0 && activeViewId === null && !userExplicitlySelectedFiles) {
-      setActiveViewId(viewProviders[0].viewId);
+    if (hasPostNfo && viewProviders.length > 0 && activeProviderId === null && !userExplicitlySelectedFiles) {
+      setActiveProviderId(viewProviders[0].id);
     }
-  }, [mounted, activeViewRestored, files, viewProviders, activeViewId, userExplicitlySelectedFiles]);
+  }, [mounted, activeViewRestored, files, viewProviders, activeProviderId, userExplicitlySelectedFiles]);
 
   const handleNavigate = useCallback((path: string) => {
     // Push to browser history so back/forward works
@@ -231,19 +236,17 @@ export default function FilesPage() {
     window.history.pushState({ path: currentPath }, "", url);
   }, [currentPath]);
 
-  function handleViewSelect(viewId: string | null) {
-    setActiveViewId(viewId);
+  function handleViewSelect(providerId: string | null) {
+    setActiveProviderId(providerId);
     // Track when user explicitly selects Files view to prevent auto-reactivation
-    setUserExplicitlySelectedFiles(viewId === null);
+    setUserExplicitlySelectedFiles(providerId === null);
     // Persist preference globally
-    const value = viewId ?? "files";
+    const value = providerId ?? "files";
     document.cookie = `archiver-active-view=${encodeURIComponent(value)};path=/;max-age=${365 * 24 * 60 * 60};samesite=lax`;
   }
 
-  const isPluginView = activeViewId !== null;
-  const activeProvider = viewProviders.find(
-    (p) => p.viewId === activeViewId
-  );
+  const isPluginView = activeProviderId !== null;
+  const activeProvider = viewProviders.find((p) => p.id === activeProviderId);
 
   return (
     <div className="flex flex-col animate-vault-enter">
@@ -252,12 +255,14 @@ export default function FilesPage() {
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-6 pb-4">
           <div className="flex flex-col gap-4">
             {viewProviders.length > 0 && (
-              <div className="flex items-center justify-end">
-                <ViewToggle
-                  providers={viewProviders}
-                  activeViewId={activeViewId}
-                  onSelect={handleViewSelect}
-                />
+              <div className="flex w-full min-w-0 justify-start sm:justify-end">
+                <div className="min-w-0 max-w-full">
+                  <ViewToggle
+                    providers={viewProviders}
+                    activeProviderId={activeProviderId}
+                    onSelect={handleViewSelect}
+                  />
+                </div>
               </div>
             )}
 

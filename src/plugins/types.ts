@@ -32,6 +32,12 @@ export interface PluginViewDeclaration {
   icon?: string;
   /** Relative path to the compiled JS view bundle (e.g., "view/index.js") */
   entryPoint: string;
+  /**
+   * Additional setting keys (relative to the plugin, e.g. "reddit_account_1_upvoted_folder")
+   * whose values should also be treated as tracked directories for this view. Lets plugins
+   * surface per-account or per-target custom folders the user can configure individually.
+   */
+  additionalDirectorySettingKeys?: string[];
 }
 
 export interface PluginThumbnailDeclaration {

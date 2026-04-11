@@ -114,9 +114,13 @@ export interface ViewProviderRegistration {
   directorySettingKey: string;
   /** Fallback directory name when no value is stored in settings (from the setting's defaultValue) */
   directoryDefaultValue?: string;
+  /** Additional fully-qualified setting keys whose values are also tracked directories. */
+  additionalDirectorySettingKeys?: string[];
 }
 
 export interface ViewProviderInfo {
+  /** Composite id: `${pluginId}:${viewId}` — stable and unique across plugins. */
+  id: string;
   pluginId: string;
   viewId: string;
   label: string;
@@ -157,7 +161,11 @@ function getTrackedDirectoryValue(primaryKey: string, defaultValue?: string): st
  * any per-site directory overrides from the site_directories setting.
  * This allows view providers to activate on all configured output folders.
  */
-function getAllTrackedDirectories(directorySettingKey: string, directoryDefaultValue?: string): string[] {
+function getAllTrackedDirectories(
+  directorySettingKey: string,
+  directoryDefaultValue?: string,
+  additionalDirectorySettingKeys?: string[],
+): string[] {
   const dirs: string[] = [];
 
   const primary = getTrackedDirectoryValue(directorySettingKey, directoryDefaultValue);
@@ -182,6 +190,20 @@ function getAllTrackedDirectories(directorySettingKey: string, directoryDefaultV
     }
   } catch {
     // Invalid JSON or missing setting — ignore
+  }
+
+  // Plugin-declared additional per-target directory settings (e.g. per-account custom folders).
+  if (additionalDirectorySettingKeys) {
+    for (const key of additionalDirectorySettingKeys) {
+      try {
+        const value = getSetting<string>(key);
+        if (typeof value === "string" && value.trim() && !dirs.includes(value)) {
+          dirs.push(value.trim());
+        }
+      } catch {
+        // Setting not registered yet — ignore
+      }
+    }
   }
 
   return dirs;
@@ -274,6 +296,9 @@ function registerViewProvider(
   directorySettingKey: string,
   directoryDefaultValue?: string
 ): void {
+  const additional = (view.additionalDirectorySettingKeys ?? [])
+    .filter((k) => typeof k === "string" && k.trim().length > 0)
+    .map((k) => (k.startsWith("plugin.") ? k : `plugin.${pluginId}.${k}`));
   viewProviders.set(pluginId, {
     pluginId,
     viewId: view.viewId,
@@ -282,6 +307,7 @@ function registerViewProvider(
     entryPoint: view.entryPoint,
     directorySettingKey,
     directoryDefaultValue,
+    additionalDirectorySettingKeys: additional.length > 0 ? additional : undefined,
   });
 }
 
@@ -925,7 +951,11 @@ export function getViewProvidersForPath(relativePath: string): ViewProviderInfo[
   for (const reg of viewProviders.values()) {
     let trackedDirs: string[];
     try {
-      trackedDirs = getAllTrackedDirectories(reg.directorySettingKey, reg.directoryDefaultValue);
+      trackedDirs = getAllTrackedDirectories(
+        reg.directorySettingKey,
+        reg.directoryDefaultValue,
+        reg.additionalDirectorySettingKeys,
+      );
     } catch {
       // Settings not initialized or key not found — skip
       continue;
@@ -942,6 +972,7 @@ export function getViewProvidersForPath(relativePath: string): ViewProviderInfo[
         normalizedPath.startsWith(normalizedTracked + "/")
       ) {
         results.push({
+          id: `${reg.pluginId}:${reg.viewId}`,
           pluginId: reg.pluginId,
           viewId: reg.viewId,
           label: reg.label,
