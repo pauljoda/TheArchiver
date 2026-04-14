@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ScheduleDialog } from "./schedule-dialog";
-import { PRESET_CRONS } from "@/lib/cron";
+import { describeCron } from "@/lib/cron";
 import { cn } from "@/lib/utils";
 
 interface ScheduleItem {
@@ -63,9 +63,6 @@ function formatRelativeTime(dateValue: string | number | null): string {
   return diffMs > 0 ? `${days}d` : `${days}d ago`;
 }
 
-function cronToLabel(cron: string): string {
-  return PRESET_CRONS.find((p) => p.cron === cron)?.label ?? cron;
-}
 
 export function ScheduleTable({ items, onRefresh }: ScheduleTableProps) {
   const [togglingId, setTogglingId] = useState<number | null>(null);
@@ -177,9 +174,9 @@ export function ScheduleTable({ items, onRefresh }: ScheduleTableProps) {
                   <div className="flex items-center gap-2 mt-1.5">
                     <Badge
                       variant="outline"
-                      className="text-[10px] font-mono"
+                      className="text-[10px] font-normal"
                     >
-                      {cronToLabel(item.cronExpression)}
+                      {describeCron(item.cronExpression)}
                     </Badge>
                     {item.lastRunAt && (
                       <span className="text-[10px] text-muted-foreground/60">
