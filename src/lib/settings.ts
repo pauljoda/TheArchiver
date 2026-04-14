@@ -137,6 +137,8 @@ function deserialize(
       return parseFloat(raw);
     case "boolean":
       return raw === "true" || raw === "1";
+    case "action":
+      return null;
     default:
       return raw;
   }
@@ -275,6 +277,8 @@ export async function deleteSettingsByPrefix(prefix: string): Promise<void> {
 }
 
 function validate(value: unknown, def: SettingDefinition): void {
+  if (def.type === "action") return;
+
   const v = def.validation;
   if (!v) return;
 

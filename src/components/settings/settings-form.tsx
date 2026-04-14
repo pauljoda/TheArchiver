@@ -17,7 +17,10 @@ interface SettingsFormProps {
   title: string;
   settings: SettingData[];
   onSave: (updates: Array<{ key: string; value: unknown }>) => Promise<void>;
-  onAction?: (key: string) => Promise<{ success: boolean; message: string }>;
+  onAction?: (
+    key: string,
+    values: Record<string, unknown>
+  ) => Promise<{ success: boolean; message: string }>;
 }
 
 export function SettingsForm({
@@ -88,7 +91,7 @@ export function SettingsForm({
         message: `Failed to save settings before action: ${err instanceof Error ? err.message : "unknown error"}`,
       };
     }
-    return onAction(key);
+    return onAction(key, values);
   }
 
   const visible = settings.filter((s) => !s.hidden);
@@ -154,7 +157,7 @@ export function SettingsForm({
                 value={values[s.key] as string | number | boolean | null}
                 validation={s.validation}
                 onChange={handleChange}
-                onAction={handleAction}
+                onAction={onAction ? handleAction : undefined}
               />
             ))}
           </CardContent>
@@ -180,7 +183,7 @@ export function SettingsForm({
                 value={values[s.key] as string | number | boolean | null}
                 validation={s.validation}
                 onChange={handleChange}
-                onAction={handleAction}
+                onAction={onAction ? handleAction : undefined}
               />
             ))}
           </SettingsSection>

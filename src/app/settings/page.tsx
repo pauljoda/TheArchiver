@@ -86,9 +86,29 @@ function SettingsContent() {
     setGroups(data.groups || {});
   }
 
-  async function handleAction(
-    settingKey: string
+  async function handleSettingsAction(
+    settingKey: string,
+    values: Record<string, unknown>
   ): Promise<{ success: boolean; message: string }> {
+    if (settingKey === "core.flaresolverr_test") {
+      const baseUrl = String(values["core.flaresolverr_url"] ?? "").trim();
+      const res = await fetch("/api/settings/flaresolverr-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ baseUrl }),
+      });
+      const data = await res.json();
+      return {
+        success: data.success === true,
+        message:
+          typeof data.message === "string"
+            ? data.message
+            : res.ok
+              ? "OK"
+              : "Request failed",
+      };
+    }
+
     const parts = settingKey.split(".");
     if (parts.length < 3 || parts[0] !== "plugin") {
       return { success: false, message: "Invalid action key" };
@@ -165,7 +185,10 @@ function SettingsContent() {
                 settings={groups[activeGroup]}
                 onSave={handleSave}
                 onAction={
-                  activeGroup.startsWith("plugin:") ? handleAction : undefined
+                  activeGroup === "core" ||
+                  activeGroup.startsWith("plugin:")
+                    ? handleSettingsAction
+                    : undefined
                 }
               />
             )}

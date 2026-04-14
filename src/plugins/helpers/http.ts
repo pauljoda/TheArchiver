@@ -1,3 +1,6 @@
+import { getSetting } from "@/lib/settings";
+import * as flaresolverr from "./flaresolverr";
+
 interface RateLimiterOptions {
   /** Minimum milliseconds between requests. */
   minIntervalMs: number;
@@ -12,6 +15,50 @@ interface RateLimiterOptions {
 interface RateLimitedFetchOptions extends RequestInit {
   /** Logger to report rate limit waits and retries. */
   logger?: { info: (msg: string) => void; warn: (msg: string) => void };
+}
+
+/**
+ * For GET requests without a body, optionally bootstraps clearance cookies via
+ * FlareSolverr (core setting) before calling the origin directly.
+ */
+async function fetchWithFlareSolverrPreference(
+  url: string,
+  init?: RateLimitedFetchOptions
+): Promise<Response> {
+  const { logger: _logger, ...rest } = init ?? {};
+  const method = (rest.method ?? "GET").toUpperCase();
+  const base = getSetting<string>("core.flaresolverr_url")?.trim();
+
+  if (
+    !base ||
+    !/^https?:\/\//i.test(url) ||
+    method !== "GET" ||
+    rest.body != null
+  ) {
+    return fetch(url, rest);
+  }
+
+  try {
+    const { cookies, userAgent } = await flaresolverr.fetchCookiesForUrl(
+      url,
+      base,
+      { maxTimeoutMs: 120_000 }
+    );
+    const headers = new Headers(rest.headers);
+    if (userAgent && !headers.has("user-agent")) {
+      headers.set("User-Agent", userAgent);
+    }
+    if (cookies) {
+      const existing = headers.get("Cookie");
+      headers.set(
+        "Cookie",
+        existing ? `${existing}; ${cookies}` : cookies
+      );
+    }
+    return fetch(url, { ...rest, headers });
+  } catch {
+    return fetch(url, rest);
+  }
 }
 
 /**
@@ -60,7 +107,10 @@ export function createRateLimiter(options: RateLimiterOptions) {
 
       // Strip logger from fetch options
       const { logger: _, ...nativeFetchOptions } = fetchOptions ?? {};
-      const res = await fetch(url, nativeFetchOptions);
+      const res = await fetchWithFlareSolverrPreference(
+        url,
+        nativeFetchOptions
+      );
 
       if (retryOnStatus.includes(res.status) && attempt < maxRetries) {
         attempt++;

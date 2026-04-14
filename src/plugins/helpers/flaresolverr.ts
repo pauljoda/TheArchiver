@@ -19,6 +19,8 @@ interface FlareSolverrCookie {
 interface FlareSolverrV1Response {
   status?: string;
   message?: string;
+  /** Present on health-style responses (e.g. sessions.list). */
+  version?: string;
   solution?: {
     status?: number;
     response?: string;
@@ -26,6 +28,13 @@ interface FlareSolverrV1Response {
     cookies?: FlareSolverrCookie[];
     userAgent?: string;
   };
+}
+
+export interface FlareSolverrTestResult {
+  success: boolean;
+  message: string;
+  version?: string;
+  latencyMs?: number;
 }
 
 function normalizeBaseUrl(flaresolverrUrl: string): string {
@@ -87,13 +96,14 @@ export async function fetchPage(
 export async function fetchPageWithCookies(
   url: string,
   flaresolverrUrl: string,
-  options?: { maxTimeoutMs?: number }
+  options?: { maxTimeoutMs?: number; returnOnlyCookies?: boolean }
 ): Promise<FlareSolverrPageWithCookies> {
   const maxTimeout = options?.maxTimeoutMs ?? 60_000;
   const parsed = await postV1(flaresolverrUrl, {
     cmd: "request.get",
     url,
     maxTimeout,
+    ...(options?.returnOnlyCookies ? { returnOnlyCookies: true } : {}),
   });
 
   const sol = parsed.solution!;
@@ -112,13 +122,42 @@ export async function fetchPageWithCookies(
 }
 
 /**
+ * Opens the URL in FlareSolverr (solves challenges) and returns clearance cookies
+ * for follow-up direct HTTP downloads on the same host.
+ */
+export async function fetchCookiesForUrl(
+  url: string,
+  flaresolverrUrl: string,
+  options?: { maxTimeoutMs?: number }
+): Promise<{ cookies: string; userAgent: string | null }> {
+  const { cookies, userAgent } = await fetchPageWithCookies(
+    url,
+    flaresolverrUrl,
+    { ...options, returnOnlyCookies: true }
+  );
+  return { cookies, userAgent };
+}
+
+/**
  * Returns true if the FlareSolverr instance responds to a lightweight API call.
  */
 export async function isAvailable(
   flaresolverrUrl: string,
   options?: { timeoutMs?: number }
 ): Promise<boolean> {
-  const timeoutMs = options?.timeoutMs ?? 5000;
+  const r = await testConnection(flaresolverrUrl, options);
+  return r.success;
+}
+
+/**
+ * Lightweight check that FlareSolverr is reachable and speaking the v1 API.
+ */
+export async function testConnection(
+  flaresolverrUrl: string,
+  options?: { timeoutMs?: number }
+): Promise<FlareSolverrTestResult> {
+  const timeoutMs = options?.timeoutMs ?? 15_000;
+  const t0 = Date.now();
   try {
     const base = normalizeBaseUrl(flaresolverrUrl);
     const controller = new AbortController();
@@ -130,13 +169,41 @@ export async function isAvailable(
         body: JSON.stringify({ cmd: "sessions.list" }),
         signal: controller.signal,
       });
-      if (!res.ok) return false;
-      const data = (await res.json()) as FlareSolverrV1Response;
-      return data.status === "ok";
+      const text = await res.text();
+      const latencyMs = Date.now() - t0;
+      let data: FlareSolverrV1Response;
+      try {
+        data = JSON.parse(text) as FlareSolverrV1Response;
+      } catch {
+        return {
+          success: false,
+          message: `Expected JSON from FlareSolverr (${res.status}). Body starts with: ${text.slice(0, 120)}`,
+        };
+      }
+      if (data.status !== "ok") {
+        return {
+          success: false,
+          message: data.message || "FlareSolverr returned a non-ok status",
+          latencyMs,
+        };
+      }
+      return {
+        success: true,
+        message: `Connected in ${latencyMs} ms`,
+        version: typeof data.version === "string" ? data.version : undefined,
+        latencyMs,
+      };
     } finally {
       clearTimeout(t);
     }
-  } catch {
-    return false;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return {
+      success: false,
+      message:
+        msg === "This operation was aborted"
+          ? `Timed out after ${timeoutMs} ms`
+          : `Unreachable: ${msg}`,
+    };
   }
 }

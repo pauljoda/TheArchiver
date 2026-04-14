@@ -1,4 +1,18 @@
 services:
+  # Local FlareSolverr for Cloudflare bypass testing:
+  #   docker compose --profile flaresolverr up -d
+  # Then set Core → FlareSolverr URL to http://127.0.0.1:8191 (host) or
+  # http://flaresolverr:8191 when the app runs in Docker alongside this service.
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    ports:
+      - "8191:8191"
+    environment:
+      LOG_LEVEL: info
+    restart: unless-stopped
+    profiles:
+      - flaresolverr
+
   app:
     build: .
     ports:
@@ -12,6 +26,8 @@ services:
       - DOWNLOAD_LOCATION=/downloads
       - MAX_CONCURRENT_DOWNLOADS=10
       - PLUGINS_DIR=/plugins
+      # With profile flaresolverr: set FLARESOLVERR_URL=http://flaresolverr:8191
+      # - FLARESOLVERR_URL=http://flaresolverr:8191
       # Uncomment and configure as needed:
       # - NTFY_URL=https://ntfy.example.com/archiver
     restart: unless-stopped

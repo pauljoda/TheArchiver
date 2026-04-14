@@ -5,6 +5,7 @@ import { Readable } from "stream";
 import { pipeline } from "stream/promises";
 import { execFile } from "child_process";
 import { promisify } from "util";
+import * as flaresolverr from "./flaresolverr";
 
 const execFileAsync = promisify(execFile);
 
@@ -19,42 +20,85 @@ export async function downloadFile(
     cookies?: string;
     headers?: Record<string, string>;
     redirect?: RequestRedirect;
+    /** When set, solves Cloudflare in-browser first, then downloads with returned cookies. */
+    flaresolverrUrl?: string;
   }
 ): Promise<void> {
   const dir = path.dirname(outputPath);
   await fsp.mkdir(dir, { recursive: true });
 
-  const headers: Record<string, string> = {
-    "User-Agent": options?.userAgent || DEFAULT_USER_AGENT,
-  };
-  if (options?.cookies) {
-    headers["Cookie"] = options.cookies;
-  }
-  if (options?.headers) {
-    Object.assign(headers, options.headers);
-  }
-
-  const fetchOptions: RequestInit = { headers };
+  const fetchOptions: RequestInit = {};
   if (options?.redirect) {
     fetchOptions.redirect = options.redirect;
   }
 
-  const res = await fetch(url, fetchOptions);
-  if (!res.ok || !res.body) {
-    throw new Error(
-      `Failed to download ${url}: ${res.status} ${res.statusText}`
-    );
+  async function pipeDownload(headers: Record<string, string>): Promise<void> {
+    const res = await fetch(url, { ...fetchOptions, headers });
+    if (!res.ok || !res.body) {
+      throw new Error(
+        `Failed to download ${url}: ${res.status} ${res.statusText}`
+      );
+    }
+
+    const nodeStream = Readable.fromWeb(res.body as never);
+    const fileStream = fs.createWriteStream(outputPath);
+    await pipeline(nodeStream, fileStream);
   }
 
-  const nodeStream = Readable.fromWeb(res.body as never);
-  const fileStream = fs.createWriteStream(outputPath);
-  await pipeline(nodeStream, fileStream);
+  function buildHeaders(cookieHeader?: string, userAgent?: string): Record<string, string> {
+    const headers: Record<string, string> = {
+      "User-Agent": userAgent || options?.userAgent || DEFAULT_USER_AGENT,
+    };
+    if (cookieHeader) {
+      headers["Cookie"] = cookieHeader;
+    }
+    if (options?.headers) {
+      Object.assign(headers, options.headers);
+    }
+    return headers;
+  }
+
+  const fsUrl = options?.flaresolverrUrl?.trim();
+  if (fsUrl && /^https?:\/\//i.test(url)) {
+    try {
+      const { cookies: fsCookies, userAgent: fsUa } =
+        await flaresolverr.fetchCookiesForUrl(url, fsUrl, {
+          maxTimeoutMs: 120_000,
+        });
+      const mergedCookies = [options?.cookies, fsCookies]
+        .filter((c) => c && String(c).trim())
+        .join("; ");
+      const ua = options?.userAgent || fsUa || DEFAULT_USER_AGENT;
+      try {
+        await pipeDownload(buildHeaders(mergedCookies || undefined, ua));
+        return;
+      } catch {
+        await pipeDownload(
+          buildHeaders(options?.cookies || undefined, options?.userAgent)
+        );
+        return;
+      }
+    } catch {
+      await pipeDownload(
+        buildHeaders(options?.cookies || undefined, options?.userAgent)
+      );
+      return;
+    }
+  }
+
+  await pipeDownload(
+    buildHeaders(options?.cookies || undefined, options?.userAgent)
+  );
 }
 
 export async function downloadFiles(
   files: Array<{ url: string; outputPath: string }>,
   concurrency: number = 5,
-  options?: { userAgent?: string; cookies?: string }
+  options?: {
+    userAgent?: string;
+    cookies?: string;
+    flaresolverrUrl?: string;
+  }
 ): Promise<void> {
   const chunks: Array<typeof files> = [];
   for (let i = 0; i < files.length; i += concurrency) {
@@ -62,7 +106,9 @@ export async function downloadFiles(
   }
   for (const chunk of chunks) {
     await Promise.all(
-      chunk.map((file) => downloadFile(file.url, file.outputPath, options))
+      chunk.map((file) =>
+        downloadFile(file.url, file.outputPath, options)
+      )
     );
   }
 }

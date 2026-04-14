@@ -141,8 +141,28 @@ export interface PluginHelpers {
     selectHtml(html: string, selector: string): string[];
   };
   io: {
-    downloadFile(url: string, outputPath: string, options?: { headers?: Record<string, string>; cookies?: string }): Promise<void>;
-    downloadFiles(files: Array<{ url: string; outputPath: string }>, concurrency?: number, options?: { headers?: Record<string, string>; cookies?: string }): Promise<void>;
+    downloadFile(
+      url: string,
+      outputPath: string,
+      options?: {
+        userAgent?: string;
+        headers?: Record<string, string>;
+        cookies?: string;
+        redirect?: RequestRedirect;
+        /** When set, uses this FlareSolverr base URL instead of the core setting. */
+        flaresolverrUrl?: string;
+      }
+    ): Promise<void>;
+    downloadFiles(
+      files: Array<{ url: string; outputPath: string }>,
+      concurrency?: number,
+      options?: {
+        userAgent?: string;
+        headers?: Record<string, string>;
+        cookies?: string;
+        flaresolverrUrl?: string;
+      }
+    ): Promise<void>;
     ensureDir(dirPath: string): Promise<void>;
     fileExists(filePath: string): Promise<boolean>;
     moveFile(src: string, dest: string): Promise<void>;
@@ -189,6 +209,10 @@ export interface PluginHelpers {
     };
   };
   http: {
+    /**
+     * Rate-limited fetch. When `core.flaresolverr_url` is set, plain GET requests
+     * (no body) first obtain clearance cookies via FlareSolverr, then hit the origin directly.
+     */
     createRateLimiter(options: {
       minIntervalMs: number;
       retryOnStatus?: number[];
@@ -201,9 +225,18 @@ export interface PluginHelpers {
     fetchPageWithCookies(
       url: string,
       flaresolverrUrl: string,
-      options?: { maxTimeoutMs?: number }
+      options?: { maxTimeoutMs?: number; returnOnlyCookies?: boolean }
     ): Promise<{ html: string; cookies: string; userAgent: string | null }>;
+    fetchCookiesForUrl(
+      url: string,
+      flaresolverrUrl: string,
+      options?: { maxTimeoutMs?: number }
+    ): Promise<{ cookies: string; userAgent: string | null }>;
     isAvailable(flaresolverrUrl: string, options?: { timeoutMs?: number }): Promise<boolean>;
+    testConnection(
+      flaresolverrUrl: string,
+      options?: { timeoutMs?: number }
+    ): Promise<{ success: boolean; message: string; version?: string; latencyMs?: number }>;
   };
 }
 

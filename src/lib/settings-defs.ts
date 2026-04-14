@@ -35,6 +35,16 @@ export const CORE_SETTINGS: SettingDefinition[] = [
     sortOrder: 2,
   },
   {
+    key: "core.flaresolverr_test",
+    group: "core",
+    type: "action",
+    label: "Test FlareSolverr",
+    description:
+      "Sends a lightweight API call to FlareSolverr. Other settings are saved first; the URL field value above is used for the test.",
+    defaultValue: false,
+    sortOrder: 3,
+  },
+  {
     key: "notifications.ntfy_url",
     group: "notifications",
     type: "string",

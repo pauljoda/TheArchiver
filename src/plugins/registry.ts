@@ -242,19 +242,36 @@ function setInitialized(v: boolean) {
   g.__pluginRegistryInitialized = v;
 }
 
+function resolvedFlareSolverrUrl(
+  override?: string | null | undefined
+): string | undefined {
+  const trimmed = override?.trim();
+  if (trimmed) return trimmed;
+  return getSetting<string>("core.flaresolverr_url")?.trim() || undefined;
+}
+
 export const helpers: PluginHelpers = {
   html: {
     ...htmlHelpers,
     fetchPage: (url, options) =>
       htmlHelpers.fetchPage(url, {
         ...options,
-        flaresolverrUrl:
-          options?.flaresolverrUrl?.trim() ||
-          getSetting<string>("core.flaresolverr_url")?.trim() ||
-          undefined,
+        flaresolverrUrl: resolvedFlareSolverrUrl(options?.flaresolverrUrl),
       }),
   },
-  io: ioHelpers,
+  io: {
+    ...ioHelpers,
+    downloadFile: (url, outputPath, options) =>
+      ioHelpers.downloadFile(url, outputPath, {
+        ...options,
+        flaresolverrUrl: resolvedFlareSolverrUrl(options?.flaresolverrUrl),
+      }),
+    downloadFiles: (files, concurrency, options) =>
+      ioHelpers.downloadFiles(files, concurrency, {
+        ...options,
+        flaresolverrUrl: resolvedFlareSolverrUrl(options?.flaresolverrUrl),
+      }),
+  },
   url: urlHelpers,
   string: stringHelpers,
   process: processHelpers,

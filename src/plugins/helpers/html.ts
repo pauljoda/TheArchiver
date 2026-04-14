@@ -12,8 +12,13 @@ export async function fetchPage(
     flaresolverrUrl?: string;
   }
 ): Promise<string> {
-  if (options?.flaresolverrUrl?.trim()) {
-    return flaresolverr.fetchPage(url, options.flaresolverrUrl.trim());
+  const fsUrl = options?.flaresolverrUrl?.trim();
+  if (fsUrl) {
+    try {
+      return await flaresolverr.fetchPage(url, fsUrl);
+    } catch {
+      // FlareSolverr misconfigured, down, or target error — fall back to direct fetch
+    }
   }
 
   const headers: Record<string, string> = {

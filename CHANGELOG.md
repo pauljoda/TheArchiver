@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 
 ## [Unreleased]
 
+### Added
+- **FlareSolverr** — Core settings action "Test FlareSolverr" and `POST /api/settings/flaresolverr-test` to verify connectivity (optional JSON `baseUrl` overrides the saved URL); `helpers.flaresolverr.testConnection()` and `fetchCookiesForUrl()` for plugins
+- **Docker Compose** — Optional `flaresolverr` service (`docker compose --profile flaresolverr up -d`) on port 8191 for local bypass testing
+
+### Changed
+- **FlareSolverr routing** — `helpers.html.fetchPage` tries FlareSolverr first when configured, then falls back to a direct fetch; `helpers.io.downloadFile` / `downloadFiles` obtain clearance cookies via FlareSolverr (`request.get` + `returnOnlyCookies`) before downloading from the origin, with fallbacks if FlareSolverr or the boosted fetch fails; `helpers.http.createRateLimiter` applies the same cookie bootstrap for GET requests without a body when `core.flaresolverr_url` is set
+
 ## [2.3.0] - 2026-04-11
 ### Changed
 - **Release pipeline** — Split CI into `publish-dev.yml` (builds `dev`/`sha-<short>`/`<version>-<short>` tags on every push to `main`) and `release.yml` (`workflow_dispatch`-only; bumps version, rewrites changelog, tags, pushes `latest`/`X.Y.Z`/`X.Y`/`X`, creates GitHub Release, post-bumps to next `-dev`). `latest` no longer moves on every commit.
