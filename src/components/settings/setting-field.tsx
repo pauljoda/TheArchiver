@@ -1,6 +1,7 @@
 "use client";
 
 import { SiteDirectoryMap } from "./site-directory-map";
+import { SiteFileMap } from "./site-file-map";
 import { ExtensionDirectoryMap } from "./extension-directory-map";
 import { FileUploadField } from "./file-upload-field";
 import { ActionField } from "./fields/action-field";
@@ -11,7 +12,7 @@ import { TextField } from "./fields/text-field";
 
 interface SettingFieldProps {
   settingKey: string;
-  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map" | "extension-directory-map" | "file";
+  type: "string" | "number" | "boolean" | "password" | "select" | "action" | "site-directory-map" | "site-file-map" | "extension-directory-map" | "file";
   label: string;
   description?: string;
   value: string | number | boolean | null;
@@ -57,6 +58,19 @@ export function SettingField({
           description={description}
           value={value as string | null}
           options={validation?.options ?? []}
+          onChange={onChange}
+        />
+      );
+
+    case "site-file-map":
+      return (
+        <SiteFileMap
+          settingKey={settingKey}
+          label={label}
+          description={description}
+          value={value as string | null}
+          options={validation?.options ?? []}
+          validation={validation}
           onChange={onChange}
         />
       );

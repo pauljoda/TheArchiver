@@ -5,7 +5,7 @@ export const settings = sqliteTable("settings", {
   value: text("value"),
   group: text("group").notNull(),
   type: text("type", {
-    enum: ["string", "number", "boolean", "password", "select", "action", "site-directory-map", "extension-directory-map", "file"],
+    enum: ["string", "number", "boolean", "password", "select", "action", "site-directory-map", "site-file-map", "extension-directory-map", "file"],
   }).notNull(),
   label: text("label").notNull(),
   description: text("description"),

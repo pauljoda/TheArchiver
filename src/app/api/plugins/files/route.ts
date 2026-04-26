@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
 import fs from "fs/promises";
+import { randomUUID } from "crypto";
 import { getDb, schema } from "@/db";
 import { eq } from "drizzle-orm";
 import { getSetting, setSetting } from "@/lib/settings";
@@ -9,7 +10,25 @@ const PLUGINS_DIR =
   process.env.PLUGINS_DIR || path.resolve(process.cwd(), "plugins");
 
 function isValidSegment(s: string): boolean {
-  return s.length > 0 && !s.includes("\0") && s !== "." && s !== "..";
+  return (
+    s.length > 0 &&
+    !s.includes("\0") &&
+    !s.includes("/") &&
+    !s.includes("\\") &&
+    s !== "." &&
+    s !== ".."
+  );
+}
+
+function isPathInside(childPath: string, parentPath: string): boolean {
+  const relative = path.relative(
+    path.resolve(parentPath),
+    path.resolve(childPath)
+  );
+  return (
+    relative === "" ||
+    (!!relative && !relative.startsWith("..") && !path.isAbsolute(relative))
+  );
 }
 
 function validateCookiesFile(content: string): {
@@ -65,6 +84,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const pluginId = formData.get("pluginId") as string | null;
     const settingKey = formData.get("settingKey") as string | null;
+    const managedByMap = formData.get("managedByMap") === "true";
     const file = formData.get("file") as File | null;
 
     if (!pluginId || !settingKey || !file) {
@@ -96,7 +116,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify the setting exists and is type "file"
+    // Verify the setting exists and supports file uploads.
     const fullKey = `plugin.${pluginId}.${settingKey}`;
     const settingRow = db
       .select()
@@ -104,9 +124,19 @@ export async function POST(request: NextRequest) {
       .where(eq(schema.settings.key, fullKey))
       .get();
 
-    if (!settingRow || settingRow.type !== "file") {
+    if (
+      !settingRow ||
+      (settingRow.type !== "file" && settingRow.type !== "site-file-map")
+    ) {
       return NextResponse.json(
-        { error: `Setting "${settingKey}" is not a file-type setting` },
+        { error: `Setting "${settingKey}" is not a file-upload setting` },
+        { status: 400 }
+      );
+    }
+
+    if (managedByMap && settingRow.type !== "site-file-map") {
+      return NextResponse.json(
+        { error: `Setting "${settingKey}" is not a site file map` },
         { status: 400 }
       );
     }
@@ -129,7 +159,7 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
 
     // Only cookie uploads should go through Netscape cookies.txt validation.
-    if (settingKey === "cookies_file") {
+    if (settingKey === "cookies_file" || settingKey === "site_cookies") {
       const content = buffer.toString("utf-8");
       const formatCheck = validateCookiesFile(content);
       if (!formatCheck.valid) {
@@ -147,25 +177,34 @@ export async function POST(request: NextRequest) {
     const dataDir = path.join(PLUGINS_DIR, pluginId, "data", settingKey);
     await fs.mkdir(dataDir, { recursive: true });
 
-    // Remove any existing files in this setting's data dir
-    try {
-      const existing = await fs.readdir(dataDir);
-      for (const f of existing) {
-        await fs.unlink(path.join(dataDir, f));
+    if (settingRow.type === "file") {
+      // Remove any existing files in this setting's data dir
+      try {
+        const existing = await fs.readdir(dataDir);
+        for (const f of existing) {
+          await fs.unlink(path.join(dataDir, f));
+        }
+      } catch {
+        // Directory may not exist yet
       }
-    } catch {
-      // Directory may not exist yet
     }
 
-    const filePath = path.join(dataDir, safeName);
+    const outputName =
+      settingRow.type === "site-file-map"
+        ? `${Date.now()}-${randomUUID()}-${safeName}`
+        : safeName;
+    const filePath = path.join(dataDir, outputName);
     await fs.writeFile(filePath, buffer);
 
-    // Update the setting value to the absolute path
-    await setSetting(fullKey, filePath);
+    if (settingRow.type === "file") {
+      // Update single-file settings directly. Map-backed settings are saved by
+      // their UI as JSON after the returned path is assigned to one or more sites.
+      await setSetting(fullKey, filePath);
+    }
 
     return NextResponse.json({
       success: true,
-      filename: safeName,
+      filename: outputName,
       path: filePath,
     });
   } catch (err) {
@@ -180,7 +219,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const body = await request.json();
-    const { pluginId, settingKey } = body;
+    const { pluginId, settingKey, path: filePath } = body;
 
     if (!pluginId || !settingKey) {
       return NextResponse.json(
@@ -197,16 +236,45 @@ export async function DELETE(request: NextRequest) {
     }
 
     const fullKey = `plugin.${pluginId}.${settingKey}`;
+    const db = getDb();
+    const settingRow = db
+      .select()
+      .from(schema.settings)
+      .where(eq(schema.settings.key, fullKey))
+      .get();
+
+    if (!settingRow) {
+      return NextResponse.json(
+        { error: `Setting "${settingKey}" not found` },
+        { status: 404 }
+      );
+    }
+
+    const expectedDir = path.join(PLUGINS_DIR, pluginId, "data", settingKey);
+
+    if (typeof filePath === "string" && filePath) {
+      if (!isPathInside(filePath, expectedDir)) {
+        return NextResponse.json(
+          { error: "Invalid file path" },
+          { status: 400 }
+        );
+      }
+      try {
+        await fs.unlink(filePath);
+      } catch {
+        // File may already be deleted
+      }
+      return NextResponse.json({ success: true });
+    }
+
     const currentPath = getSetting<string>(fullKey);
 
     // Delete the file if it exists
     if (currentPath && currentPath !== "null") {
       // Ensure the path is within the expected data directory
-      const expectedDir = path.join(PLUGINS_DIR, pluginId, "data", settingKey);
-      const resolved = path.resolve(currentPath);
-      if (resolved.startsWith(expectedDir)) {
+      if (isPathInside(currentPath, expectedDir)) {
         try {
-          await fs.unlink(resolved);
+          await fs.unlink(currentPath);
         } catch {
           // File may already be deleted
         }

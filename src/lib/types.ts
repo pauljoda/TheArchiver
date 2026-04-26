@@ -18,6 +18,7 @@ export interface SettingData {
     | "select"
     | "action"
     | "site-directory-map"
+    | "site-file-map"
     | "extension-directory-map"
     | "file";
   label: string;
@@ -32,5 +33,7 @@ export interface SettingData {
     max?: number;
     pattern?: string;
     options?: Array<{ label: string; value: string }>;
+    accept?: string;
+    maxSize?: number;
   };
 }
