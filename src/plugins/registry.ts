@@ -96,14 +96,6 @@ interface RegisteredPlugin {
   fileTypes?: string[];
 }
 
-const DIRECT_FILE_URL_EXTS = new Set([
-  ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".ico", ".avif", ".tiff",
-  ".mp4", ".m4v", ".webm", ".mov", ".mkv", ".avi", ".flv", ".wmv",
-  ".mp3", ".flac", ".wav", ".ogg", ".aac", ".wma", ".m4a",
-  ".pdf", ".zip", ".tar", ".gz", ".bz2", ".7z", ".rar", ".xz",
-  ".txt", ".md", ".json", ".xml", ".csv",
-]);
-
 export interface ViewProviderRegistration {
   pluginId: string;
   viewId: string;
@@ -731,7 +723,7 @@ export function getPluginForUrl(
 
     // Built-in Files fallback only makes sense for URLs that look like
     // direct file downloads, not arbitrary page URLs after a plugin removal.
-    if (g.__fallbackPlugin && ext && DIRECT_FILE_URL_EXTS.has(ext)) {
+    if (g.__fallbackPlugin && ext) {
       return {
         plugin: g.__fallbackPlugin.plugin,
         pluginId: g.__fallbackPlugin.pluginId,
