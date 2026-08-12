@@ -37,8 +37,6 @@ COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/CHANGELOG.md ./CHANGELOG.md
 
 # Create persistent data directories
-RUN mkdir -p /data /downloads /plugins
-
 VOLUME ["/data", "/downloads", "/plugins"]
 
 ENV DATABASE_URL=file:/data/archiver.db
