@@ -1,11 +1,13 @@
+# ── Stage 0: Initialize
+FROM node:20-alpine AS base
 # ── Stage 1: Install dependencies ──
-FROM node:20-alpine AS deps
+FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
 # ── Stage 2: Build ──
-FROM node:20-alpine AS builder
+FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -13,7 +15,7 @@ COPY . .
 RUN npm run build
 
 # ── Stage 3: Production runner ──
-FROM node:20-alpine AS runner
+FROM base AS runner
 WORKDIR /app
 
 RUN apk add --no-cache ffmpeg zip python3 py3-pip \
