@@ -1,20 +1,21 @@
-# ── Stage 1: Install dependencies ──
-FROM node:20-alpine AS deps
+# ── Stage 0: Initialize
+FROM node:20-alpine AS base
 WORKDIR /app
+
+# ── Stage 1: Install dependencies ──
+FROM base AS deps
 COPY package.json package-lock.json ./
 RUN npm ci
 
 # ── Stage 2: Build ──
-FROM node:20-alpine AS builder
-WORKDIR /app
+FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 RUN npm run build
 
 # ── Stage 3: Production runner ──
-FROM node:20-alpine AS runner
-WORKDIR /app
+FROM base AS runner
 
 RUN apk add --no-cache ffmpeg zip python3 py3-pip \
     && python3 -m venv /opt/venv \
@@ -36,8 +37,6 @@ COPY --from=builder /app/drizzle ./drizzle
 COPY --from=builder /app/CHANGELOG.md ./CHANGELOG.md
 
 # Create persistent data directories
-RUN mkdir -p /data /downloads /plugins
-
 VOLUME ["/data", "/downloads", "/plugins"]
 
 ENV DATABASE_URL=file:/data/archiver.db
